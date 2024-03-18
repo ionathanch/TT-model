@@ -1,3 +1,5 @@
+{-# OPTIONS --rewriting #-}
+
 open import common
 import accessibility
 import syntactics
@@ -11,64 +13,38 @@ open accessibility Level _<_
 open syntactics Level
 open reduction Level
 
-{--------------------------------------------------------
-  Semantic well-typedness:
-  ∗       ∈ ⟦∗⟧ₖ       = ⊤
-  mty     ∈ ⟦∗⟧ₖ       = ⊤
-  Π a j b ∈ ⟦∗⟧ₖ       = j < k ∧ a ∈ ⟦∗⟧ⱼ ∧ (∀ x → x ∈ ⟦a⟧ⱼ → b{x} ∈ ⟦∗⟧ₖ)
-  _       ∈ ⟦mty⟧ₖ     = ⊥
-  f       ∈ ⟦Π a j b⟧ₖ = ∀ x → x ∈ ⟦a⟧ⱼ → f x ∈ ⟦b{x}⟧ₖ
-  x       ∈ ⟦a⟧ₖ       = ∃ b → a ⇔ b ∧ x ∈ ⟦b⟧ₖ
+data U' k (U< : ∀ {j} → j < k → Term → Set) : Term → Set
+el' : ∀ k (U< : ∀ {j} → j < k → Term → Set) → Term → ∀ {T} → U' k U< T → Set
 
-                j < k
-                ⟦a⟧ⱼ                      a ⇒ b
-                ∀ x → x ∈ ⟦a⟧ⱼ → ⟦b{x}⟧ₖ  ⟦b⟧ₖ
-  ----  ------  ------------------------  -----
-  ⟦∗⟧ₖ  ⟦mty⟧ₖ  ⟦Π a j b⟧ₖ                ⟦a⟧ₖ
+data U' k U< where
+  Û : ∀ j → j < k → U' k U< (𝒰 j)
+  ⊥̂ : U' k U< mty
+  Π̂ : ∀ a → (A : U' k U< a) →
+      ∀ b → (∀ x → el' k U< x A → U' k U< (subst (x +: var) b)) →
+      U' k U< (Π a b)
+  ⇒̂  : ∀ a b → a ⇒ b → U' k U< b → U' k U< a
 
-  T ∈ ⟦∗⟧ₖ       = ⟦T⟧ₖ
-  _ ∈ ⟦mty⟧ₖ     = ⊥
-  f ∈ ⟦Π a j b⟧ₖ = ∀ x → x ∈ ⟦a⟧ⱼ → f x ∈ ⟦b{x}⟧ₖ
-      (N.B. ⟦a⟧ⱼ, ⟦b{x}⟧ₖ are defined)
-  x ∈ ⟦a⟧ₖ       = x ∈ ⟦b⟧ₖ
-      (where a ⇒ b and ⟦b⟧ₖ)
---------------------------------------------------------}
+el' k U< T (Û j j<k) = U< j<k T
+el' k U< _ ⊥̂  = ⊥
+el' k U< f (Π̂ _ A _ B) = ∀ x → (a : el' k U< x A) → el' k U< ($ᵈ f x) (B x a)
+el' k U< x (⇒̂  a b a⇒b A) = el' k U< x A
 
-data U' k (U< : ∀ {j} → j < k → Term → Set)
-          (el< : ∀ {j} (j<k : j < k) → Term → ∀ {T} → U< j<k T → Set)
-        : Term → Set where
-  Û : U' k U< el< ∗
-  ⊥̂ : U' k U< el< mty
-  Π̂ : ∀ j → (j<k : j < k) →
-      ∀ a → (A : U< j<k a) →
-      ∀ b → (∀ x → el< j<k x A → U' k U< el< (subst (x +: var) b)) →
-      U' k U< el< (Π a j b)
-  ⇒̂  : ∀ a b → a ⇒ b → U' k U< el< b → U' k U< el< a
-
-el' : ∀ k (U< : ∀ {j} → j < k → Term → Set)
-          (el< : ∀ {j} (j<k : j < k) → Term → ∀ {T} → U< j<k T → Set) →
-      Term → ∀ {T} → U' k U< el< T → Set
-el' k U< el< T Û = U' k U< el< T
-el' k U< el< _ ⊥̂  = ⊥
-el' k U< el< f (Π̂ j j<k _ A _ B) = ∀ x → (a : el< j<k x A) → el' k U< el< ($ᵈ f x) (B x a)
-el' k U< el< x (⇒̂  a b a⇒b A) = el' k U< el< x A
-
--- U' k and el' k are parametrized by U< j and el< j, where j < k;
+-- U' k and el' k are parametrized by U< j, where j < k;
 -- we instantiate the parameters by induction on accessibility of levels
 
 U<  : ∀ {k} → Acc k → ∀ {j} → j < k → Term → Set
 el< : ∀ {k} (p : Acc k) {j} (j<k : j < k) → Term → ∀ {T} → U< p j<k T → Set
 
-U<  (acc< f) {j} j<k T = U'  j (U< (f j<k)) (el< (f j<k)) T
-el< (acc< f) {j} j<k t = el' j (U< (f j<k)) (el< (f j<k)) t
+U<  (acc< f) {j} j<k T = U'  j (U< (f j<k)) T
+el< (acc< f) {j} j<k t = el' j (U< (f j<k)) t
 
 -- We tie the knot by instantiating U< and el<
 
 U : ∀ k (acc : Acc k) → Term → Set
-U k acc T = U' k (U< acc) (el< acc) T
+U k acc T = U' k (U< acc) T
 
 el : ∀ k (acc : Acc k) → Term → ∀ {T} → U k acc T → Set
-el k acc t = el' k (U< acc) (el< acc) t
+el k acc t = el' k (U< acc) t
 
 {-----------------------------------------------------
   Propositional irrelevance across U:
@@ -76,31 +52,35 @@ el k acc t = el' k (U< acc) (el< acc) t
   even given different sets 〚A⟧ₖ for convertible A
 -----------------------------------------------------}
 
-accU : ∀ {k T} (acc₁ acc₂ : Acc k) → U k acc₁ T → U k acc₂ T
-accU acc₁ acc₂ u with refl ← (let open accext in accProp acc₁ acc₂) = u
+accU→ : ∀ {k T} (acc₁ acc₂ : Acc k) → U k acc₁ T → U k acc₂ T
+accU→ acc₁ acc₂ u with refl ← (let open ext in accProp acc₁ acc₂) = u
+
+accU≡ : ∀ {k T} (acc₁ acc₂ : Acc k) → U k acc₁ T ≡ U k acc₂ T
+accU≡ acc₁ acc₂ with refl ← (let open ext in accProp acc₁ acc₂) = refl
+
+accU<→ : ∀ {j k T} (accj : Acc j) (acck : Acc k) (j<k : j < k) → U j accj T → U< acck j<k T
+accU<→ accj (acc< f) j<k = accU→ accj (f j<k)
 
 elProp : ∀ {k a A₁ A₂} (acc₁ acc₂ : Acc k)
          (u₁ : U k acc₁ A₁) (u₂ : U k acc₂ A₂) →
          A₁ ⇔ A₂ → el k acc₁ a u₁ → el k acc₂ a u₂
-elProp acc₁ acc₂ Û Û _ = accU acc₁ acc₂
+elProp (acc< f) (acc< g) (Û _ j<k₁) (Û _ j<k₂) 𝒰₁⇔𝒰₂
+  with refl ← ⇔-𝒰-inv 𝒰₁⇔𝒰₂ = accU→ (f j<k₁) (g j<k₂)
 elProp acc₁ acc₂ ⊥̂ ⊥̂ _ ()
-elProp acc₁@(acc< f) acc₂@(acc< g) (Π̂ j₁ j<k₁ a₁ A₁ b₁ B₁) (Π̂ j₂ j<k₂ a₂ A₂ b₂ B₂) Πab₁⇔Πab₂ =
-  let a₁⇔a₂ , j₁≡j₂ , b₁⇔b₂ = ⇔-Π-inv Πab₁⇔Πab₂ in helper a₁⇔a₂ j₁≡j₂ b₁⇔b₂ where
-    helper : a₁ ⇔ a₂ → j₁ ≡ j₂ → b₁ ⇔ b₂ →
-      el' _ _ _ _ (Π̂ j₁ j<k₁ a₁ A₁ b₁ B₁) → el' _ _ _ _ (Π̂ j₂ j<k₂ a₂ A₂ b₂ B₂)
-    helper a₁⇔a₂ refl b₁⇔b₂ elf x ela =
-      let ela' = elProp (g j<k₂) (f j<k₁) A₂ A₁ (⇔-sym a₁⇔a₂) ela
-      in elProp acc₁ acc₂ (B₁ x ela') (B₂ x ela) (⇔-cong ⇔-refl b₁⇔b₂) (elf x ela')
+elProp acc₁ acc₂ (Π̂ a₁ A₁ b₁ B₁) (Π̂ a₂ A₂ b₂ B₂) Πab₁⇔Πab₂ elf x ela =
+  let a₁⇔a₂ , b₁⇔b₂ = ⇔-Π-inv Πab₁⇔Πab₂
+      ela' = elProp acc₂ acc₁ A₂ A₁ (⇔-sym a₁⇔a₂) ela
+  in elProp acc₁ acc₂ (B₁ x ela') (B₂ x ela) (⇔-cong ⇔-refl b₁⇔b₂) (elf x ela')
 elProp acc₁ acc₂ (⇒̂  a₁ a₂ a₁⇒a₂ u₁) u₂ a₁⇔a₃ =
   elProp acc₁ acc₂ u₁ u₂ (⇔-trans (⇔-sym (⇒-⇔ a₁⇒a₂)) a₁⇔a₃)
 elProp acc₁ acc₂ u₁ (⇒̂  a₂ a₃ a₂⇒a₃ u₂) a₁⇔a₂ =
   elProp acc₁ acc₂ u₁ u₂ (⇔-trans a₁⇔a₂ (⇒-⇔ a₂⇒a₃))
-elProp _ _ Û ⊥̂ ∗⇔mty with () ← ⇎⋆-∗mty ∗⇔mty
-elProp _ _ Û (Π̂ _ _ _ _ _ _) ∗⇔Π with () ← ⇎⋆-∗Π ∗⇔Π
-elProp _ _ ⊥̂ (Π̂ _ _ _ _ _ _) mty⇔Π with () ← ⇎⋆-mtyΠ mty⇔Π
-elProp _ _ ⊥̂ Û mty⇔∗ with () ← ⇎⋆-∗mty (⇔-sym mty⇔∗)
-elProp _ _ (Π̂ _ _ _ _ _ _) Û Π⇔∗ with () ← ⇎⋆-∗Π (⇔-sym Π⇔∗)
-elProp _ _ (Π̂ _ _ _ _ _ _) ⊥̂ Π⇔mty with () ← ⇎⋆-mtyΠ (⇔-sym Π⇔mty)
+elProp _ _ (Û _ _) ⊥̂ 𝒰⇔mty with () ← ⇎⋆-𝒰mty 𝒰⇔mty
+elProp _ _ (Û _ _) (Π̂ _ _ _ _) 𝒰⇔Π with () ← ⇎⋆-𝒰Π 𝒰⇔Π
+elProp _ _ ⊥̂ (Π̂ _ _ _ _) mty⇔Π with () ← ⇎⋆-mtyΠ mty⇔Π
+elProp _ _ ⊥̂ (Û _ _) mty⇔𝒰 with () ← ⇎⋆-𝒰mty (⇔-sym mty⇔𝒰)
+elProp _ _ (Π̂ _ _ _ _) (Û _ _) Π⇔𝒰 with () ← ⇎⋆-𝒰Π (⇔-sym Π⇔𝒰)
+elProp _ _ (Π̂ _ _ _ _) ⊥̂ Π⇔mty with () ← ⇎⋆-mtyΠ (⇔-sym Π⇔mty)
 
 -- elProp specialized to identical syntactic types
 accEl : ∀ {k a A} (acc₁ acc₂ : Acc k)
@@ -130,33 +110,39 @@ accEl acc₁ acc₂ u₁ u₂ = elProp acc₁ acc₂ u₁ u₂ ⇔-refl
 -- U is cumulative
 cumU : ∀ {j k} (accj : Acc j) (acck : Acc k) → j < k → {T : Term} →
        U j accj T → U k acck T
-cumU _ _ _ Û = Û
+
+cumEl : ∀ {j k} (accj : Acc j) (acck : Acc k) (j<k : j < k) {t T : Term} (u : U j accj T) →
+        el j accj t u ≡ el k acck t (cumU accj acck j<k u)
+
+cumU (acc< f) (acc< g) j<k (Û i i<j) = Û i (trans< i<j j<k)
 cumU _ _ _ ⊥̂  = ⊥̂
-cumU accj@(acc< f) acck@(acc< g) j<k (Π̂ i i<j a A b B) =
-  let A' = accU (f i<j) (g (trans< i<j j<k)) A
-  in Π̂ i (trans< i<j j<k) a A'
-       b (λ x a → cumU accj acck j<k (B x (accEl (g (trans< i<j j<k)) (f i<j) A' A a)))
+cumU accj acck j<k (Π̂ a A b B) =
+  Π̂ a (cumU accj acck j<k A)
+    b (λ x a →
+         let p = cumEl accj acck j<k A
+         in cumU accj acck j<k (B x (coe (sym p) a)))
 cumU accj acck j<k (⇒̂  a b a⇒b B) = ⇒̂  a b a⇒b (cumU accj acck j<k B)
 
--- el is cumulative
-cumEl : ∀ {j k} (accj : Acc j) (acck : Acc k) (j<k : j < k) {t T : Term} (u : U j accj T) →
-        el j accj t u → el k acck t (cumU accj acck j<k u)
-cumEl accj acck j<k Û = cumU accj acck j<k
-cumEl _ _ _ ⊥̂  = λ b → b
-cumEl accj@(acc< f) acck@(acc< g) j<k (Π̂ i i<j a A b B) elB x elA =
-  let A' = accU (f i<j) (g (trans< i<j j<k)) A
-      a' = accEl (g (trans< i<j j<k)) (f i<j) A' A elA
-  in cumEl accj acck j<k (B x a') (elB x a')
-cumEl accj acck j<k (⇒̂  a b a⇒b B) elB = cumEl accj acck j<k B elB
+cumEl (acc< f) (acc< g) j<k (Û i i<j) = accU≡ (f i<j) (g (trans< i<j j<k))
+cumEl (acc< _) (acc< _) _ ⊥̂  = refl
+cumEl accj@(acc< _) acck@(acc< _) j<k {t = t} (Π̂ a A b B) =
+  let open ext in
+  piext refl (λ x →
+    let p = cumEl accj acck j<k A in
+    piext p (λ a →
+      let B' = λ a → cumU accj acck j<k (B x a)
+          q = cumEl accj acck j<k (B x a)
+      in trans q (cong (λ a → el' _ _ _ (B' a)) (sym (coe-β p a)))))
+cumEl accj@(acc< _) acck@(acc< _) j<k (⇒̂  a b a⇒b B) = cumEl accj acck j<k B
 
 {-------------------
   Inversion lemmas
 --------------------}
 
 -- Universes are à la Russell
-el-U : ∀ {k A} (acc : Acc k) (u : U k acc ∗) → el k acc A u → U k acc A
-el-U acc Û elU = elU
-el-U acc (⇒̂  ∗ ∗ ⇒-∗ u) elU = el-U acc u elU
+el-U : ∀ {j k A} (acc : Acc k) (u : U k acc (𝒰 j)) → el k acc A u → Σ[ acc' ∈ Acc j ] j < k × U j acc' A
+el-U (acc< f) (Û j j<k) elU = f j<k , j<k , elU
+el-U acc (⇒̂  (𝒰 j) (𝒰 j) (⇒-𝒰 j) u) elU = el-U acc u elU
 
 -- Nothing lives in the empty type
 empty : ∀ {k t} acc (u : U k acc mty) → el k acc t u → ⊥
@@ -164,20 +150,19 @@ empty acc ⊥̂  ()
 empty acc (⇒̂  mty mty ⇒⋆-mty u) = empty acc u
 
 -- Inversion on semantic function type
-invΠ-U : ∀ {a j b k} (acc : Acc k) → U k acc (Π a j b) →
-         ∃[ j<k ] Σ[ A ∈ U< acc j<k a ]
-         ∀ x → el< acc j<k x A → U k acc (subst (x +: var) b)
-invΠ-U acc (Π̂ j j<k a A b B) = j<k , A , B
-invΠ-U acc@(acc< f) (⇒̂  (Π a j b) (Π a' j b') (⇒-Π a⇒a' b⇒b') u) =
-  let j<k , A' , B' = invΠ-U acc u
-  in j<k , ⇒̂  a a' a⇒a' A' , λ x elA → ⇒̂  _ _ (⇒-cong (⇒-refl x) b⇒b') (B' x elA)
+invΠ-U : ∀ {a b k} (acc : Acc k) → U k acc (Π a b) →
+         Σ[ A ∈ U k acc a ] ∀ x → el k acc x A → U k acc (subst (x +: var) b)
+invΠ-U acc (Π̂ a A b B) = A , B
+invΠ-U acc (⇒̂  (Π a b) (Π a' b') (⇒-Π a⇒a' b⇒b') u) =
+  let A' , B' = invΠ-U acc u
+  in ⇒̂  a a' a⇒a' A' , λ x elA → ⇒̂  _ _ (⇒-cong (⇒-refl x) b⇒b') (B' x elA)
 
 -- Inversion on semantic functions
-invΠ-el : ∀ {a j b k} (acc : Acc k) (u : U k acc (Π a j b)) f → el k acc f u →
-          let j<k , A , B = invΠ-U acc u in
-          ∀ x → (a : el< acc j<k x A) → el k acc ($ᵈ f x) (B x a)
-invΠ-el acc (Π̂ j j<k' a A b B) f elB x elA = elB x elA
-invΠ-el acc@(acc< _) (⇒̂  (Π a j b) (Π a' j b') (⇒-Π a⇒a' b⇒b') u) = invΠ-el acc u
+invΠ-el : ∀ {a b k} (acc : Acc k) (u : U k acc (Π a b)) f → el k acc f u →
+          let A , B = invΠ-U acc u in
+          ∀ x → (a : el k acc x A) → el k acc ($ᵈ f x) (B x a)
+invΠ-el acc (Π̂ a A b B) f elB x elA = elB x elA
+invΠ-el acc (⇒̂  (Π a b) (Π a' b') (⇒-Π a⇒a' b⇒b') u) = invΠ-el acc u
 
 {----------------------------------------------------
   Backward preservation of U, el with respect to ⇒⋆
@@ -188,8 +173,8 @@ invΠ-el acc@(acc< _) (⇒̂  (Π a j b) (Π a' j b') (⇒-Π a⇒a' b⇒b') u) 
 ⇒⋆-U acc (⇒⋆-trans a⇒b b⇒⋆c) u = ⇒̂ _ _ a⇒b (⇒⋆-U acc b⇒⋆c u)
 
 ⇒-el : ∀ {k} (acc : Acc k) {a b A} (u : U k acc A) → a ⇒ b → el k acc b u → el k acc a u
-⇒-el acc Û a⇒b = ⇒⋆-U acc (⇒-⇒⋆ a⇒b)
-⇒-el acc (Π̂ j j<k _ A _ B) a⇒b elB x elA = ⇒-el acc (B x elA) (⇒-$ᵈ a⇒b (⇒-refl x)) (elB x elA)
+⇒-el (acc< f) (Û j j<k) a⇒b = ⇒⋆-U (f j<k) (⇒-⇒⋆ a⇒b)
+⇒-el acc (Π̂ _ A _ B) a⇒b elB x elA = ⇒-el acc (B x elA) (⇒-$ᵈ a⇒b (⇒-refl x)) (elB x elA)
 ⇒-el acc (⇒̂  A B A⇒B u) a⇒b = ⇒-el acc u a⇒b
 
 ⇒⋆-el : ∀ {k} (acc : Acc k) {a b A} (u : U k acc A) → a ⇒⋆ b → el k acc b u → el k acc a u
@@ -202,14 +187,13 @@ invΠ-el acc@(acc< _) (⇒̂  (Π a j b) (Π a' j b') (⇒-Π a⇒a' b⇒b') u) 
 ---------------------------------}
 
 SRU  : ∀ {k} (acc : Acc k) {a b} → a ⇒ b → U k acc a → U k acc b
-SRU (acc< _) ⇒-∗ Û = Û
-SRU (acc< _) ⇒-mty ⊥̂ = ⊥̂
-SRU acc@(acc< f) (⇒-Π {a' = a'} {b' = b'} a⇒a' b⇒b') (Π̂ i i<j a A b B) =
-  Π̂ i i<j
-    a' (SRU (f i<j) a⇒a' A)
+SRU acc (⇒-𝒰 _) (Û _ j<k) = Û _ j<k
+SRU acc ⇒-mty ⊥̂ = ⊥̂
+SRU acc (⇒-Π {a' = a'} {b' = b'} a⇒a' b⇒b') (Π̂ a A b B) =
+  Π̂ a' (SRU acc a⇒a' A)
     b' (λ x elA → SRU acc (⇒-cong (⇒-refl x) b⇒b')
-         (B x (⇔-el (f i<j) (SRU (f i<j) a⇒a' A) A (⇔-sym (⇒-⇔ a⇒a')) elA)))
-SRU acc@(acc< f) {b = b} a⇒b (⇒̂  a c a⇒c C) =
+          (B x (⇔-el acc (SRU acc a⇒a' A) A (⇔-sym (⇒-⇔ a⇒a')) elA)))
+SRU acc {b = b} a⇒b (⇒̂  a c a⇒c C) =
   let d , b⇒d , c⇒d = diamond a⇒b a⇒c
   in ⇒̂  b d b⇒d (SRU acc c⇒d C)
 
@@ -230,7 +214,10 @@ em : ∀ (σ : Nat → Term) {Γ} → V Γ → Set
 
 data V where
   ∙̂  : V ∙
-  ∷̂  : ∀ {Γ A k} (acc : Acc k) (v : V Γ) → (∀ σ → em σ v → U k acc (subst σ A)) → V (Γ ∷ A # k)
+  ∷̂  : ∀ {Γ A} (v : V Γ) → (∀ σ → em σ v → ∃[ k ] Σ[ acc ∈ Acc k ] U k acc (subst σ A)) → V (Γ ∷ A)
 
 em σ ∙̂  = ⊤
-em σ (∷̂  acc v u) = Σ[ emV ∈ em (σ ∘ suc) v ] el _ acc (σ 0) (u (σ ∘ suc) emV)
+em σ (∷̂  v w) =
+  Σ[ emV ∈ em (σ ∘ suc) v ]
+    let k , acc , u = w (σ ∘ suc) emV
+    in el k acc (σ 0) u

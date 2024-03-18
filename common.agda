@@ -10,3 +10,6 @@ open ≡-Reasoning public
 
 coe : ∀ {A B : Set} → A ≡ B → A → B
 coe refl x = x
+
+coe-β : ∀ {A B : Set} (p : A ≡ B) x → coe (sym p) (coe p x) ≡ x
+coe-β refl x = refl
