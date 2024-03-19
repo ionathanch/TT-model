@@ -8,8 +8,9 @@ import reduction
 module semantics
   (Level : Set)
   (_<_ : Level → Level → Set)
-  (trans< : ∀ {i j k} → i < j → j < k → i < k) where
-open accessibility Level _<_
+  (trans< : ∀ {i j k} → i < j → j < k → i < k)
+  (open accessibility Level _<_)
+  (sup : ∀ i j → ∃[ k ] i < k × j < k × Acc k) where
 open syntactics Level
 open reduction Level
 
@@ -46,68 +47,28 @@ U k acc T = U' k (U< acc) T
 el : ∀ k (acc : Acc k) → Term → ∀ {T} → U k acc T → Set
 el k acc t = el' k (U< acc) t
 
-{-----------------------------------------------------
-  Propositional irrelevance across U:
-  two proofs of a ∈ 〚A⟧ₖ are propositionally equal,
-  even given different sets 〚A⟧ₖ for convertible A
------------------------------------------------------}
-
-accU→ : ∀ {k T} (acc₁ acc₂ : Acc k) → U k acc₁ T → U k acc₂ T
-accU→ acc₁ acc₂ u with refl ← (let open ext in accProp acc₁ acc₂) = u
+{----------------------------------------
+  Irrelevance of accessibility across U
+----------------------------------------}
 
 accU≡ : ∀ {k T} (acc₁ acc₂ : Acc k) → U k acc₁ T ≡ U k acc₂ T
 accU≡ acc₁ acc₂ with refl ← (let open ext in accProp acc₁ acc₂) = refl
 
-accU<→ : ∀ {j k T} (accj : Acc j) (acck : Acc k) (j<k : j < k) → U j accj T → U< acck j<k T
-accU<→ accj (acc< f) j<k = accU→ accj (f j<k)
+accU : ∀ {k T} (acc₁ acc₂ : Acc k) → U k acc₁ T → U k acc₂ T
+accU acc₁ acc₂ = coe (accU≡ acc₁ acc₂)
 
-elProp : ∀ {k a A₁ A₂} (acc₁ acc₂ : Acc k)
-         (u₁ : U k acc₁ A₁) (u₂ : U k acc₂ A₂) →
-         A₁ ⇔ A₂ → el k acc₁ a u₁ → el k acc₂ a u₂
-elProp (acc< f) (acc< g) (Û _ j<k₁) (Û _ j<k₂) 𝒰₁⇔𝒰₂
-  with refl ← ⇔-𝒰-inv 𝒰₁⇔𝒰₂ = accU→ (f j<k₁) (g j<k₂)
-elProp acc₁ acc₂ ⊥̂ ⊥̂ _ ()
-elProp acc₁ acc₂ (Π̂ a₁ A₁ b₁ B₁) (Π̂ a₂ A₂ b₂ B₂) Πab₁⇔Πab₂ elf x ela =
-  let a₁⇔a₂ , b₁⇔b₂ = ⇔-Π-inv Πab₁⇔Πab₂
-      ela' = elProp acc₂ acc₁ A₂ A₁ (⇔-sym a₁⇔a₂) ela
-  in elProp acc₁ acc₂ (B₁ x ela') (B₂ x ela) (⇔-cong ⇔-refl b₁⇔b₂) (elf x ela')
-elProp acc₁ acc₂ (⇒̂  a₁ a₂ a₁⇒a₂ u₁) u₂ a₁⇔a₃ =
-  elProp acc₁ acc₂ u₁ u₂ (⇔-trans (⇔-sym (⇒-⇔ a₁⇒a₂)) a₁⇔a₃)
-elProp acc₁ acc₂ u₁ (⇒̂  a₂ a₃ a₂⇒a₃ u₂) a₁⇔a₂ =
-  elProp acc₁ acc₂ u₁ u₂ (⇔-trans a₁⇔a₂ (⇒-⇔ a₂⇒a₃))
-elProp _ _ (Û _ _) ⊥̂ 𝒰⇔mty with () ← ⇎⋆-𝒰mty 𝒰⇔mty
-elProp _ _ (Û _ _) (Π̂ _ _ _ _) 𝒰⇔Π with () ← ⇎⋆-𝒰Π 𝒰⇔Π
-elProp _ _ ⊥̂ (Π̂ _ _ _ _) mty⇔Π with () ← ⇎⋆-mtyΠ mty⇔Π
-elProp _ _ ⊥̂ (Û _ _) mty⇔𝒰 with () ← ⇎⋆-𝒰mty (⇔-sym mty⇔𝒰)
-elProp _ _ (Π̂ _ _ _ _) (Û _ _) Π⇔𝒰 with () ← ⇎⋆-𝒰Π (⇔-sym Π⇔𝒰)
-elProp _ _ (Π̂ _ _ _ _) ⊥̂ Π⇔mty with () ← ⇎⋆-mtyΠ (⇔-sym Π⇔mty)
-
--- elProp specialized to identical syntactic types
-accEl : ∀ {k a A} (acc₁ acc₂ : Acc k)
-        (u₁ : U k acc₁ A) (u₂ : U k acc₂ A) →
-        el k acc₁ a u₁ → el k acc₂ a u₂
-accEl acc₁ acc₂ u₁ u₂ = elProp acc₁ acc₂ u₁ u₂ ⇔-refl
-
--- elProp specialized to identical proofs of accessibility
-⇔-el : ∀ {k a A B} (acc : Acc k)
-       (uA : U k acc A) (uB : U k acc B) (A⇔B : A ⇔ B) →
-       el k acc a uA → el k acc a uB
-⇔-el {k} acc = elProp acc acc
-
--- Could use ⇔-el since A ≡ B → A ⇔ B by ⇔-refl, but that's a little silly
-≡-el : ∀ {k t A A'} acc (u : U k acc A) (p : A ≡ A') →
-       el k acc t u → el k acc t (transp (U k acc) p u)
-≡-el acc u refl elA = elA
+accU< : ∀ {j k T} (accj : Acc j) (acck : Acc k) (j<k : j < k) → U j accj T → U< acck j<k T
+accU< accj (acc< f) j<k = accU accj (f j<k)
 
 {------------------------------------------
-  U, el, and cumulativity:
+  Cumulativity:
   * Given j < k, U j can be lifted to U k
   * Given j < k and u : U j,
-    the interpretation of u can be lifted
-    to an interpretation of the lifted u
+    the interpretation of u and
+    the interpretation of the lifted u
+    are equal
 ------------------------------------------}
 
--- U is cumulative
 cumU : ∀ {j k} (accj : Acc j) (acck : Acc k) → j < k → {T : Term} →
        U j accj T → U k acck T
 
@@ -134,6 +95,70 @@ cumEl accj@(acc< _) acck@(acc< _) j<k {t = t} (Π̂ a A b B) =
           q = cumEl accj acck j<k (B x a)
       in trans q (cong (λ a → el' _ _ _ (B' a)) (sym (coe-β p a)))))
 cumEl accj@(acc< _) acck@(acc< _) j<k (⇒̂  a b a⇒b B) = cumEl accj acck j<k B
+
+{-------------------------------------------------------
+  Propositional irrelevance of interpretations:
+  two proofs of a ∈ 〚A⟧ₖ are propositionally equal,
+  even given different sets 〚A⟧ₖ at different levels,
+  for convertible A
+-------------------------------------------------------}
+
+-- First, irrelevance across U of the same level
+el≡' : ∀ {k a A₁ A₂} (acc₁ acc₂ : Acc k)
+       (u₁ : U k acc₁ A₁) (u₂ : U k acc₂ A₂) →
+       A₁ ⇔ A₂ → el k acc₁ a u₁ ≡ el k acc₂ a u₂
+el≡' (acc< f) (acc< g) (Û _ j<k₁) (Û _ j<k₂) 𝒰₁⇔𝒰₂
+  with refl ← ⇔-𝒰-inv 𝒰₁⇔𝒰₂ = accU≡ (f j<k₁) (g j<k₂)
+el≡' acc₁ acc₂ ⊥̂ ⊥̂ _ = refl
+el≡' acc₁ acc₂ (Π̂ a₁ A₁ b₁ B₁) (Π̂ a₂ A₂ b₂ B₂) Πab₁⇔Πab₂ =
+  let a₁⇔a₂ , b₁⇔b₂ = ⇔-Π-inv Πab₁⇔Πab₂
+      open ext in
+  piext refl (λ x →
+    let ela≡ = el≡' acc₁ acc₂ A₁ A₂ a₁⇔a₂ in
+    piext ela≡ (λ a →
+      el≡' acc₁ acc₂ (B₁ x a) (B₂ x (coe ela≡ a)) (⇔-cong ⇔-refl b₁⇔b₂)))
+el≡' acc₁ acc₂ (⇒̂  a₁ a₂ a₁⇒a₂ u₁) u₂ a₁⇔a₃ =
+  el≡' acc₁ acc₂ u₁ u₂ (⇔-trans (⇔-sym (⇒-⇔ a₁⇒a₂)) a₁⇔a₃)
+el≡' acc₁ acc₂ u₁ (⇒̂  a₂ a₃ a₂⇒a₃ u₂) a₁⇔a₂ =
+  el≡' acc₁ acc₂ u₁ u₂ (⇔-trans a₁⇔a₂ (⇒-⇔ a₂⇒a₃))
+el≡' _ _ (Û _ _) ⊥̂ 𝒰⇔mty with () ← ⇎⋆-𝒰mty 𝒰⇔mty
+el≡' _ _ (Û _ _) (Π̂ _ _ _ _) 𝒰⇔Π with () ← ⇎⋆-𝒰Π 𝒰⇔Π
+el≡' _ _ ⊥̂ (Π̂ _ _ _ _) mty⇔Π with () ← ⇎⋆-mtyΠ mty⇔Π
+el≡' _ _ ⊥̂ (Û _ _) mty⇔𝒰 with () ← ⇎⋆-𝒰mty (⇔-sym mty⇔𝒰)
+el≡' _ _ (Π̂ _ _ _ _) (Û _ _) Π⇔𝒰 with () ← ⇎⋆-𝒰Π (⇔-sym Π⇔𝒰)
+el≡' _ _ (Π̂ _ _ _ _) ⊥̂ Π⇔mty with () ← ⇎⋆-mtyΠ (⇔-sym Π⇔mty)
+
+-- Cumulativity and the existence of suprema
+-- gives us irrelevance across different levels
+el≡ : ∀ {k₁ k₂} (acck₁ : Acc k₁) (acck₂ : Acc k₂) {t T₁ T₂ : Term}
+         (u₁ : U k₁ acck₁ T₁) (u₂ : U k₂ acck₂ T₂) →
+         T₁ ⇔ T₂ → el k₁ acck₁ t u₁ ≡ el k₂ acck₂ t u₂
+el≡ {k₁} {k₂} acck₁ acck₂ u₁ u₂ T₁⇔T₂ =
+  let ℓ , k₁<ℓ , k₂<ℓ , accℓ = sup k₁ k₂
+  in begin
+    el k₁ acck₁ _ u₁                        ≡⟨ cumEl acck₁ accℓ k₁<ℓ u₁ ⟩
+    el ℓ  accℓ  _ (cumU acck₁ accℓ k₁<ℓ u₁) ≡⟨ el≡' accℓ accℓ
+                                                      (cumU acck₁ accℓ k₁<ℓ u₁)
+                                                      (cumU acck₂ accℓ k₂<ℓ u₂) T₁⇔T₂ ⟩
+    el ℓ  accℓ  _ (cumU acck₂ accℓ k₂<ℓ u₂) ≡⟨ sym (cumEl acck₂ accℓ k₂<ℓ u₂) ⟩
+    el k₂ acck₂ _ u₂ ∎
+
+-- el≡ specialized to identical syntactic types
+el→ : ∀ {k₁ k₂} (acck₁ : Acc k₁) (acck₂ : Acc k₂) {t T : Term}
+      (u₁ : U k₁ acck₁ T) (u₂ : U k₂ acck₂ T) →
+      el k₁ acck₁ t u₁ → el k₂ acck₂ t u₂
+el→ acck₁ acck₂ u₁ u₂ = coe (el≡ acck₁ acck₂ u₁ u₂ ⇔-refl)
+
+-- el≡ specialized to identical proofs of accessibility
+⇔-el : ∀ {k a A B} (acc : Acc k)
+       (uA : U k acc A) (uB : U k acc B) (A⇔B : A ⇔ B) →
+       el k acc a uA → el k acc a uB
+⇔-el {k} acc uA uB A⇔B = coe (el≡ acc acc uA uB A⇔B)
+
+-- Could use ⇔-el since A ≡ B → A ⇔ B by ⇔-refl, but that's a little silly
+≡-el : ∀ {k t A A'} acc (u : U k acc A) (p : A ≡ A') →
+       el k acc t u → el k acc t (transp (U k acc) p u)
+≡-el acc u refl elA = elA
 
 {-------------------
   Inversion lemmas
