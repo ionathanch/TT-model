@@ -6,7 +6,7 @@ variable
   A B C : Set
   P : A → Set
 
-infix 10 _+:_
+infixr 10 _+:_
 _+:_ : A → (Nat → A) → Nat → A
 (x +: ξ) zero = x
 (x +: ξ) (suc n) = ξ n
@@ -23,6 +23,9 @@ data Term : Set where
   $ᵈ : Term → Term → Term
   mty : Term
   abs : Term → Term
+  eq : Term → Term → Term → Term
+  refl : Term
+  J : Term → Term → Term
 
 congΠ : ∀ {A A' B B'} → A ≡ A' → B ≡ B' → Π A B ≡ Π A' B'
 congΠ refl refl = refl
@@ -33,6 +36,15 @@ invΠ refl = refl , refl
 cong$ᵈ : ∀ {b b' a a'} → b ≡ b' → a ≡ a' → $ᵈ b a ≡ $ᵈ b' a'
 cong$ᵈ refl refl = refl
 
+congeq : ∀ {A A' a a' b b'} → A ≡ A' → a ≡ a' → b ≡ b' → eq A a b ≡ eq A' a' b'
+congeq refl refl refl = refl
+
+inveq : ∀ {A A' a a' b b'} → eq A a b ≡ eq A' a' b' → A ≡ A' × a ≡ a' × b ≡ b'
+inveq refl = refl , refl , refl
+
+congJ : ∀ {d d' p p'} → d ≡ d' → p ≡ p' → J d p ≡ J d' p'
+congJ refl refl = refl
+
 {--------------------
   Lifting renamings
 ---------------------}
@@ -40,10 +52,18 @@ cong$ᵈ refl refl = refl
 lift : (Nat → Nat) → Nat → Nat
 lift ξ = 0 +: (suc ∘ ξ)
 
+lift2 : (Nat → Nat) → Nat → Nat
+lift2 ξ = lift (lift ξ)
+
 -- Lifting composes
 lift∘ : ∀ ξ ζ ρ → (∀ x → (ξ ∘ ζ) x ≡ ρ x) → ∀ x → (lift ξ ∘ lift ζ) x ≡ lift ρ x
 lift∘ ξ ζ ρ h zero = refl
 lift∘ ξ ζ ρ h (suc n) = cong suc (h n)
+
+lift2∘ : ∀ ξ ζ ρ → (∀ x → (ξ ∘ ζ) x ≡ ρ x) → ∀ x → (lift2 ξ ∘ lift2 ζ) x ≡ lift2 ρ x
+lift2∘ ξ ζ ρ h zero = refl
+lift2∘ ξ ζ ρ h (suc zero) = refl
+lift2∘ ξ ζ ρ h (suc (suc n)) = cong (suc ∘ suc) (h n)
 
 {---------------------
   Applying renamings
@@ -57,6 +77,9 @@ rename ξ (λᵈ b) = λᵈ (rename (lift ξ) b)
 rename ξ ($ᵈ b a) = $ᵈ (rename ξ b) (rename ξ a)
 rename ξ mty = mty
 rename ξ (abs b) = abs (rename ξ b)
+rename ξ (eq A a b) = eq (rename ξ A) (rename ξ a) (rename ξ b)
+rename ξ refl = refl
+rename ξ (J d p) = J (rename ξ d) (rename ξ p)
 
 -- Renamings compose
 rename∘' : ∀ ξ ζ ς → (∀ x → (ξ ∘ ζ) x ≡ ς x) → ∀ s → (rename ξ ∘ rename ζ) s ≡ rename ς s
@@ -67,6 +90,9 @@ rename∘' ξ ζ ς h (λᵈ b) = cong λᵈ (rename∘' (lift ξ) (lift ζ) (li
 rename∘' ξ ζ ς h ($ᵈ b a) = cong$ᵈ (rename∘' ξ ζ ς h b) (rename∘' ξ ζ ς h a)
 rename∘' ξ ζ ς h mty = refl
 rename∘' ξ ζ ς h (abs b) = cong abs (rename∘' ξ ζ ς h b)
+rename∘' ξ ζ ς h (eq A a b) = congeq (rename∘' ξ ζ ς h A) (rename∘' ξ ζ ς h a) (rename∘' ξ ζ ς h b)
+rename∘' ξ ζ ς h refl = refl
+rename∘' ξ ζ ς h (J d p) = congJ (rename∘' ξ ζ ς h d) (rename∘' ξ ζ ς h p)
 
 rename∘ : ∀ ξ ζ → ∀ s → (rename ξ ∘ rename ζ) s ≡ rename (ξ ∘ ζ) s
 rename∘ ξ ζ s = rename∘' ξ ζ (ξ ∘ ζ) (λ _ → refl) s
@@ -84,6 +110,10 @@ infix 30 ↑_
 ↑_ : (Nat → Term) → Nat → Term
 ↑ σ = var 0 +: (rename suc ∘ σ)
 
+infix 30 ↑↑_
+↑↑_ : (Nat → Term) → Nat → Term
+↑↑ σ = ↑ ↑ σ
+
 -- Lifting var "substitution" does nothing
 ↑id : ∀ σ → (∀ x → σ x ≡ var x) → ∀ x → (↑ σ) x ≡ var x
 ↑id σ h zero = refl
@@ -99,6 +129,11 @@ infix 30 ↑_
 ↑lift ξ σ τ h zero = refl
 ↑lift ξ σ τ h (suc n) = cong (rename suc) (h n)
 
+↑↑lift2 : ∀ ξ σ τ → (∀ x → (σ ∘ ξ) x ≡ τ x) → ∀ x → (↑↑ σ ∘ lift2 ξ) x ≡ (↑↑ τ) x
+↑↑lift2 ξ σ τ h zero = refl
+↑↑lift2 ξ σ τ h (suc zero) = refl
+↑↑lift2 ξ σ τ h (suc (suc n)) = cong (rename suc ∘ rename suc) (h n)
+
 -- Lifting commutes with renaming
 ↑rename : ∀ ξ σ τ → (∀ x → (rename ξ ∘ σ) x ≡ τ x) → ∀ x → (rename (lift ξ) ∘ ↑ σ) x ≡ (↑ τ) x
 ↑rename ξ σ τ h zero = refl
@@ -109,6 +144,19 @@ infix 30 ↑_
   (rename suc ∘ rename ξ) (σ n)        ≡⟨⟩
   rename suc ((rename ξ ∘ σ) n)        ≡⟨ cong (rename suc) (h n) ⟩
   rename suc (τ n) ∎
+
+↑↑rename : ∀ ξ σ τ → (∀ x → (rename ξ ∘ σ) x ≡ τ x) → ∀ x → (rename (lift2 ξ) ∘ ↑↑ σ) x ≡ (↑↑ τ) x
+↑↑rename ξ σ τ h zero = refl
+↑↑rename ξ σ τ h (suc zero) = refl
+↑↑rename ξ σ τ h (suc (suc n)) = begin
+  (rename (lift2 ξ) ∘ rename suc ∘ rename suc) (σ n) ≡⟨ rename∘ (lift2 ξ) suc (rename suc (σ n)) ⟩
+  (rename (lift2 ξ ∘ suc) ∘ rename suc) (σ n)        ≡⟨ rename∘ (lift2 ξ ∘ suc) suc (σ n) ⟩
+  rename (lift2 ξ ∘ suc ∘ suc) (σ n)                 ≡⟨⟩
+  (rename (suc ∘ suc ∘ ξ)) (σ n)                     ≡⟨ sym (rename∘ (suc ∘ suc) ξ (σ n)) ⟩
+  (rename (suc ∘ suc) ∘ rename ξ) (σ n)              ≡⟨⟩
+  rename (suc ∘ suc) ((rename ξ ∘ σ) n)              ≡⟨ cong (rename (suc ∘ suc)) (h n) ⟩
+  rename (suc ∘ suc) (τ n)                           ≡⟨ sym (rename∘ suc suc (τ n)) ⟩
+  (rename suc ∘ rename suc) (τ n) ∎
 
 {-------------------------
   Applying substitutions
@@ -122,6 +170,9 @@ subst σ (λᵈ b) = λᵈ (subst (↑ σ) b)
 subst σ ($ᵈ b a) = $ᵈ (subst σ b) (subst σ a)
 subst σ mty = mty
 subst σ (abs b) = abs (subst σ b)
+subst σ (eq A a b) = eq (subst σ A) (subst σ a) (subst σ b)
+subst σ refl = refl
+subst σ (J d p) = J (subst σ d) (subst σ p)
 
 -- Substitution extensionality
 substExt : ∀ σ τ → (∀ x → σ x ≡ τ x) → ∀ s → subst σ s ≡ subst τ s
@@ -132,6 +183,9 @@ substExt σ τ h (λᵈ b) = cong λᵈ (substExt (↑ σ) (↑ τ) (↑ext σ �
 substExt σ τ h ($ᵈ b a) = cong$ᵈ (substExt σ τ h b) (substExt σ τ h a)
 substExt σ τ h mty = refl
 substExt σ τ h (abs b) = cong abs (substExt σ τ h b)
+substExt σ τ h (eq A a b) = congeq (substExt σ τ h A) (substExt σ τ h a) (substExt σ τ h b)
+substExt σ τ h refl = refl
+substExt σ τ h (J d p) = congJ (substExt σ τ h d) (substExt σ τ h p)
 
 -- Applying var "substitution" does nothing
 substId' : ∀ σ → (∀ x → σ x ≡ var x) → ∀ s → subst σ s ≡ s
@@ -142,6 +196,9 @@ substId' σ h (λᵈ b) = cong λᵈ (substId' (↑ σ) (↑id σ h) b)
 substId' σ h ($ᵈ b a) = cong$ᵈ (substId' σ h b) (substId' σ h a)
 substId' σ h mty = refl
 substId' σ h (abs b) = cong abs (substId' σ h b)
+substId' σ h (eq A a b) = congeq (substId' σ h A) (substId' σ h a) (substId' σ h b)
+substId' σ h refl = refl
+substId' σ h (J d p) = congJ (substId' σ h d) (substId' σ h p)
 
 -- Substitution/renaming compositionality
 substRename' : ∀ ξ (σ τ : Nat → Term) → (∀ x → (σ ∘ ξ) x ≡ τ x) → ∀ s → subst σ (rename ξ s) ≡ subst τ s
@@ -152,6 +209,9 @@ substRename' ξ σ τ h (λᵈ b) = cong λᵈ (substRename' (lift ξ) (↑ σ) 
 substRename' ξ σ τ h ($ᵈ b a) = cong$ᵈ (substRename' ξ σ τ h b) (substRename' ξ σ τ h a)
 substRename' ξ σ τ h mty = refl
 substRename' ξ σ τ h (abs b) = cong abs (substRename' ξ σ τ h b)
+substRename' ξ σ τ h (eq A a b) = congeq (substRename' ξ σ τ h A) (substRename' ξ σ τ h a) (substRename' ξ σ τ h b)
+substRename' ξ σ τ h refl = refl
+substRename' ξ σ τ h (J d p) = congJ (substRename' ξ σ τ h d) (substRename' ξ σ τ h p)
 
 -- Renaming/substitution compositionality
 renameSubst' : ∀ ξ σ τ → (∀ x → (rename ξ ∘ σ) x ≡ τ x) → ∀ s → rename ξ (subst σ s) ≡ subst τ s
@@ -162,6 +222,9 @@ renameSubst' ξ σ τ h (λᵈ b) = cong λᵈ (renameSubst' (lift ξ) (↑ σ) 
 renameSubst' ξ σ τ h ($ᵈ b a) = cong$ᵈ (renameSubst' ξ σ τ h b) (renameSubst' ξ σ τ h a)
 renameSubst' ξ σ τ h mty = refl
 renameSubst' ξ σ τ h (abs b) = cong abs (renameSubst' ξ σ τ h b)
+renameSubst' ξ σ τ h (eq A a b) = congeq (renameSubst' ξ σ τ h A) (renameSubst' ξ σ τ h a) (renameSubst' ξ σ τ h b)
+renameSubst' ξ σ τ h refl = refl
+renameSubst' ξ σ τ h (J d p) = congJ (renameSubst' ξ σ τ h d) (renameSubst' ξ σ τ h p)
 
 -- Lifting commutes with substitution
 ↑subst : ∀ ρ σ τ → (∀ x → (subst ρ ∘ σ) x ≡ τ x) → ∀ x → (subst (↑ ρ) ∘ (↑ σ)) x ≡ (↑ τ) x
@@ -174,6 +237,22 @@ renameSubst' ξ σ τ h (abs b) = cong abs (renameSubst' ξ σ τ h b)
   rename suc (subst ρ (σ n))       ≡⟨ cong (rename suc) (h n) ⟩
   rename suc (τ n) ∎
 
+↑↑subst : ∀ ρ σ τ → (∀ x → (subst ρ ∘ σ) x ≡ τ x) → ∀ x → (subst (↑↑ ρ) ∘ (↑↑ σ)) x ≡ (↑↑ τ) x
+↑↑subst ρ σ τ h zero = refl
+↑↑subst ρ σ τ h (suc zero) = refl
+↑↑subst ρ σ τ h (suc (suc n)) = begin
+  (subst (↑↑ ρ) ∘ rename suc ∘ rename suc) (σ n) ≡⟨ substRename' suc (↑↑ ρ) (↑↑ ρ ∘ suc) (λ _ → refl) (rename suc (σ n)) ⟩
+  (subst (↑↑ ρ ∘ suc) ∘ rename suc) (σ n)        ≡⟨ substRename' suc (↑↑ ρ ∘ suc) (↑↑ ρ ∘ suc ∘ suc) (λ _ → refl) (σ n) ⟩
+  subst (↑↑ ρ ∘ suc ∘ suc) (σ n)                 ≡⟨⟩
+  subst (rename suc ∘ rename suc ∘ ρ) (σ n)      ≡⟨ sym (renameSubst' suc (rename suc ∘ ρ)
+                                                                      (rename suc ∘ rename suc ∘ ρ)
+                                                                      (λ _ → refl) (σ n)) ⟩
+  (rename suc ∘ subst (rename suc ∘ ρ)) (σ n)    ≡⟨ cong (rename suc)
+                                                         (sym (renameSubst' suc ρ (rename suc ∘ ρ) (λ _ → refl) (σ n))) ⟩
+  (rename suc ∘ rename suc ∘ subst ρ) (σ n)      ≡⟨⟩
+  (rename suc ∘ rename suc) (subst ρ (σ n))      ≡⟨ cong (rename suc ∘ rename suc) (h n) ⟩
+  (rename suc ∘ rename suc) (τ n) ∎
+
 -- Substitution compositionality
 subst∘' : ∀ ρ σ τ → (∀ x → (subst ρ ∘ σ) x ≡ τ x) → ∀ s → (subst ρ ∘ subst σ) s ≡ subst τ s
 subst∘' ρ σ τ h (var s) = h s
@@ -183,6 +262,9 @@ subst∘' ρ σ τ h (λᵈ b) = cong λᵈ (subst∘' (↑ ρ) (↑ σ) (↑ τ
 subst∘' ρ σ τ h ($ᵈ b a) = cong$ᵈ (subst∘' ρ σ τ h b) (subst∘' ρ σ τ h a)
 subst∘' ρ σ τ h mty = refl
 subst∘' ρ σ τ h (abs b) = cong abs (subst∘' ρ σ τ h b)
+subst∘' ρ σ τ h (eq A a b) = congeq (subst∘' ρ σ τ h A) (subst∘' ρ σ τ h a) (subst∘' ρ σ τ h b)
+subst∘' ρ σ τ h refl = refl
+subst∘' ρ σ τ h (J d p) = congJ (subst∘' ρ σ τ h d) (subst∘' ρ σ τ h p)
 
 {------------------------------------------------
   Substitution & renaming lemmas, extensionally
@@ -233,7 +315,7 @@ substDist σ a s = begin
 {--------------------------
   Contexts and membership
 --------------------------}
-infix 30 _∷_
+infixl 30 _∷_
 data Ctxt : Set where
   ∙ : Ctxt
   _∷_ : Ctxt → Term → Ctxt

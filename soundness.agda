@@ -27,7 +27,7 @@ soundVar {σ} (∷̂  _ w) (emV , elU) (here {A = A}) =
       k , acc , u = w (σ ∘ suc) emV
   in k , acc , transp (U k acc) (sym p) u ,
      ≡-el acc u (sym p) elU
-soundVar {σ} (∷̂  v _) (emV , _) (there {x = x} {A = A} where?) =
+soundVar {σ} (∷̂  v _) (emV , _) (there {A = A} where?) =
   let k , acc , u , elU = soundVar v emV where?
       p : subst σ (rename suc A) ≡ subst (σ ∘ suc) A
       p = substRename suc σ A

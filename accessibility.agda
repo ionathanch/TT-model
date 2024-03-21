@@ -16,15 +16,14 @@ record Acc (k : Level) : Set where
 open Acc
 
 module ext where
-  private
-    postulate
-      funext' : ∀ {ℓ ℓ'} {A : Set ℓ} {B : A → Set ℓ'} →
-        {f g : ∀ {x} → B x} → (∀ x → f {x} ≡ g {x}) → (λ {x} → f {x}) ≡ (λ {x} → g {x})
-      funext : ∀ {ℓ ℓ'} {A : Set ℓ} {B : A → Set ℓ'} →
-        {f g : ∀ x → B x} → (∀ x → f x ≡ g x) → f ≡ g
+  postulate
+    funext' : ∀ {ℓ ℓ'} {A : Set ℓ} {B : A → Set ℓ'} →
+      {f g : ∀ {x} → B x} → (∀ x → f {x} ≡ g {x}) → (λ {x} → f {x}) ≡ (λ {x} → g {x})
+    funext : ∀ {ℓ ℓ'} {A : Set ℓ} {B : A → Set ℓ'} →
+      {f g : ∀ x → B x} → (∀ x → f x ≡ g x) → f ≡ g
 
-    funext-β : ∀ {ℓ ℓ' A B f} → funext {f = f} (λ _ → refl) ≡ refl
-    funext-β {ℓ} {ℓ'} {A} {B} {f} with refl ← funext {ℓ} {ℓ'} {A} {B} {f} (λ _ → refl) = refl
+  funext-β : ∀ {ℓ ℓ' A B f} → funext {f = f} (λ _ → refl) ≡ refl
+  funext-β {ℓ} {ℓ'} {A} {B} {f} with refl ← funext {ℓ} {ℓ'} {A} {B} {f} (λ _ → refl) = refl
 
   {-# REWRITE funext-β #-}
 
