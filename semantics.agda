@@ -23,11 +23,16 @@ data U' k U< where
   Π̂ : ∀ a → (A : U' k U< a) →
       ∀ b → (∀ x → el' k U< x A → U' k U< (subst (x +: var) b)) →
       U' k U< (Π a b)
+  êq : ∀ c → (C : U' k U< c) →
+       ∀ a → el' k U< a C →
+       ∀ b → el' k U< b C →
+       U' k U< (eq c a b)
   ⇒̂  : ∀ a b → a ⇒ b → U' k U< b → U' k U< a
 
 el' k U< T (Û j j<k) = U< j<k T
 el' k U< _ ⊥̂  = ⊥
 el' k U< f (Π̂ _ A _ B) = ∀ x → (a : el' k U< x A) → el' k U< ($ᵈ f x) (B x a)
+el' k U< p (êq _ _ a _ b _) = p ⇒⋆ refl × a ⇔ b
 el' k U< x (⇒̂  a b a⇒b A) = el' k U< x A
 
 -- U' k and el' k are parametrized by U< j, where j < k;
@@ -82,6 +87,10 @@ cumU accj acck j<k (Π̂ a A b B) =
     b (λ x a →
          let p = cumEl accj acck j<k A
          in cumU accj acck j<k (B x (coe (sym p) a)))
+cumU accj acck j<k (êq c C a A b B) =
+  let qa = cumEl accj acck j<k C
+      qb = cumEl accj acck j<k C
+  in êq c (cumU accj acck j<k C) a (coe qa A) b (coe qb B)
 cumU accj acck j<k (⇒̂  a b a⇒b B) = ⇒̂  a b a⇒b (cumU accj acck j<k B)
 
 cumEl (acc< f) (acc< g) j<k (Û i i<j) = accU≡ (f i<j) (g (trans< i<j j<k))
@@ -94,6 +103,7 @@ cumEl accj@(acc< _) acck@(acc< _) j<k {t = t} (Π̂ a A b B) =
       let B' = λ a → cumU accj acck j<k (B x a)
           q = cumEl accj acck j<k (B x a)
       in trans q (cong (λ a → el' _ _ _ (B' a)) (sym (coe-β p a)))))
+cumEl accj@(acc< _) acck@(acc< _) j<k (êq _ _ _ _ _ _) = refl
 cumEl accj@(acc< _) acck@(acc< _) j<k (⇒̂  a b a⇒b B) = cumEl accj acck j<k B
 
 {-------------------------------------------------------
@@ -117,6 +127,9 @@ el≡' acc₁ acc₂ (Π̂ a₁ A₁ b₁ B₁) (Π̂ a₂ A₂ b₂ B₂) Πab�
     let ela≡ = el≡' acc₁ acc₂ A₁ A₂ a₁⇔a₂ in
     piext ela≡ (λ a →
       el≡' acc₁ acc₂ (B₁ x a) (B₂ x (coe ela≡ a)) (⇔-cong ⇔-refl b₁⇔b₂)))
+el≡' acc₁ acc₂ (êq c₁ C₁ a₁ A₁ b₁ B₁) (êq c₂ C₂ a₂ A₂ b₂ B₂) eq⇔eq =
+  let A₁⇔A₂ , a₁⇔a₂ , b₁⇔b₂ = ⇔-eq-inv eq⇔eq
+  in {!   !} -- cong₂ {!   !} {!   !} {!   !}
 el≡' acc₁ acc₂ (⇒̂  a₁ a₂ a₁⇒a₂ u₁) u₂ a₁⇔a₃ =
   el≡' acc₁ acc₂ u₁ u₂ (⇔-trans (⇔-sym (⇒-⇔ a₁⇒a₂)) a₁⇔a₃)
 el≡' acc₁ acc₂ u₁ (⇒̂  a₂ a₃ a₂⇒a₃ u₂) a₁⇔a₂ =
@@ -212,15 +225,62 @@ invΠ-el acc (⇒̂  (Π a b) (Π a' b') (⇒-Π a⇒a' b⇒b') u) = invΠ-el ac
 ---------------------------------}
 
 SRU  : ∀ {k} (acc : Acc k) {a b} → a ⇒ b → U k acc a → U k acc b
-SRU acc (⇒-𝒰 _) (Û _ j<k) = Û _ j<k
-SRU acc ⇒-mty ⊥̂ = ⊥̂
-SRU acc (⇒-Π {a' = a'} {b' = b'} a⇒a' b⇒b') (Π̂ a A b B) =
-  Π̂ a' (SRU acc a⇒a' A)
-    b' (λ x elA → SRU acc (⇒-cong (⇒-refl x) b⇒b')
-          (B x (⇔-el acc (SRU acc a⇒a' A) A (⇔-sym (⇒-⇔ a⇒a')) elA)))
+SRel : ∀ {k} (acc : Acc k) {a b t} (a⇒b : a ⇒ b) (u : U k acc a) → el k acc t u ↔ el k acc t (SRU acc a⇒b u)
+
 SRU acc {b = b} a⇒b (⇒̂  a c a⇒c C) =
   let d , b⇒d , c⇒d = diamond a⇒b a⇒c
   in ⇒̂  b d b⇒d (SRU acc c⇒d C)
+SRU acc (⇒-𝒰 _) (Û _ j<k) = Û _ j<k
+SRU acc ⇒-mty ⊥̂ = ⊥̂
+SRU acc (⇒-Π a⇒a' b⇒b') (Π̂ _ A _ B) =
+  Π̂ _ (SRU acc a⇒a' A)
+    _ (λ x elA → SRU acc (⇒-cong (⇒-refl x) b⇒b')
+         let _ , g , _ , _ = SRel acc a⇒a' A
+         in (B x (g elA)))
+SRU acc (⇒-eq {a' = a'} {b' = b'} A⇒A' a⇒a' b⇒b') (êq _ C _ A _ B) =
+  let fA , _ , _ , _ = SRel acc A⇒A' C
+      fB , _ , _ , _ = SRel acc A⇒A' C
+  in êq _ (SRU acc A⇒A' C) a' (fA {!   !}) b' (fB {!   !})
+
+SRel acc {b = b} a⇒b (⇒̂  a c a⇒c C) =
+  let d , b⇒d , c⇒d = diamond a⇒b a⇒c
+  in SRel acc c⇒d C
+SRel acc (⇒-𝒰 _) (Û _ j<k) = id , id , (λ _ → refl) , (λ _ → refl)
+SRel acc ⇒-mty ⊥̂ = id , id , (λ _ → refl) , (λ _ → refl)
+SRel acc (⇒-Π a⇒a' b⇒b') (Π̂ a A b B) =
+  (λ elB x elA →
+     let _ , gA , _ , _ = SRel acc a⇒a' A
+         fB , _ , _ , _ = SRel acc (⇒-cong (⇒-refl x) b⇒b') (B x (gA elA))
+     in fB (elB x (gA elA))) ,
+  (λ elB x elA →
+     let fA , _ , _ , gfA = SRel acc a⇒a' A
+         _ , gB , _ , _   = SRel acc (⇒-cong (⇒-refl x) b⇒b') (B x elA)
+         elB' = elB x (fA elA)
+     in gB (transp (λ elA → el _ acc _ (SRU acc _ (B x elA))) (gfA elA) elB')) ,
+  (λ elB →
+     let open ext
+     in funext (λ x → funext (λ elA →
+        let fA , gA , fgA , gfA = SRel acc a⇒a' A
+            fB , gB , fgB , gfB = SRel acc (⇒-cong (⇒-refl x) b⇒b') (B x (gA elA))
+            gfgg : gA (fA (gA elA)) ≡ gA elA
+            gfgg = gfA (gA elA)
+            gg : ∀ {elA'} (p : fA (gA elA) ≡ elA') → gA elA' ≡ gA elA
+            gg p = transp (λ elA' → gA elA' ≡ gA elA) p gfgg
+        in begin
+           fB (gB _)                           ≡⟨ fgB _ ⟩
+           transp _ gfgg (elB x (fA (gA elA))) ≡⟨ congd (λ elA'' p → transp _ (gg p) (elB x elA'')) (fgA elA) ⟩
+           transp _ (gg (fgA elA)) (elB x elA) ≡⟨ transpK _ _ {!   !} ⟩
+           elB x elA ∎))) ,
+  {!   !}
+  {-
+  let open ext in
+  piext refl (λ x →
+    let p = SRel acc a⇒a' A in
+    piext p (λ elA →
+      trans (SRel acc (⇒-cong (⇒-refl x) b⇒b') (B x elA))
+            (cong (λ elA → el _ acc _ (SRU acc (⇒-cong (⇒-refl x) b⇒b') (B x elA)))
+                  (sym (coe-β p elA))))) -}
+SRel acc (⇒-eq A⇒A' a⇒a' b⇒b') (êq c C a A b B) = {!   !} , {!   !} , {!   !} , {!   !}
 
 SRU⋆ : ∀ {k a b} acc → a ⇒⋆ b → U k acc a → U k acc b
 SRU⋆ acc (⇒⋆-refl a) u = SRU acc (⇒-refl a) u
