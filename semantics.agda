@@ -288,10 +288,10 @@ inveq-el acc (⇒̂  (eq c a b) (eq c' a' b') (⇒-eq c⇒c' a⇒a' b⇒b') u) p
   let p⇒⋆refl , a'⇔b' = inveq-el acc u p elp
   in p⇒⋆refl , ⇔-trans (⇔-trans (⇒-⇔ a⇒a') a'⇔b') (⇔-sym (⇒-⇔ b⇒b'))
 
-{-----------------------------------------
+{--------------------------------------
   Semantic well-formedness:
-    σ ∈ ⟦Γ⟧ = x ⦂ A # k ∈ Γ → σ x ∈ ⟦A⟧ₖ
------------------------------------------}
+  σ ∈ ⟦Γ⟧ = x ⦂ A ∈ Γ → σ x ∈ ⟦A{σ}⟧ₖ
+--------------------------------------}
 
 data V : Ctxt → Set
 em : ∀ (σ : Nat → Term) {Γ} → V Γ → Set

@@ -1,21 +1,96 @@
 # Mechanization of consistency
 
-This mechanization has been checked with Agda 2.6.4.3 using agda-stdlib 2.0.
+This is a mechanization of a minimal type theory with universes,
+based on @yiyunliu's [mltt-consistency](https://github.com/yiyunliu/mltt-consistency)
+proof written in Rocq.
+It has been checked with Agda 2.6.4.3 using agda-stdlib 2.0.
 The top-level file can be checked by `agda consistency.agda`.
+
+## Type Theory
+
+The object theory is a type theory with universes à la Russell,
+dependent functions, an empty type, equality types,
+and untyped conversion.
+The below is an overview of the typing and conversion rules with variable names,
+although the mechanization uses de Bruijn indexing.
+
+```
+                Γ ⊢ B : 𝒰 k
+x : A ∈ Γ    Γ ⊢ a : A    A ≈ B       ⊢ Γ    j < k
+---------    ------------------    -------------------
+Γ ⊢ x : A        Γ ⊢ a : B         Γ ⊢ 𝒰 j : Γ ⊢ 𝒰 k
+
+    Γ ⊢ A : 𝒰 k            Γ ⊢ Πx : A. B           Γ ⊢ b : Πx: A. B
+Γ, x : A ⊢ B : 𝒰 k        Γ, x : A ⊢ b : B            Γ ⊢ a : A
+--------------------    ----------------------    -------------------
+Γ ⊢ Πx : A. B : 𝒰 k     Γ ⊢ λx. b : Πx : A. B     Γ ⊢ b a : B{x ↦ a}
+
+    ⊢ Γ         Γ ⊢ A : 𝒰 k    Γ ⊢ b : ⊥
+------------    -------------------------
+Γ ⊢ ⊥ : 𝒰 k          Γ ⊢ abs b : A
+                                                           Γ ⊢ p : eq A a b
+     Γ ⊢ A : 𝒰 k                                  Γ, y : A, q : eq A a y ⊢ B : 𝒰 k
+Γ ⊢ a : A    Γ ⊢ b : A         Γ ⊢ a : A              Γ ⊢ d : B{y ↦ a, q ↦ refl}
+----------------------    --------------------    ----------------------------------
+  Γ ⊢ eq A a b : 𝒰 k      Γ ⊢ refl : eq A a a        Γ ⊢ J d p : B{y ↦ b, q ↦ p}
+
+--------------------    ------------    + reflexivity,  symmetry,
+(λx. b) a ⇔ b{x ↦ a}    J d refl ⇔ d      transitivity, congruence
+```
+
+## Logical Relation
+
+The semantic model of the type theory is a logical relation
+split into an inductive and a recursive part:
+the inductive part defines the interpretation of universes,
+while the recursive part defines the interpretation of types.
+Both are parametrized over a universe level,
+an accessibility proof of that level,
+and an abstract interpretation of universe for all lower levels.
+The top-level interpretations at a given accessible level
+is defined by well-founded induction using the parametrized interpretations.
+Below is a simplified sketch of the logical relation,
+omitting these accessibility details.
+There is also an inductive–recursive interpretation of contexts as predicates on substitutions,
+but its conceptual meaning is given below informally.
+
+```
+j < k               A ⇒ B    ⟦B⟧ₖ
+------    -----    --------------
+⟦𝒰 j⟧ₖ    ⟦⊥⟧ₖ          ⟦A⟧ₖ
+
+ ⟦A⟧ₖ    ∀a ∈ ⟦A⟧ₖ. ⟦B{x ↦ a}⟧ₖ
+-------------------------------
+         ⟦Πx : A. B⟧ₖ
+
+⟦A⟧ₖ    a ∈ ⟦A⟧ₖ    b ∈ ⟦A⟧ₖ
+----------------------------
+        ⟦eq A a b⟧ₖ
+
+A ∈ ⟦𝒰 j⟧ₖ       = ⟦A⟧ⱼ
+b ∉ ⟦⊥⟧ₖ
+f ∈ ⟦Πx : A. B⟧ₖ = ∀a ∈ ⟦A⟧ₖ. f a ∈ ⟦B{x ↦ a}⟧ₖ
+p ∈ ⟦eq A a b⟧ₖ  = p ⇒⋆ refl ∧ a ⇔ b
+x ∈ ⟦A⟧ₖ         = x ∈ ⟦B⟧ₖ    (where A ⇒ B)
+
+σ ∈ ⟦Γ⟧ = x : A ∈ Γ → σ(x) ∈ ⟦A{σ}⟧ₖ
+```
 
 ## Axioms
 
 The only axiom used is function extensionality,
-which is located in the `accext` module of `accessibility.agda`
+which is located in the `ext` module of `accessibility.agda`
 as private postulates (one for an implicit and one for an explicit domain).
-Function extensionality is only used to prove
-mere propositionality of the accessibility predicate,
-which in turn is only used to prove `accU` in `semantics.agda`.
+Function extensionality is used to prove two extensional principles:
+* mere propositionality of the accessibility predicate,
+  which is used to prove `accU≡` in `semantics.agda`; and
+* congruence of dependent function types,
+  which is needed to prove cumulativity of the logical relation in `semantics.agda`.
 
 ## Contents
 
 Most of the modules are parametrized over an abstract `Level`
-and its strict transitive order,
+and its strict transitive order with all strict upper bounds,
 only to be instantiated at the very end by the naturals.
 
 * `common.agda`: Reëxports all the necessary agda-stdlib modules,
@@ -34,19 +109,21 @@ only to be instantiated at the very end by the naturals.
 ## Statistics
 
 ```
-github.com/AlDanial/cloc v 1.98  T=0.01 s (654.7 files/s, 88706.0 lines/s)
---------------------------------------------------------------------------------
-File                              blank        comment           code
---------------------------------------------------------------------------------
-reduction.agda                       46             11            223
-syntactics.agda                      42             21            181
-semantics.agda                       38             20            178
-typing.agda                          14             20            117
-soundness.agda                        3              0             78
-consistency.agda                     12              2             44
-accessibility.agda                    4              0             18
-common.agda                           1              0             11
---------------------------------------------------------------------------------
-SUM:                                160             74            850
---------------------------------------------------------------------------------
+$ cloc --include-lang=Agda --exclude-content=model --by-file .
+
+github.com/AlDanial/cloc v 1.98  T=0.02 s (506.7 files/s, 92854.9 lines/s)
+----------------------------------------------------------------------------------
+File                                blank        comment           code
+----------------------------------------------------------------------------------
+./reduction.agda                       62             14            328
+./syntactics.agda                      49             22            239
+./semantics.agda                       49             24            234
+./typing.agda                          13             26            135
+./soundness.agda                        4              0            110
+./consistency.agda                     25              4             75
+./accessibility.agda                    9              0             26
+./common.agda                           3              0             15
+----------------------------------------------------------------------------------
+SUM:                                  214             90           1162
+----------------------------------------------------------------------------------
 ```
