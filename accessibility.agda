@@ -16,7 +16,7 @@ record Acc (k : Level) : Set where
 open Acc
 
 module ext where
-  postulate
+  private postulate
     funext' : ∀ {ℓ ℓ'} {A : Set ℓ} {B : A → Set ℓ'} →
       {f g : ∀ {x} → B x} → (∀ x → f {x} ≡ g {x}) → (λ {x} → f {x}) ≡ (λ {x} → g {x})
     funext : ∀ {ℓ ℓ'} {A : Set ℓ} {B : A → Set ℓ'} →

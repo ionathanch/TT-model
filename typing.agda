@@ -161,8 +161,6 @@ data _⊢_⦂_ Γ where
           -------------------
           Γ ⊢ refl ⦂ eq A a a
   ⊢J    : ∀ {A a b p d B k} →
-          Γ ⊢ a ⦂ A →
-          Γ ⊢ b ⦂ A →
           Γ ⊢ p ⦂ eq A a b →
           Γ ∷ A ∷ eq (rename suc A) (rename suc a) (var 0) ⊢ B ⦂ 𝒰 k →
           Γ ⊢ d ⦂ subst (refl +: a +: var) B →

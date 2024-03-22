@@ -108,6 +108,11 @@ data _⇒_ : Term → Term → Set where
 ⇒-cong : ∀ {a a' b b'} → a ⇒ a' → b ⇒ b' → subst (a +: var) b ⇒ subst (a' +: var) b'
 ⇒-cong {a} {a'} a⇒a' b⇒b' = ⇒-morphing (a +: var) (a' +: var) (λ {zero → a⇒a' ; (suc n) → ⇒-var n}) b⇒b'
 
+⇒-cong₂ : ∀ {a a' b b'} c → a ⇒ a' → b ⇒ b' → subst (a +: b +: var) c ⇒ subst (a' +: b' +: var) c
+⇒-cong₂ {a} {a'} {b} {b'} c a⇒a' b⇒b' =
+  ⇒-morphing (a +: b +: var) (a' +: b' +: var)
+    (λ {zero → a⇒a' ; (suc zero) → b⇒b' ; (suc (suc n)) → ⇒-var n}) (⇒-refl c)
+
 {--------------------------------
   Reflexive, transitive closure
   of parallel reduction
@@ -137,6 +142,12 @@ data _⇒⋆_ : Term → Term → Set where
 ⇒⋆-cong (⇒⋆-refl a) (⇒⋆-trans b⇒c c⇒⋆d) = ⇒⋆-trans (⇒-cong (⇒-refl a) b⇒c) (⇒⋆-cong (⇒⋆-refl a) c⇒⋆d)
 ⇒⋆-cong (⇒⋆-trans a⇒b b⇒⋆c) (⇒⋆-refl d) = ⇒⋆-trans (⇒-cong a⇒b (⇒-refl d)) (⇒⋆-cong b⇒⋆c (⇒⋆-refl d))
 ⇒⋆-cong (⇒⋆-trans a⇒b b⇒⋆c) (⇒⋆-trans d⇒e e⇒⋆f) = ⇒⋆-trans (⇒-cong a⇒b d⇒e) (⇒⋆-cong b⇒⋆c e⇒⋆f)
+
+⇒⋆-cong₂ : ∀ {a a' b b'} c → a ⇒⋆ a' → b ⇒⋆ b' → subst (a +: b +: var) c ⇒⋆ subst (a' +: b' +: var) c
+⇒⋆-cong₂ x (⇒⋆-refl a) (⇒⋆-refl b) = ⇒⋆-refl (subst (a +: b +: var) x)
+⇒⋆-cong₂ x (⇒⋆-refl a) (⇒⋆-trans b⇒c c⇒⋆d) = ⇒⋆-trans (⇒-cong₂ x (⇒-refl a) b⇒c) (⇒⋆-cong₂ x (⇒⋆-refl a) c⇒⋆d)
+⇒⋆-cong₂ x (⇒⋆-trans a⇒b b⇒⋆c) (⇒⋆-refl d) = ⇒⋆-trans (⇒-cong₂ x a⇒b (⇒-refl d)) (⇒⋆-cong₂ x b⇒⋆c (⇒⋆-refl d))
+⇒⋆-cong₂ x (⇒⋆-trans a⇒b b⇒⋆c) (⇒⋆-trans d⇒e e⇒⋆f) = ⇒⋆-trans (⇒-cong₂ x a⇒b d⇒e) (⇒⋆-cong₂ x b⇒⋆c e⇒⋆f)
 
 ⇒⋆-Π : ∀ {a a' b b'} → a ⇒⋆ a' → b ⇒⋆ b' → Π a b ⇒⋆ Π a' b'
 ⇒⋆-Π (⇒⋆-refl a) (⇒⋆-refl b) = ⇒⋆-refl (Π a b)
@@ -194,9 +205,16 @@ data _⇒⋆_ : Term → Term → Set where
   let A'' , a'' , b'' , p , A'⇒⋆A'' , a'⇒⋆a'' , b'⇒⋆b'' = ⇒⋆-eq-inv eq'⇒⋆c
   in A'' , a'' , b'' , p , ⇒⋆-trans A⇒A' A'⇒⋆A'' , ⇒⋆-trans a⇒a' a'⇒⋆a'' , ⇒⋆-trans b⇒b' b'⇒⋆b''
 
+⇒⋆-refl-inv : ∀ {p} → refl ⇒⋆ p → p ≡ refl
+⇒⋆-refl-inv (⇒⋆-refl refl) = refl
+⇒⋆-refl-inv (⇒⋆-trans ⇒-rfl refl⇒⋆p) = ⇒⋆-refl-inv refl⇒⋆p
+
 ⇒⋆-β : ∀ σ b a → ($ᵈ (λᵈ (subst (↑ σ) b)) a) ⇒⋆ (subst (a +: σ) b)
 ⇒⋆-β σ b a = ⇒⋆-trans (⇒-β (⇒-refl _) (⇒-refl _))
                       (transp (_⇒⋆ subst (a +: σ) b) (substUnion σ a b) (⇒⋆-refl _))
+
+⇒⋆-ι : ∀ d → J d refl ⇒⋆ d
+⇒⋆-ι d = ⇒-⇒⋆ (⇒-ι (⇒-refl d))
 
 {----------------------------------
   Confluence via diamond property
@@ -332,20 +350,32 @@ a ⇔ b = ∃[ c ] a ⇒⋆ c × b ⇒⋆ c
 ⇔-J : ∀ {dₗ dᵣ pₗ pᵣ} → dₗ ⇔ dᵣ → pₗ ⇔ pᵣ → J dₗ pₗ ⇔ J dᵣ pᵣ
 ⇔-J (d , dₗ⇒⋆d , dᵣ⇒⋆d) (p , pₗ⇒⋆p , pᵣ⇒⋆p) = J d p , ⇒⋆-J dₗ⇒⋆d pₗ⇒⋆p , ⇒⋆-J dᵣ⇒⋆d pᵣ⇒⋆p
 
-⇎⋆-𝒰mty : ∀ {k} → 𝒰 k ⇔ mty → ⊥
-⇎⋆-𝒰mty (b , 𝒰⇒⋆b , mty⇒⋆b) with ⇒⋆-𝒰-inv 𝒰⇒⋆b | ⇒⋆-mty-inv mty⇒⋆b
+⇎-𝒰mty : ∀ {k} → 𝒰 k ⇔ mty → ⊥
+⇎-𝒰mty (_ , 𝒰⇒⋆b , mty⇒⋆b) with ⇒⋆-𝒰-inv 𝒰⇒⋆b | ⇒⋆-mty-inv mty⇒⋆b
 ... | refl | ()
 
-⇎⋆-𝒰Π : ∀ {k a b} → 𝒰 k ⇔ Π a b → ⊥
-⇎⋆-𝒰Π (b , 𝒰⇒⋆b , Π⇒⋆b) with ⇒⋆-𝒰-inv 𝒰⇒⋆b | ⇒⋆-Π-inv Π⇒⋆b
+⇎-𝒰Π : ∀ {k a b} → 𝒰 k ⇔ Π a b → ⊥
+⇎-𝒰Π (_ , 𝒰⇒⋆b , Π⇒⋆b) with ⇒⋆-𝒰-inv 𝒰⇒⋆b | ⇒⋆-Π-inv Π⇒⋆b
 ... | refl | ()
 
-⇎⋆-mtyΠ : ∀ {a b} → mty ⇔ Π a b → ⊥
-⇎⋆-mtyΠ (b , mty⇒⋆b , Π⇒⋆b) with ⇒⋆-mty-inv mty⇒⋆b | ⇒⋆-Π-inv Π⇒⋆b
+⇎-mtyΠ : ∀ {a b} → mty ⇔ Π a b → ⊥
+⇎-mtyΠ (_ , mty⇒⋆b , Π⇒⋆b) with ⇒⋆-mty-inv mty⇒⋆b | ⇒⋆-Π-inv Π⇒⋆b
 ... | refl | ()
+
+⇎-𝒰eq : ∀ {k A a b} → 𝒰 k ⇔ eq A a b → ⊥
+⇎-𝒰eq (_ , 𝒰⇒⋆b , eq⇒⋆b) with ⇒⋆-𝒰-inv 𝒰⇒⋆b | ⇒⋆-eq-inv eq⇒⋆b
+... | refl | ()
+
+⇎-mtyeq : ∀ {A a b} → mty ⇔ eq A a b → ⊥
+⇎-mtyeq (_ , mty⇒⋆b , eq⇒⋆b) with ⇒⋆-mty-inv mty⇒⋆b | ⇒⋆-eq-inv eq⇒⋆b
+... | refl | ()
+
+⇎-Πeq : ∀ {a b C d e} → Π a b ⇔ eq C d e → ⊥
+⇎-Πeq (_ , Π⇒⋆b , eq⇒⋆b) with ⇒⋆-Π-inv Π⇒⋆b | ⇒⋆-eq-inv eq⇒⋆b
+... | _ , _ , refl , _ | ()
 
 ⇔-𝒰-inv : ∀ {jₗ jᵣ} → 𝒰 jₗ ⇔ 𝒰 jᵣ → jₗ ≡ jᵣ
-⇔-𝒰-inv (c , 𝒰ₗ⇒⋆c , 𝒰ᵣ⇒⋆c)
+⇔-𝒰-inv (_ , 𝒰ₗ⇒⋆c , 𝒰ᵣ⇒⋆c)
   with refl ← ⇒⋆-𝒰-inv 𝒰ₗ⇒⋆c
   with refl ← ⇒⋆-𝒰-inv 𝒰ᵣ⇒⋆c = refl
 

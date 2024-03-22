@@ -65,14 +65,11 @@ accU acc₁ acc₂ = coe (accU≡ acc₁ acc₂)
 accU< : ∀ {j k T} (accj : Acc j) (acck : Acc k) (j<k : j < k) → U j accj T → U< acck j<k T
 accU< accj (acc< f) j<k = accU accj (f j<k)
 
-{------------------------------------------
-  Cumulativity:
-  * Given j < k, U j can be lifted to U k
-  * Given j < k and u : U j,
-    the interpretation of u and
-    the interpretation of the lifted u
-    are equal
-------------------------------------------}
+{----------------------------------
+  Cumulativity given j<k:
+  * ⟦A⟧ⱼ can be lifted to ⟦A⟧ₖ
+  * a ∈ ⟦A⟧ⱼ is equal to a ∈ ⟦A⟧ₖ
+----------------------------------}
 
 cumU : ∀ {j k} (accj : Acc j) (acck : Acc k) → j < k → {T : Term} →
        U j accj T → U k acck T
@@ -114,64 +111,137 @@ cumEl accj@(acc< _) acck@(acc< _) j<k (⇒̂  a b a⇒b B) = cumEl accj acck j<k
 -------------------------------------------------------}
 
 -- First, irrelevance across U of the same level
-el≡' : ∀ {k a A₁ A₂} (acc₁ acc₂ : Acc k)
-       (u₁ : U k acc₁ A₁) (u₂ : U k acc₂ A₂) →
-       A₁ ⇔ A₂ → el k acc₁ a u₁ ≡ el k acc₂ a u₂
-el≡' (acc< f) (acc< g) (Û _ j<k₁) (Û _ j<k₂) 𝒰₁⇔𝒰₂
-  with refl ← ⇔-𝒰-inv 𝒰₁⇔𝒰₂ = accU≡ (f j<k₁) (g j<k₂)
-el≡' acc₁ acc₂ ⊥̂ ⊥̂ _ = refl
-el≡' acc₁ acc₂ (Π̂ a₁ A₁ b₁ B₁) (Π̂ a₂ A₂ b₂ B₂) Πab₁⇔Πab₂ =
-  let a₁⇔a₂ , b₁⇔b₂ = ⇔-Π-inv Πab₁⇔Πab₂
-      open ext in
-  piext refl (λ x →
-    let ela≡ = el≡' acc₁ acc₂ A₁ A₂ a₁⇔a₂ in
-    piext ela≡ (λ a →
-      el≡' acc₁ acc₂ (B₁ x a) (B₂ x (coe ela≡ a)) (⇔-cong ⇔-refl b₁⇔b₂)))
-el≡' acc₁ acc₂ (êq c₁ C₁ a₁ A₁ b₁ B₁) (êq c₂ C₂ a₂ A₂ b₂ B₂) eq⇔eq =
-  let A₁⇔A₂ , a₁⇔a₂ , b₁⇔b₂ = ⇔-eq-inv eq⇔eq
-  in {!   !} -- cong₂ {!   !} {!   !} {!   !}
-el≡' acc₁ acc₂ (⇒̂  a₁ a₂ a₁⇒a₂ u₁) u₂ a₁⇔a₃ =
-  el≡' acc₁ acc₂ u₁ u₂ (⇔-trans (⇔-sym (⇒-⇔ a₁⇒a₂)) a₁⇔a₃)
-el≡' acc₁ acc₂ u₁ (⇒̂  a₂ a₃ a₂⇒a₃ u₂) a₁⇔a₂ =
-  el≡' acc₁ acc₂ u₁ u₂ (⇔-trans a₁⇔a₂ (⇒-⇔ a₂⇒a₃))
-el≡' _ _ (Û _ _) ⊥̂ 𝒰⇔mty with () ← ⇎⋆-𝒰mty 𝒰⇔mty
-el≡' _ _ (Û _ _) (Π̂ _ _ _ _) 𝒰⇔Π with () ← ⇎⋆-𝒰Π 𝒰⇔Π
-el≡' _ _ ⊥̂ (Π̂ _ _ _ _) mty⇔Π with () ← ⇎⋆-mtyΠ mty⇔Π
-el≡' _ _ ⊥̂ (Û _ _) mty⇔𝒰 with () ← ⇎⋆-𝒰mty (⇔-sym mty⇔𝒰)
-el≡' _ _ (Π̂ _ _ _ _) (Û _ _) Π⇔𝒰 with () ← ⇎⋆-𝒰Π (⇔-sym Π⇔𝒰)
-el≡' _ _ (Π̂ _ _ _ _) ⊥̂ Π⇔mty with () ← ⇎⋆-mtyΠ (⇔-sym Π⇔mty)
+el≡' : ∀ {k a A₁ A₂} (acc : Acc k)
+       (u₁ : U k acc A₁) (u₂ : U k acc A₂) →
+       A₁ ⇔ A₂ → el k acc a u₁ ↔ el k acc a u₂
+el≡' (acc< f) (Û _ j<k₁) (Û _ j<k₂) 𝒰₁⇔𝒰₂
+  with refl ← ⇔-𝒰-inv 𝒰₁⇔𝒰₂ = accU (f j<k₁) (f j<k₂) , accU (f j<k₂) (f j<k₁)
+el≡' acc ⊥̂ ⊥̂ _ = id , id
+el≡' acc (Π̂ a₁ A₁ b₁ B₁) (Π̂ a₂ A₂ b₂ B₂) Πab₁⇔Πab₂ =
+  let a₁⇔a₂ , b₁⇔b₂ = ⇔-Π-inv Πab₁⇔Πab₂ in
+  (λ elB x elA →
+     let fA , gA = el≡' acc A₁ A₂ a₁⇔a₂
+         fB , gB = el≡' acc (B₁ x (gA elA)) (B₂ x elA) (⇔-cong ⇔-refl b₁⇔b₂)
+     in fB (elB x (gA elA))) ,
+  (λ elB x elA →
+     let fA , gA = el≡' acc A₁ A₂ a₁⇔a₂
+         fB , gB = el≡' acc (B₁ x elA) (B₂ x (fA elA)) (⇔-cong ⇔-refl b₁⇔b₂)
+     in gB (elB x (fA elA)))
+el≡' acc (êq c₁ C₁ a₁ A₁ b₁ B₁) (êq c₂ C₂ a₂ A₂ b₂ B₂) eq⇔eq =
+  let _ , a₁⇔a₂ , b₁⇔b₂ = ⇔-eq-inv eq⇔eq in
+  (λ {(p⇒⋆refl , a₁⇔b₁) → p⇒⋆refl , ⇔-trans (⇔-sym a₁⇔a₂) (⇔-trans a₁⇔b₁ b₁⇔b₂)}) ,
+  (λ {(p⇒⋆refl , a₂⇔b₂) → p⇒⋆refl , ⇔-trans (⇔-trans a₁⇔a₂ a₂⇔b₂) (⇔-sym b₁⇔b₂)})
+el≡' acc (⇒̂  a₁ a₂ a₁⇒a₂ u₁) u₂ a₁⇔a₃ =
+  el≡' acc u₁ u₂ (⇔-trans (⇔-sym (⇒-⇔ a₁⇒a₂)) a₁⇔a₃)
+el≡' acc u₁ (⇒̂  a₂ a₃ a₂⇒a₃ u₂) a₁⇔a₂ =
+  el≡' acc u₁ u₂ (⇔-trans a₁⇔a₂ (⇒-⇔ a₂⇒a₃))
+el≡' _ (Û _ _) ⊥̂ 𝒰⇔mty with () ← ⇎-𝒰mty 𝒰⇔mty
+el≡' _ (Û _ _) (Π̂ _ _ _ _) 𝒰⇔Π with () ← ⇎-𝒰Π 𝒰⇔Π
+el≡' _ ⊥̂ (Π̂ _ _ _ _) mty⇔Π with () ← ⇎-mtyΠ mty⇔Π
+el≡' _ ⊥̂ (Û _ _) mty⇔𝒰 with () ← ⇎-𝒰mty (⇔-sym mty⇔𝒰)
+el≡' _ (Π̂ _ _ _ _) (Û _ _) Π⇔𝒰 with () ← ⇎-𝒰Π (⇔-sym Π⇔𝒰)
+el≡' _ (Π̂ _ _ _ _) ⊥̂ Π⇔mty with () ← ⇎-mtyΠ (⇔-sym Π⇔mty)
+el≡' _ (Û _ _) (êq _ _ _ _ _ _) 𝒰⇔eq with () ← ⇎-𝒰eq 𝒰⇔eq
+el≡' _ (êq _ _ _ _ _ _) (Û _ _) eq⇔𝒰 with () ← ⇎-𝒰eq (⇔-sym eq⇔𝒰)
+el≡' _ ⊥̂ (êq _ _ _ _ _ _) mty⇔eq with () ← ⇎-mtyeq mty⇔eq
+el≡' _ (êq _ _ _ _ _ _) ⊥̂ eq⇔mty with () ← ⇎-mtyeq (⇔-sym eq⇔mty)
+el≡' _ (Π̂ _ _ _ _) (êq _ _ _ _ _ _) Π⇔eq with () ← ⇎-Πeq Π⇔eq
+el≡' _ (êq _ _ _ _ _ _) (Π̂ _ _ _ _) eq⇔Π with () ← ⇎-Πeq (⇔-sym eq⇔Π)
 
 -- Cumulativity and the existence of suprema
 -- gives us irrelevance across different levels
 el≡ : ∀ {k₁ k₂} (acck₁ : Acc k₁) (acck₂ : Acc k₂) {t T₁ T₂ : Term}
          (u₁ : U k₁ acck₁ T₁) (u₂ : U k₂ acck₂ T₂) →
-         T₁ ⇔ T₂ → el k₁ acck₁ t u₁ ≡ el k₂ acck₂ t u₂
-el≡ {k₁} {k₂} acck₁ acck₂ u₁ u₂ T₁⇔T₂ =
+         T₁ ⇔ T₂ → el k₁ acck₁ t u₁ → el k₂ acck₂ t u₂
+el≡ {k₁} {k₂} acck₁ acck₂ u₁ u₂ T₁⇔T₂ elt =
   let ℓ , k₁<ℓ , k₂<ℓ , accℓ = sup k₁ k₂
-  in begin
-    el k₁ acck₁ _ u₁                        ≡⟨ cumEl acck₁ accℓ k₁<ℓ u₁ ⟩
-    el ℓ  accℓ  _ (cumU acck₁ accℓ k₁<ℓ u₁) ≡⟨ el≡' accℓ accℓ
-                                                      (cumU acck₁ accℓ k₁<ℓ u₁)
-                                                      (cumU acck₂ accℓ k₂<ℓ u₂) T₁⇔T₂ ⟩
-    el ℓ  accℓ  _ (cumU acck₂ accℓ k₂<ℓ u₂) ≡⟨ sym (cumEl acck₂ accℓ k₂<ℓ u₂) ⟩
-    el k₂ acck₂ _ u₂ ∎
+      f , _ = el≡' accℓ (cumU acck₁ accℓ k₁<ℓ u₁) (cumU acck₂ accℓ k₂<ℓ u₂) T₁⇔T₂
+      p = cumEl acck₁ accℓ k₁<ℓ u₁
+      q = cumEl acck₂ accℓ k₂<ℓ u₂
+  in coe (sym q) (f (coe p elt))
 
 -- el≡ specialized to identical syntactic types
 el→ : ∀ {k₁ k₂} (acck₁ : Acc k₁) (acck₂ : Acc k₂) {t T : Term}
       (u₁ : U k₁ acck₁ T) (u₂ : U k₂ acck₂ T) →
       el k₁ acck₁ t u₁ → el k₂ acck₂ t u₂
-el→ acck₁ acck₂ u₁ u₂ = coe (el≡ acck₁ acck₂ u₁ u₂ ⇔-refl)
+el→ acck₁ acck₂ u₁ u₂ = el≡ acck₁ acck₂ u₁ u₂ ⇔-refl
 
 -- el≡ specialized to identical proofs of accessibility
 ⇔-el : ∀ {k a A B} (acc : Acc k)
        (uA : U k acc A) (uB : U k acc B) (A⇔B : A ⇔ B) →
        el k acc a uA → el k acc a uB
-⇔-el {k} acc uA uB A⇔B = coe (el≡ acc acc uA uB A⇔B)
+⇔-el {k} acc uA uB A⇔B = el≡ acc acc uA uB A⇔B
 
 -- Could use ⇔-el since A ≡ B → A ⇔ B by ⇔-refl, but that's a little silly
 ≡-el : ∀ {k t A A'} acc (u : U k acc A) (p : A ≡ A') →
        el k acc t u → el k acc t (transp (U k acc) p u)
 ≡-el acc u refl elA = elA
+
+{--------------------------------------
+  Backward preservation given a ⇒⋆ b:
+  * if ⟦b⟧ₖ then ⟦a⟧ₖ
+  * if b ∈ ⟦A⟧ₖ then a ∈ ⟦A⟧ₖ
+--------------------------------------}
+
+⇒⋆-U : ∀ {k} (acc : Acc k) {a b} → a ⇒⋆ b → U k acc b → U k acc a
+⇒⋆-U _ (⇒⋆-refl a) u = u
+⇒⋆-U acc (⇒⋆-trans a⇒b b⇒⋆c) u = ⇒̂ _ _ a⇒b (⇒⋆-U acc b⇒⋆c u)
+
+⇒-el : ∀ {k} (acc : Acc k) {a b A} (u : U k acc A) → a ⇒ b → el k acc b u → el k acc a u
+⇒-el (acc< f) (Û j j<k) a⇒b = ⇒⋆-U (f j<k) (⇒-⇒⋆ a⇒b)
+⇒-el acc (Π̂ _ A _ B) a⇒b elB x elA = ⇒-el acc (B x elA) (⇒-$ᵈ a⇒b (⇒-refl x)) (elB x elA)
+⇒-el acc (⇒̂  A B A⇒B u) a⇒b = ⇒-el acc u a⇒b
+⇒-el acc {p} {q} (êq _ C a A b B) p⇒q (q⇒⋆refl , abc) = ⇒⋆-trans p⇒q q⇒⋆refl , abc
+
+⇒⋆-el : ∀ {k} (acc : Acc k) {a b A} (u : U k acc A) → a ⇒⋆ b → el k acc b u → el k acc a u
+⇒⋆-el acc u (⇒⋆-refl a) elU = elU
+⇒⋆-el acc u (⇒⋆-trans a⇒b b⇒⋆c) elU = ⇒-el acc u a⇒b (⇒⋆-el acc u b⇒⋆c elU)
+
+{----------------------------------
+  Subject reduction given a ⇒⋆ b:
+  * if ⟦a⟧ₖ then ⟦b⟧ₖ, and
+  * if a ∈ ⟦A⟧ₖ then b ∈ ⟦A⟧ₖ
+----------------------------------}
+
+SRU  : ∀ {k} (acc : Acc k) {a b} → a ⇒ b → U k acc a → U k acc b
+SRel : ∀ {k} (acc : Acc k) {A a b} → a ⇒ b → (u : U k acc A) → el k acc a u → el k acc b u
+
+SRU acc {b = b} a⇒b (⇒̂  a c a⇒c C) =
+  let d , b⇒d , c⇒d = diamond a⇒b a⇒c
+  in ⇒̂  b d b⇒d (SRU acc c⇒d C)
+SRU acc (⇒-𝒰 _) (Û _ j<k) = Û _ j<k
+SRU acc ⇒-mty ⊥̂ = ⊥̂
+SRU acc (⇒-Π a⇒a' b⇒b') (Π̂ _ A _ B) =
+  Π̂ _ (SRU acc a⇒a' A)
+    _ (λ x elA → SRU acc (⇒-cong (⇒-refl x) b⇒b')
+         (B x (⇔-el acc (SRU acc a⇒a' A) A (⇔-sym (⇒-⇔ a⇒a')) elA)))
+SRU acc (⇒-eq {a' = a'} {b' = b'} A⇒A' a⇒a' b⇒b') (êq _ C _ elA _ elB) =
+  let elA' = ⇔-el acc C (SRU acc A⇒A' C) (⇒-⇔ A⇒A') (SRel acc a⇒a' C elA)
+      elB' = ⇔-el acc C (SRU acc A⇒A' C) (⇒-⇔ A⇒A') (SRel acc b⇒b' C elB)
+  in êq _ (SRU acc A⇒A' C) a' elA' b' elB'
+
+SRel acc a⇒b (⇒̂  _ _ _ C) = SRel acc a⇒b C
+SRel (acc< f) a⇒b (Û _ j<k) = SRU (f j<k) a⇒b
+SRel acc _ ⊥̂ = id
+SRel acc a⇒b (Π̂ a A b B) f x elA = SRel acc (⇒-$ᵈ a⇒b (⇒-refl x)) (B x elA) (f x elA)
+SRel acc p⇒q (êq c C a A b B) (p⇒⋆refl , a⇔b) =
+  let _ , refl⇒⋆r , q⇒⋆r = diacon p⇒⋆refl p⇒q
+      r≡refl = ⇒⋆-refl-inv refl⇒⋆r
+  in transp (_ ⇒⋆_) r≡refl q⇒⋆r , a⇔b
+
+SRU⋆ : ∀ {k a b} acc → a ⇒⋆ b → U k acc a → U k acc b
+SRU⋆ acc (⇒⋆-refl a) u = SRU acc (⇒-refl a) u
+SRU⋆ acc (⇒⋆-trans a⇒b b⇒⋆c) u = SRU⋆ acc b⇒⋆c (SRU acc a⇒b u)
+
+-- Why do we never need a ⇒⋆ b → el k acc a → el k acc b?
+
+{----------------------------------------------------------
+  Corollary of backward preservation + subject reduction:
+  given a ⇔ b, if ⟦a⟧ₖ then ⟦b⟧ₖ
+----------------------------------------------------------}
+
+⇔-U : ∀ {k a b} acc → a ⇔ b → U k acc a → U k acc b
+⇔-U acc (_ , a⇒⋆c , b⇒⋆c) u = ⇒⋆-U acc b⇒⋆c (SRU⋆ acc a⇒⋆c u)
 
 {-------------------
   Inversion lemmas
@@ -202,92 +272,21 @@ invΠ-el : ∀ {a b k} (acc : Acc k) (u : U k acc (Π a b)) f → el k acc f u �
 invΠ-el acc (Π̂ a A b B) f elB x elA = elB x elA
 invΠ-el acc (⇒̂  (Π a b) (Π a' b') (⇒-Π a⇒a' b⇒b') u) = invΠ-el acc u
 
-{----------------------------------------------------
-  Backward preservation of U, el with respect to ⇒⋆
-----------------------------------------------------}
+-- Inversion on semantic equality type
+inveq-U : ∀ {c a b k} (acc : Acc k) → U k acc (eq c a b) →
+          Σ[ C ∈ U k acc c ] el k acc a C × el k acc b C
+inveq-U acc (êq _ C _ ela _ elb) = C , ela , elb
+inveq-U acc (⇒̂  (eq c a b) (eq c' a' b') (⇒-eq c⇒c' a⇒a' b⇒b') u) =
+  let C' , ela' , elb' = inveq-U acc u
+  in ⇒̂  c c' c⇒c' C' , ⇒-el acc C' a⇒a' ela' , ⇒-el acc C' b⇒b' elb'
 
-⇒⋆-U : ∀ {k} (acc : Acc k) {a b} → a ⇒⋆ b → U k acc b → U k acc a
-⇒⋆-U _ (⇒⋆-refl a) u = u
-⇒⋆-U acc (⇒⋆-trans a⇒b b⇒⋆c) u = ⇒̂ _ _ a⇒b (⇒⋆-U acc b⇒⋆c u)
-
-⇒-el : ∀ {k} (acc : Acc k) {a b A} (u : U k acc A) → a ⇒ b → el k acc b u → el k acc a u
-⇒-el (acc< f) (Û j j<k) a⇒b = ⇒⋆-U (f j<k) (⇒-⇒⋆ a⇒b)
-⇒-el acc (Π̂ _ A _ B) a⇒b elB x elA = ⇒-el acc (B x elA) (⇒-$ᵈ a⇒b (⇒-refl x)) (elB x elA)
-⇒-el acc (⇒̂  A B A⇒B u) a⇒b = ⇒-el acc u a⇒b
-
-⇒⋆-el : ∀ {k} (acc : Acc k) {a b A} (u : U k acc A) → a ⇒⋆ b → el k acc b u → el k acc a u
-⇒⋆-el acc u (⇒⋆-refl a) elU = elU
-⇒⋆-el acc u (⇒⋆-trans a⇒b b⇒⋆c) elU = ⇒-el acc u a⇒b (⇒⋆-el acc u b⇒⋆c elU)
-
-{---------------------------------
-  Subject reduction of U:
-  if a ⇒⋆ b and U k a then U k b
----------------------------------}
-
-SRU  : ∀ {k} (acc : Acc k) {a b} → a ⇒ b → U k acc a → U k acc b
-SRel : ∀ {k} (acc : Acc k) {a b t} (a⇒b : a ⇒ b) (u : U k acc a) → el k acc t u ↔ el k acc t (SRU acc a⇒b u)
-
-SRU acc {b = b} a⇒b (⇒̂  a c a⇒c C) =
-  let d , b⇒d , c⇒d = diamond a⇒b a⇒c
-  in ⇒̂  b d b⇒d (SRU acc c⇒d C)
-SRU acc (⇒-𝒰 _) (Û _ j<k) = Û _ j<k
-SRU acc ⇒-mty ⊥̂ = ⊥̂
-SRU acc (⇒-Π a⇒a' b⇒b') (Π̂ _ A _ B) =
-  Π̂ _ (SRU acc a⇒a' A)
-    _ (λ x elA → SRU acc (⇒-cong (⇒-refl x) b⇒b')
-         let _ , g , _ , _ = SRel acc a⇒a' A
-         in (B x (g elA)))
-SRU acc (⇒-eq {a' = a'} {b' = b'} A⇒A' a⇒a' b⇒b') (êq _ C _ A _ B) =
-  let fA , _ , _ , _ = SRel acc A⇒A' C
-      fB , _ , _ , _ = SRel acc A⇒A' C
-  in êq _ (SRU acc A⇒A' C) a' (fA {!   !}) b' (fB {!   !})
-
-SRel acc {b = b} a⇒b (⇒̂  a c a⇒c C) =
-  let d , b⇒d , c⇒d = diamond a⇒b a⇒c
-  in SRel acc c⇒d C
-SRel acc (⇒-𝒰 _) (Û _ j<k) = id , id , (λ _ → refl) , (λ _ → refl)
-SRel acc ⇒-mty ⊥̂ = id , id , (λ _ → refl) , (λ _ → refl)
-SRel acc (⇒-Π a⇒a' b⇒b') (Π̂ a A b B) =
-  (λ elB x elA →
-     let _ , gA , _ , _ = SRel acc a⇒a' A
-         fB , _ , _ , _ = SRel acc (⇒-cong (⇒-refl x) b⇒b') (B x (gA elA))
-     in fB (elB x (gA elA))) ,
-  (λ elB x elA →
-     let fA , _ , _ , gfA = SRel acc a⇒a' A
-         _ , gB , _ , _   = SRel acc (⇒-cong (⇒-refl x) b⇒b') (B x elA)
-         elB' = elB x (fA elA)
-     in gB (transp (λ elA → el _ acc _ (SRU acc _ (B x elA))) (gfA elA) elB')) ,
-  (λ elB →
-     let open ext
-     in funext (λ x → funext (λ elA →
-        let fA , gA , fgA , gfA = SRel acc a⇒a' A
-            fB , gB , fgB , gfB = SRel acc (⇒-cong (⇒-refl x) b⇒b') (B x (gA elA))
-            gfgg : gA (fA (gA elA)) ≡ gA elA
-            gfgg = gfA (gA elA)
-            gg : ∀ {elA'} (p : fA (gA elA) ≡ elA') → gA elA' ≡ gA elA
-            gg p = transp (λ elA' → gA elA' ≡ gA elA) p gfgg
-        in begin
-           fB (gB _)                           ≡⟨ fgB _ ⟩
-           transp _ gfgg (elB x (fA (gA elA))) ≡⟨ congd (λ elA'' p → transp _ (gg p) (elB x elA'')) (fgA elA) ⟩
-           transp _ (gg (fgA elA)) (elB x elA) ≡⟨ transpK _ _ {!   !} ⟩
-           elB x elA ∎))) ,
-  {!   !}
-  {-
-  let open ext in
-  piext refl (λ x →
-    let p = SRel acc a⇒a' A in
-    piext p (λ elA →
-      trans (SRel acc (⇒-cong (⇒-refl x) b⇒b') (B x elA))
-            (cong (λ elA → el _ acc _ (SRU acc (⇒-cong (⇒-refl x) b⇒b') (B x elA)))
-                  (sym (coe-β p elA))))) -}
-SRel acc (⇒-eq A⇒A' a⇒a' b⇒b') (êq c C a A b B) = {!   !} , {!   !} , {!   !} , {!   !}
-
-SRU⋆ : ∀ {k a b} acc → a ⇒⋆ b → U k acc a → U k acc b
-SRU⋆ acc (⇒⋆-refl a) u = SRU acc (⇒-refl a) u
-SRU⋆ acc (⇒⋆-trans a⇒b b⇒⋆c) u = SRU⋆ acc b⇒⋆c (SRU acc a⇒b u)
-
-⇔-U : ∀ {k a b} acc → a ⇔ b → U k acc a → U k acc b
-⇔-U acc (_ , a⇒⋆c , b⇒⋆c) u = ⇒⋆-U acc b⇒⋆c (SRU⋆ acc a⇒⋆c u)
+-- Inversion on semantic equalities
+inveq-el : ∀ {c a b k} (acc : Acc k) (u : U k acc (eq c a b)) p →
+           el k acc p u → p ⇒⋆ refl × a ⇔ b
+inveq-el acc (êq _ _ _ _ _ _) _ = id
+inveq-el acc (⇒̂  (eq c a b) (eq c' a' b') (⇒-eq c⇒c' a⇒a' b⇒b') u) p elp =
+  let p⇒⋆refl , a'⇔b' = inveq-el acc u p elp
+  in p⇒⋆refl , ⇔-trans (⇔-trans (⇒-⇔ a⇒a') a'⇔b') (⇔-sym (⇒-⇔ b⇒b'))
 
 {-----------------------------------------
   Semantic well-formedness:

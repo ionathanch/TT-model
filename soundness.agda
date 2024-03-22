@@ -82,8 +82,30 @@ soundness {σ} v emV (⊢$ᵈ {B = B} {b = b} {a = a} tb ta) =
 soundness v emV (⊢mty {k} ⊢Γ) =
   let ℓ , k<ℓ , accℓ@(acc< _) = succ k
   in ℓ , accℓ , Û k k<ℓ , ⊥̂
-soundness {σ} v emV (⊢abs {b = b} tA tb)
+soundness v emV (⊢abs {b = b} tA tb)
   with () ← (let k , acck , b , elb = soundness v emV tb in empty acck b elb)
+soundness v emV (⊢eq {A} {a} {b} {k} tA ta tb) =
+  let ℓ , accℓ@(acc< _) , u , elU = soundness v emV tA
+      acck , k<ℓ , uA = el-U accℓ u elU
+      ka , accka , ua , ela = soundness v emV ta
+      kb , acckb , ub , elb = soundness v emV tb
+  in ℓ , accℓ , Û k k<ℓ ,
+     êq _ uA _ (el→ accka acck ua uA ela) _ (el→ acckb acck ub uA elb)
+soundness v emV (⊢refl ta) =
+  let k , acck , ua , ela = soundness v emV ta
+  in k , acck , êq _ ua _ ela _ ela , ⇒⋆-refl refl , ⇔-refl
+soundness {σ} v emV (⊢J {a = a} {b = b} {p = p} {d = d} {B = B} tp tB td) =
+  let kp , acckp , up , elp = soundness v emV tp
+      kd , acckd , ud , eld = soundness v emV td
+      uA , ela , elb = inveq-U acckp up
+      p⇒⋆refl , (c , a⇒⋆c , b⇒⋆c) = inveq-el acckp up (subst σ p) elp
+      Brefla⇔Bpb : subst σ (subst (refl +: a +: var) B) ⇔ subst σ (subst (p +: b +: var) B)
+      Brefla⇔Bpb = subst σ (subst (refl +: c +: var) B) , {!   !} , {!   !}
+      ud' = ⇔-U acckd Brefla⇔Bpb ud
+      eld' = ⇔-el acckd ud ud' Brefla⇔Bpb eld
+      Jdp⇒⋆d : subst σ (J d p) ⇒⋆ subst σ d
+      Jdp⇒⋆d = ⇒⋆-trans' (⇒⋆-J (⇒⋆-refl (subst σ d)) p⇒⋆refl) (⇒⋆-ι (subst σ d))
+  in kd , acckd , ud' , ⇒⋆-el acckd ud' Jdp⇒⋆d eld'
 soundness {σ} v emV (⊢≈ A≈B ta _) =
   let k , acck , uA , elA = soundness v emV ta
       Aσ⇔Bσ = ⇔-subst σ (≈-⇔ A≈B)
