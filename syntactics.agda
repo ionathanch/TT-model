@@ -102,6 +102,12 @@ infix 30 ↑_
 ↑_ : (Nat → Term) → Nat → Term
 ↑ σ = var 0 +: (rename suc ∘ σ)
 
+-- Lifting twice pushes renamings inwards
+↑↑ : ∀ σ x → (↑ ↑ σ) x ≡ (var 0 +: var 1 +: (rename suc ∘ rename suc ∘ σ)) x
+↑↑ σ zero = refl
+↑↑ σ (suc zero) = refl
+↑↑ σ (suc (suc n)) = refl
+
 -- Lifting var "substitution" does nothing
 ↑id : ∀ σ → (∀ x → σ x ≡ var x) → ∀ x → (↑ σ) x ≡ var x
 ↑id σ h zero = refl
@@ -253,11 +259,28 @@ substDrop σ a n = begin
   subst var (σ n) ≡⟨ sym (substRename suc (a +: var) (σ n)) ⟩
   subst (a +: var) (rename suc (σ n)) ∎
 
+substDrop₂ : ∀ (σ : Nat → Term) a b n → σ n ≡ subst (a +: b +: var) (rename suc (rename suc (σ n)))
+substDrop₂ σ a b n = begin
+  σ n                                              ≡⟨ sym (substId (σ n)) ⟩
+  subst var (σ n)                                  ≡⟨ sym (substRename (suc ∘ suc) (a +: b +: var) (σ n)) ⟩
+  subst (a +: b +: var) (rename (suc ∘ suc) (σ n)) ≡⟨ cong (subst (a +: b +: var)) (sym (rename∘ suc suc (σ n))) ⟩
+  subst (a +: b +: var) (rename suc (rename suc (σ n))) ∎
+
 substUnion : ∀ σ a s → subst (a +: σ) s ≡ subst (a +: var) (subst (↑ σ) s)
 substUnion σ a s = begin
   subst (a +: σ) s                                         ≡⟨ substExt _ _ (λ {zero → refl ; (suc n) → substDrop σ a n}) s ⟩
   subst (subst (a +: var) ∘ (var 0 +: (rename suc ∘ σ))) s ≡⟨ sym (subst∘ (a +: var) (↑ σ) s) ⟩
   (subst (a +: var) ∘ subst (var 0 +: (rename suc ∘ σ))) s ∎
+
+substUnion₂ : ∀ σ a b s → subst (a +: b +: σ) s ≡ subst (a +: b +: var) (subst (↑ ↑ σ) s)
+substUnion₂ σ a b s = begin
+  subst (a +: b +: σ) s
+    ≡⟨ substExt _ _ (λ {zero → refl ; (suc zero) → refl ; (suc (suc n)) → substDrop₂ σ a b n}) s ⟩
+  subst (subst (a +: b +: var) ∘ (var 0 +: var 1 +: (rename suc ∘ rename suc ∘ σ))) s
+    ≡⟨ sym (subst∘ (a +: b +: var) (var 0 +: var 1 +: (rename suc ∘ rename suc ∘ σ)) s) ⟩
+  (subst (a +: b +: var) ∘ subst (var 0 +: var 1 +: (rename suc ∘ rename suc ∘ σ))) s
+    ≡⟨ cong (subst (a +: b +: var)) (sym (substExt _ _ (↑↑ σ) s)) ⟩
+  (subst (a +: b +: var) ∘ subst (↑ ↑ σ)) s ∎
 
 substDist : ∀ σ a s → subst (subst σ a +: var) (subst (↑ σ) s) ≡ subst σ (subst (a +: var) s)
 substDist σ a s = begin
@@ -265,6 +288,13 @@ substDist σ a s = begin
   subst (subst σ a +: σ) s                   ≡⟨ substExt _ _ (λ {zero → refl ; (suc n) → refl}) s ⟩
   subst (subst σ ∘ (a +: var)) s             ≡⟨ sym (subst∘ σ (a +: var) s) ⟩
   (subst σ ∘ subst (a +: var)) s ∎
+
+substDist₂ : ∀ σ a b s → subst (subst σ a +: subst σ b +: var) (subst (↑ ↑ σ) s) ≡ subst σ (subst (a +: b +: var) s)
+substDist₂ σ a b s = begin
+  subst (subst σ a +: subst σ b +: var) (subst (↑ ↑ σ) s) ≡⟨ sym (substUnion₂ σ (subst σ a) (subst σ b) s) ⟩
+  subst (subst σ a +: subst σ b +: σ) s                   ≡⟨ substExt _ _ (λ {zero → refl ; (suc zero) → refl ; (suc (suc n)) → refl}) s ⟩
+  subst (subst σ ∘ a +: b +: var) s                       ≡⟨ sym (subst∘ σ (a +: b +: var) s) ⟩
+  (subst σ ∘ subst (a +: b +: var)) s ∎
 
 {--------------------------
   Contexts and membership

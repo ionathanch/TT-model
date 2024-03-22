@@ -314,6 +314,9 @@ a ⇔ b = ∃[ c ] a ⇒⋆ c × b ⇒⋆ c
 ⇒-⇔ : ∀ {a b} → a ⇒ b → a ⇔ b
 ⇒-⇔ {a} {b} a⇒b = b , ⇒-⇒⋆ a⇒b , ⇒⋆-refl b
 
+⇒⋆-⇔ : ∀ {a b} → a ⇒⋆ b → a ⇔ b
+⇒⋆-⇔ {a} {b} a⇒⋆b = b , a⇒⋆b , ⇒⋆-refl b
+
 ⇔-refl : ∀ {a} → a ⇔ a
 ⇔-refl {a} = a , ⇒⋆-refl a , ⇒⋆-refl a
 
@@ -331,6 +334,10 @@ a ⇔ b = ∃[ c ] a ⇒⋆ c × b ⇒⋆ c
 ⇔-cong : ∀ {a a' b b'} → a ⇔ a' → b ⇔ b' → subst (a +: var) b ⇔ subst (a' +: var) b'
 ⇔-cong (a'' , a⇒⋆a'' , a'⇒⋆a'') (b'' , b⇒⋆b'' , b'⇒⋆b'') =
   subst (a'' +: var) b'' , ⇒⋆-cong a⇒⋆a'' b⇒⋆b'' , ⇒⋆-cong a'⇒⋆a'' b'⇒⋆b''
+
+⇔-cong₂ : ∀ {a a' b b'} c → a ⇔ a' → b ⇔ b' → subst (a +: b +: var) c ⇔ subst (a' +: b' +: var) c
+⇔-cong₂ c (a'' , a⇒⋆a'' , a'⇒⋆a'') (b'' , b⇒⋆b'' , b'⇒⋆b'') =
+  subst (a'' +: b'' +: var) c , ⇒⋆-cong₂ c a⇒⋆a'' b⇒⋆b'' , ⇒⋆-cong₂ c a'⇒⋆a'' b'⇒⋆b''
 
 ⇔-Π : ∀ {aₗ aᵣ bₗ bᵣ} → aₗ ⇔ aᵣ → bₗ ⇔ bᵣ → Π aₗ bₗ ⇔ Π aᵣ bᵣ
 ⇔-Π (a , aₗ⇒⋆a , aᵣ⇒⋆a) (b , bₗ⇒⋆b , bᵣ⇒⋆b) = Π a b , ⇒⋆-Π aₗ⇒⋆a bₗ⇒⋆b , ⇒⋆-Π aᵣ⇒⋆a bᵣ⇒⋆b

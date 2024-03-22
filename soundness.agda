@@ -98,9 +98,10 @@ soundness {σ} v emV (⊢J {a = a} {b = b} {p = p} {d = d} {B = B} tp tB td) =
   let kp , acckp , up , elp = soundness v emV tp
       kd , acckd , ud , eld = soundness v emV td
       uA , ela , elb = inveq-U acckp up
-      p⇒⋆refl , (c , a⇒⋆c , b⇒⋆c) = inveq-el acckp up (subst σ p) elp
+      p⇒⋆refl , a⇔b = inveq-el acckp up (subst σ p) elp
       Brefla⇔Bpb : subst σ (subst (refl +: a +: var) B) ⇔ subst σ (subst (p +: b +: var) B)
-      Brefla⇔Bpb = subst σ (subst (refl +: c +: var) B) , {!   !} , {!   !}
+      Brefla⇔Bpb = transp₂ (_⇔_) (substDist₂ σ refl a B) (substDist₂ σ p b B)
+                           (⇔-cong₂ (subst (↑ ↑ σ) B) (⇔-sym (⇒⋆-⇔ p⇒⋆refl)) a⇔b)
       ud' = ⇔-U acckd Brefla⇔Bpb ud
       eld' = ⇔-el acckd ud ud' Brefla⇔Bpb eld
       Jdp⇒⋆d : subst σ (J d p) ⇒⋆ subst σ d

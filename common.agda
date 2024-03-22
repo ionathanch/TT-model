@@ -5,7 +5,7 @@ open import Data.Empty using (⊥) public
 open import Data.Product.Base using (Σ-syntax ; ∃-syntax ; _×_ ; _,_) public
 open import Relation.Binary.PropositionalEquality public
   using (_≡_ ; refl ; sym ; trans ; cong ; cong₂ ; module ≡-Reasoning)
-  renaming (subst to transp)
+  renaming (subst to transp ; subst₂ to transp₂)
 open ≡-Reasoning public
 
 _↔_ : Set → Set → Set

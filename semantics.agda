@@ -82,8 +82,8 @@ cumU _ _ _ ⊥̂  = ⊥̂
 cumU accj acck j<k (Π̂ a A b B) =
   Π̂ a (cumU accj acck j<k A)
     b (λ x a →
-         let p = cumEl accj acck j<k A
-         in cumU accj acck j<k (B x (coe (sym p) a)))
+        let p = cumEl accj acck j<k A
+        in cumU accj acck j<k (B x (coe (sym p) a)))
 cumU accj acck j<k (êq c C a A b B) =
   let qa = cumEl accj acck j<k C
       qb = cumEl accj acck j<k C
@@ -120,13 +120,13 @@ el≡' acc ⊥̂ ⊥̂ _ = id , id
 el≡' acc (Π̂ a₁ A₁ b₁ B₁) (Π̂ a₂ A₂ b₂ B₂) Πab₁⇔Πab₂ =
   let a₁⇔a₂ , b₁⇔b₂ = ⇔-Π-inv Πab₁⇔Πab₂ in
   (λ elB x elA →
-     let fA , gA = el≡' acc A₁ A₂ a₁⇔a₂
-         fB , gB = el≡' acc (B₁ x (gA elA)) (B₂ x elA) (⇔-cong ⇔-refl b₁⇔b₂)
-     in fB (elB x (gA elA))) ,
+    let fA , gA = el≡' acc A₁ A₂ a₁⇔a₂
+        fB , gB = el≡' acc (B₁ x (gA elA)) (B₂ x elA) (⇔-cong ⇔-refl b₁⇔b₂)
+    in fB (elB x (gA elA))) ,
   (λ elB x elA →
-     let fA , gA = el≡' acc A₁ A₂ a₁⇔a₂
-         fB , gB = el≡' acc (B₁ x elA) (B₂ x (fA elA)) (⇔-cong ⇔-refl b₁⇔b₂)
-     in gB (elB x (fA elA)))
+    let fA , gA = el≡' acc A₁ A₂ a₁⇔a₂
+        fB , gB = el≡' acc (B₁ x elA) (B₂ x (fA elA)) (⇔-cong ⇔-refl b₁⇔b₂)
+    in gB (elB x (fA elA)))
 el≡' acc (êq c₁ C₁ a₁ A₁ b₁ B₁) (êq c₂ C₂ a₂ A₂ b₂ B₂) eq⇔eq =
   let _ , a₁⇔a₂ , b₁⇔b₂ = ⇔-eq-inv eq⇔eq in
   (λ {(p⇒⋆refl , a₁⇔b₁) → p⇒⋆refl , ⇔-trans (⇔-sym a₁⇔a₂) (⇔-trans a₁⇔b₁ b₁⇔b₂)}) ,
@@ -214,7 +214,7 @@ SRU acc ⇒-mty ⊥̂ = ⊥̂
 SRU acc (⇒-Π a⇒a' b⇒b') (Π̂ _ A _ B) =
   Π̂ _ (SRU acc a⇒a' A)
     _ (λ x elA → SRU acc (⇒-cong (⇒-refl x) b⇒b')
-         (B x (⇔-el acc (SRU acc a⇒a' A) A (⇔-sym (⇒-⇔ a⇒a')) elA)))
+        (B x (⇔-el acc (SRU acc a⇒a' A) A (⇔-sym (⇒-⇔ a⇒a')) elA)))
 SRU acc (⇒-eq {a' = a'} {b' = b'} A⇒A' a⇒a' b⇒b') (êq _ C _ elA _ elB) =
   let elA' = ⇔-el acc C (SRU acc A⇒A' C) (⇒-⇔ A⇒A') (SRel acc a⇒a' C elA)
       elB' = ⇔-el acc C (SRU acc A⇒A' C) (⇒-⇔ A⇒A') (SRel acc b⇒b' C elB)
