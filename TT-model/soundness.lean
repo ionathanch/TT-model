@@ -39,14 +39,14 @@ theorem soundness {Γ a A} : (Γ ⊢ a ⦂ A) → (Γ ⊨ a ⦂ A)
     | ⟨P, hpi⟩ =>
     match interpsPiInv hpi with
     | ⟨Pa, hA, _, e⟩ =>
-      constructor; exists P; constructor
-      . exact hpi
-      . subst e; intro x Pb PAx hB; rw [← substUnion] at hB
-        match soundness thb (x +: σ) (semSubstCons hA PAx hσ) with
-        | ⟨_, _, hB', hb⟩ =>
-        rw [interpsDet hB hB']
-        apply interpsBwdsP _ hB' hb
-        apply parsβ
+    constructor; exists P; constructor
+    . exact hpi
+    . subst e; intro x Pb PAx hB; rw [← substUnion] at hB
+      match soundness thb (x +: σ) (semSubstCons hA PAx hσ) with
+      | ⟨_, _, hB', hb⟩ =>
+      rw [interpsDet hB hB']
+      apply interpsBwdsP _ hB' hb
+      apply parsβ
   | Wt.app thb tha => by
     intro σ hσ
     match soundness thb σ hσ with
