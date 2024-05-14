@@ -264,10 +264,6 @@ theorem interpsMtyInv {i P} (h : ⟦ mty ⟧ i ↘ P) : P = (λ _ ↦ False) := 
   rw [interpLt] at h
   apply interpMtyInv h
 
-theorem interpsRussell {i j a P} (h : ⟦ 𝒰 j ⟧ i ↘ P) (ha : P a) : ∃ Pa, ⟦ a ⟧ j ↘ Pa := by
-  match interps𝒰Inv h with
-  | ⟨_, e⟩ => rw [e] at ha; exact ha
-
 /-*----------------
   Semantic typing
 ----------------*-/
