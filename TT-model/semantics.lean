@@ -32,7 +32,6 @@ theorem interp𝒰 {i I j P} : P = I j → j < i → ⟦ 𝒰 j ⟧ i , I ↘ P 
   Simple inversion lemmas
 ------------------------*-/
 
--- TODO: fix ugly proof case in step
 theorem interpPiInv {i I a b P} (h : ⟦ pi a b ⟧ i , I ↘ P) :
   ∃ (Pa : Term → Prop) (Pf : Term → (Term → Prop) → Prop),
     (⟦ a ⟧ i , I ↘ Pa) ∧
@@ -50,13 +49,11 @@ theorem interpPiInv {i I a b P} (h : ⟦ pi a b ⟧ i , I ↘ P) :
     subst e; cases r
     match ih rfl with
     | ⟨Pa, Pf, ha, hPf, hb, e⟩ =>
-      exists Pa, Pf; constructor
-      constructor <;> assumption; constructor
-      exact hPf; constructor
-      intro x Pb PfxPb; constructor
-      . apply parCong; apply parRefl; assumption
-      . exact hb x Pb PfxPb
-      exact e
+      refine ⟨Pa, Pf, ?_, hPf, ?_, e⟩
+      . constructor <;> assumption
+      . intro x Pb PfxPb; constructor
+        . apply parCong; apply parRefl; assumption
+        . exact hb x Pb PfxPb
 
 theorem interp𝒰Inv {i I j P} (h : ⟦ 𝒰 j ⟧ i , I ↘ P) : j < i ∧ P = I j := by
   generalize e : 𝒰 j = a at h
@@ -235,7 +232,7 @@ theorem interpPiInv' {i I a b P} (h : ⟦ pi a b ⟧ i , I ↘ P) :
     P = λ f ↦ ∀ x Pb, Pa x → (⟦ subst (x +: var) b⟧ i , I ↘ Pb) → Pb (app f x) := by
   match interpPiInv h with
   | ⟨Pa, Pf, ha, hPf, hfb, e⟩ =>
-    exists Pa, ha; constructor
+    refine ⟨Pa, ha, ?_, ?_⟩
     . intro x Pax; match hPf x Pax with
       | ⟨Pb, PfxPb⟩ => exact ⟨Pb, hfb x Pb PfxPb⟩
     . subst e; apply funext; intro f; apply propext; constructor

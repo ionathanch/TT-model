@@ -176,8 +176,8 @@ theorem parsPiInv {a b c} (r : pi a b ⇒⋆ c) : ∃ a' b', c = pi a' b' ∧ a 
     subst e; cases r;
     match ih rfl with
     | ⟨a', b', e, _, _⟩ =>
-      exact ⟨a', b', e,
-        (by constructor <;> constructor <;> assumption)⟩
+      refine ⟨a', b', e, ?_, ?_⟩
+      all_goals constructor <;> assumption
 
 /-*---------------------------------------
   Confluence via Takahashi's translation
