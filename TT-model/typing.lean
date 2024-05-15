@@ -2,7 +2,6 @@ import «TT-model».syntactics
 import «TT-model».reduction
 
 open Term
-open Ctxt (nil)
 
 set_option autoImplicit false
 
@@ -10,36 +9,42 @@ set_option autoImplicit false
   Definitional equality
 ----------------------*-/
 
+section
+set_option hygiene false
+local infix:40 "≈" => Eqv
+
 inductive Eqv : Term → Term → Prop where
-  | β {b a} : Eqv (app (abs b) a) (subst (a +: var) b)
+  | β {b a} : app (abs b) a ≈ subst (a +: var) b
   | pi {a a' b b'} :
-    Eqv a a' →
-    Eqv b b' →
-    -----------------------
-    Eqv (pi a b) (pi a' b')
+    a ≈ a' →
+    b ≈ b' →
+    -----------------
+    pi a b ≈ pi a' b'
   | abs {b b'} :
-    Eqv b b' →
-    --------------------
-    Eqv (abs b) (abs b')
+    b ≈ b' →
+    --------------
+    abs b ≈ abs b'
   | app {b b' a a'} :
-    Eqv b b' →
-    Eqv a a' →
-    -------------------------
-    Eqv (app b a) (app b' a')
+    b ≈ b' →
+    a ≈ a' →
+    -------------------
+    app b a ≈ app b' a'
   | exf {b b'} :
-    Eqv b b' →
-    --------------------
-    Eqv (exf b) (exf b')
-  | refl {a} : Eqv a a
+    b ≈ b' →
+    --------------
+    exf b ≈ exf b'
+  | refl {a} : a ≈ a
   | sym {a b} :
-    Eqv a b →
-    ---------
-    Eqv b a
+    a ≈ b →
+    -------
+    b ≈ a
   | trans {a b c} :
-    Eqv a b →
-    Eqv b c →
-    ---------
-    Eqv a c
+    a ≈ b →
+    b ≈ c →
+    -------
+    a ≈ c
+end
+
 infix:40 "≈" => Eqv
 
 /-* Conversion is sound and complete with respect to definitional equality,
@@ -105,55 +110,62 @@ def idx : I → Type
   | wf => Ctxt
   | wt => T
 
+section
+set_option hygiene false
+local notation:40 "⊢" Γ:40 => Wtf (Sigma.mk wf Γ)
+local notation:40 Γ:41 "⊢" a:41 "∶" A:41 => Wtf (Sigma.mk wt (T.mk Γ a A))
+
 inductive Wtf : (Σ w, idx w) → Prop where
-  | nil : Wtf ⟨wf, nil⟩
+  | nil : ⊢ ⬝
   | cons {Γ A k} :
-    Wtf ⟨wf, Γ⟩ →
-    Wtf ⟨wt, T.mk Γ A (𝒰 k)⟩ →
-    ---------------------------
-    Wtf ⟨wf, Γ ∷ A⟩
+    ⊢ Γ →
+    Γ ⊢ A ∶ 𝒰 k →
+    --------------
+    ⊢ Γ ∷ A
   | var {Γ x A} :
-    Wtf ⟨wf, Γ⟩ →
-    In x A Γ →
-    --------------------------
-    Wtf ⟨wt, T.mk Γ (var x) A⟩
+    ⊢ Γ →
+    Γ ∋ x ∶ A →
+    -------------
+    Γ ⊢ var x ∶ A
   | 𝒰 {Γ j k} :
-    Wtf ⟨wf, Γ⟩ →
+    ⊢ Γ →
     j < k →
-    -----------------------------
-    Wtf ⟨wt, T.mk Γ (𝒰 j) (𝒰 k)⟩
+    --------------
+    Γ ⊢ 𝒰 j ∶ 𝒰 k
   | pi {Γ A B k} :
-    Wtf ⟨wt, T.mk Γ A (𝒰 k)⟩ →
-    Wtf ⟨wt, T.mk (Γ ∷ A) B (𝒰 k)⟩ →
-    ---------------------------------
-    Wtf ⟨wt, T.mk Γ (pi A B) (𝒰 k)⟩
+    Γ ⊢ A ∶ 𝒰 k →
+    Γ ∷ A ⊢ B ∶ 𝒰 k →
+    ------------------
+    Γ ⊢ pi A B ∶ 𝒰 k
   | abs {Γ A B b k} :
-    Wtf ⟨wt, T.mk Γ (pi A B) (𝒰 k)⟩ →
-    Wtf ⟨wt, T.mk (Γ ∷ A) b B⟩ →
-    ----------------------------------
-    Wtf ⟨wt, T.mk Γ (abs b) (pi A B)⟩
+    Γ ⊢ pi A B ∶ 𝒰 k →
+    Γ ∷ A ⊢ b ∶ B →
+    -------------------
+    Γ ⊢ abs b ∶ pi A B
   | app {Γ A B b a} :
-    Wtf ⟨wt, T.mk Γ b (pi A B)⟩ →
-    Wtf ⟨wt, T.mk Γ a A⟩ →
-    -----------------------------------------------
-    Wtf ⟨wt, T.mk Γ (app b a) (subst (a +: var) B)⟩
+    Γ ⊢ b ∶ pi A B →
+    Γ ⊢ a ∶ A →
+    --------------------------------
+    Γ ⊢ app b a ∶ subst (a +: var) B
   | mty {Γ k} :
-    Wtf ⟨wf, Γ⟩ →
-    ---------------------------
-    Wtf ⟨wt, T.mk Γ mty (𝒰 k)⟩
+    ⊢ Γ →
+    --------------
+    Γ ⊢ mty ∶ 𝒰 k
   | exf {Γ A b k} :
-    Wtf ⟨wt, T.mk Γ A (𝒰 k)⟩ →
-    Wtf ⟨wt, T.mk Γ b mty⟩ →
-    ---------------------------
-    Wtf ⟨wt, T.mk Γ (exf b) A⟩
+    Γ ⊢ A ∶ 𝒰 k →
+    Γ ⊢ b ∶ mty →
+    -------------
+    Γ ⊢ exf b ∶ A
   | conv {Γ A B a k} :
     A ≈ B →
-    Wtf ⟨wt, T.mk Γ a A⟩ →
-    Wtf ⟨wt, T.mk Γ B (𝒰 k)⟩ →
-    ---------------------------
-    Wtf ⟨wt, T.mk Γ a B⟩
-prefix:95 "⊢" => Wtf (Sigma.mk wf ·)
-notation:40 Γ "⊢" a "⦂" A => Wtf (Sigma.mk wt (T.mk Γ a A))
+    Γ ⊢ a ∶ A →
+    Γ ⊢ B ∶ 𝒰 k →
+    --------------
+    Γ ⊢ a ∶ B
+end
+
+notation:40 "⊢" Γ:40 => Wtf (Sigma.mk wf Γ)
+notation:40 Γ:41 "⊢" a:41 "∶" A:41 => Wtf (Sigma.mk wt (T.mk Γ a A))
 
 /-*---------------------------------------------
   Lean currently doesn't support induction on
@@ -213,5 +225,5 @@ inductive Wt : Ctxt → Term → Term → Prop where
 end
 
 prefix:95 "⊢" => Wf
-notation:40 Γ "⊢" a "⦂" A => Wt Γ a A
+notation:40 Γ "⊢" a "∶" A => Wt Γ a A
 ---------------------------------------------*-/

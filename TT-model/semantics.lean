@@ -3,7 +3,6 @@ import «TT-model».reduction
 
 open Nat
 open Term
-open Ctxt (nil)
 
 set_option autoImplicit false
 
@@ -265,18 +264,18 @@ theorem interpsMtyInv {i P} (h : ⟦ mty ⟧ i ↘ P) : P = (λ _ ↦ False) := 
   Semantic typing
 ----------------*-/
 
-def semSubst Γ σ := ∀ x a, In x a Γ → ∃ i P, (⟦ subst σ a ⟧ i ↘ P) ∧ P (σ x)
-notation:40 σ "⊨" Γ => semSubst Γ σ
+def semSubst σ Γ := ∀ x a, In x a Γ → ∃ i P, (⟦ subst σ a ⟧ i ↘ P) ∧ P (σ x)
+infix:40 "⊨" => semSubst
 
-def semWt Γ a A := ∀ σ, (σ ⊨ Γ) → ∃ i P, (⟦ subst σ A ⟧ i ↘ P) ∧ P (subst σ a)
-notation:40 Γ "⊨" a "⦂" A => semWt Γ a A
+def semWt Γ a A := ∀ σ, σ ⊨ Γ → ∃ i P, (⟦ subst σ A ⟧ i ↘ P) ∧ P (subst σ a)
+notation:40 Γ:41 "⊨" a:41 "∶" A:41 => semWt Γ a A
 
-theorem semSubstNil σ : σ ⊨ nil := by
+theorem semSubstNil σ : σ ⊨ ⬝ := by
   intro _ _ mem; cases mem
 
-theorem semSubstCons {Γ σ i a A P} :
+theorem semSubstCons {Γ : Ctxt} {σ i a A P} :
   (⟦ subst σ A ⟧ i ↘ P) → P a →
-  (σ ⊨ Γ) → ((a +: σ) ⊨ Γ ∷ A) := by
+  σ ⊨ Γ → a +: σ ⊨ Γ ∷ A := by
   intro hA ha hσ x B mem
   cases mem
   case here =>

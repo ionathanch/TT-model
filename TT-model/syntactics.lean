@@ -6,7 +6,7 @@ set_option autoImplicit false
 def cons {A : Type} (x : A) (ξ : Nat → A) : Nat → A
   | 0 => x
   | n + 1 => ξ n
-infixr:10 " +: " => cons
+infixr:50 " +: " => cons
 
 /-*------
   Terms
@@ -245,8 +245,10 @@ theorem substDist σ a s : subst (subst σ a +: var) (subst (⇑ σ) s) = subst 
 inductive Ctxt : Type where
   | nil : Ctxt
   | cons : Ctxt → Term → Ctxt
-infixl:30 "∷" => Ctxt.cons
+notation:50 "⬝" => Ctxt.nil
+infixl:50 "∷" => Ctxt.cons
 
 inductive In : Nat → Term → Ctxt → Prop where
-  | here {Γ a} : In 0 (rename succ a) (Γ ∷ a)
-  | there {Γ x a b} : In x a Γ → In (succ x) (rename succ a) (Γ ∷ b)
+  | here {Γ A} : In 0 (rename succ A) (Γ ∷ A)
+  | there {Γ x A B} : In x A Γ → In (succ x) (rename succ A) (Γ ∷ B)
+notation:40 Γ:41 "∋" x:41 "∶" A:41 => In x A Γ

@@ -5,12 +5,11 @@ import «TT-model».semantics
 
 open Nat
 open Term
-open Ctxt (nil)
 
 set_option autoImplicit false
 
-theorem soundness {Γ a A} (h : Γ ⊢ a ⦂ A) : (Γ ⊨ a ⦂ A) := by
-  generalize e : @Sigma.mk I idx I.wt (T.mk Γ a A) = t at h
+theorem soundness {Γ a A} (h : Γ ⊢ a ∶ A) : Γ ⊨ a ∶ A := by
+  generalize e : @Sigma.mk I idx I.wt ⟨Γ, a, A⟩ = t at h
   revert Γ a A e; induction h
   all_goals intro Γ a A e; injection e with eI e; injection eI
   all_goals injection e with eCtxt eTerm eType;
@@ -85,6 +84,6 @@ theorem soundness {Γ a A} (h : Γ ⊢ a ⦂ A) : (Γ ⊨ a ⦂ A) := by
     . apply interpsConv _ hA; apply convSubst σ; apply eqvConv conv
     . exact ha
 
-theorem consistency {b} : ¬ (nil ⊢ b ⦂ mty) := by
+theorem consistency {b} : ¬ ⬝ ⊢ b ∶ mty := by
   intro h; match soundness h var (semSubstNil _) with
   | ⟨_, _, hmty, hb⟩ => rw [interpsMtyInv hmty] at hb; exact hb

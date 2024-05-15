@@ -8,33 +8,39 @@ set_option autoImplicit false
   Parallel reduction
 -------------------*-/
 
+section
+set_option hygiene false
+local infix:40 "⇒" => Par
+
 inductive Par : Term → Term → Prop where
   | β {b b' a a'} :
-    Par b b' →
-    Par a a' →
-    ------------------------------------------
-    Par (app (abs b) a) (subst (a' +: var) b')
-  | var s : Par (var s) (var s)
-  | 𝒰 k : Par (𝒰 k) (𝒰 k)
+    b ⇒ b' →
+    a ⇒ a' →
+    ------------------------------------
+    app (abs b) a ⇒ subst (a' +: var) b'
+  | var s : var s ⇒ var s
+  | 𝒰 k : 𝒰 k ⇒ 𝒰 k
   | pi {a a' b b'} :
-    Par a a' →
-    Par b b' →
-    -----------------------
-    Par (pi a b) (pi a' b')
+    a ⇒ a' →
+    b ⇒ b' →
+    -----------------
+    pi a b ⇒ pi a' b'
   | abs {b b'} :
-    Par b b' →
-    --------------------
-    Par (abs b) (abs b')
+    b ⇒ b' →
+    --------------
+    abs b ⇒ abs b'
   | app {b b' a a'} :
-    Par b b' →
-    Par a a' →
-    -------------------------
-    Par (app b a) (app b' a')
+    b ⇒ b' →
+    a ⇒ a' →
+    -------------------
+    app b a ⇒ app b' a'
   | mty : Par mty mty
   | exf {b b'} :
-    Par b b' →
-    --------------------
-    Par (exf b) (exf b')
+    b ⇒ b' →
+    --------------
+    exf b ⇒ exf b'
+end
+
 infix:40 "⇒" => Par
 
 theorem parRefl a : a ⇒ a := by
@@ -79,9 +85,15 @@ theorem parCong {a a' b b'} (ra : a ⇒ a') (rb : b ⇒ b') : subst (a +: var) b
   Reflexive, transitive closure of parallel reduction
 ----------------------------------------------------*-/
 
+section
+set_option hygiene false
+local infix:40 "⇒⋆" => Pars
+
 inductive Pars : Term → Term → Prop where
-  | refl a : Pars a a
-  | trans {a b c} : a ⇒ b → Pars b c → Pars a c
+  | refl a : a ⇒⋆ a
+  | trans {a b c} : a ⇒ b → b ⇒⋆ c → a ⇒⋆ c
+end
+
 infix:40 "⇒⋆" => Pars
 open Pars
 
