@@ -77,7 +77,89 @@ theorem eqvConv {a b} (r : a ≈ b) : a ⇔ b := by
 
 /-*-------------------------------------------------
   Context well-formedness and term well-typedness
+
+  This is an encoding of a mutual inductive
+  predicate as a single inductive,
+  where I selects the original inductive
+  (wf for the well-formedness judgement,
+   wt for the well-typedness judgement),
+  and idx provides the types of the indices
+  for each judgement.
+  The (w : I) and the idx i need to be paired up
+  so that they can be generalized together
+  during induction; generalizing over the w alone
+  will result in an ill-typed idx w.
 -------------------------------------------------*-/
+
+inductive I : Type where
+  | wf : I
+  | wt : I
+open I
+
+structure T where
+  ctxt : Ctxt
+  term : Term
+  type : Term
+
+def idx : I → Type
+  | wf => Ctxt
+  | wt => T
+
+inductive Wtf : (Σ w, idx w) → Prop where
+  | nil : Wtf ⟨wf, nil⟩
+  | cons {Γ A k} :
+    Wtf ⟨wf, Γ⟩ →
+    Wtf ⟨wt, T.mk Γ A (𝒰 k)⟩ →
+    ---------------------------
+    Wtf ⟨wf, Γ ∷ A⟩
+  | var {Γ x A} :
+    Wtf ⟨wf, Γ⟩ →
+    In x A Γ →
+    --------------------------
+    Wtf ⟨wt, T.mk Γ (var x) A⟩
+  | 𝒰 {Γ j k} :
+    Wtf ⟨wf, Γ⟩ →
+    j < k →
+    -----------------------------
+    Wtf ⟨wt, T.mk Γ (𝒰 j) (𝒰 k)⟩
+  | pi {Γ A B k} :
+    Wtf ⟨wt, T.mk Γ A (𝒰 k)⟩ →
+    Wtf ⟨wt, T.mk (Γ ∷ A) B (𝒰 k)⟩ →
+    ---------------------------------
+    Wtf ⟨wt, T.mk Γ (pi A B) (𝒰 k)⟩
+  | abs {Γ A B b k} :
+    Wtf ⟨wt, T.mk Γ (pi A B) (𝒰 k)⟩ →
+    Wtf ⟨wt, T.mk (Γ ∷ A) b B⟩ →
+    ----------------------------------
+    Wtf ⟨wt, T.mk Γ (abs b) (pi A B)⟩
+  | app {Γ A B b a} :
+    Wtf ⟨wt, T.mk Γ b (pi A B)⟩ →
+    Wtf ⟨wt, T.mk Γ a A⟩ →
+    -----------------------------------------------
+    Wtf ⟨wt, T.mk Γ (app b a) (subst (a +: var) B)⟩
+  | mty {Γ k} :
+    Wtf ⟨wf, Γ⟩ →
+    ---------------------------
+    Wtf ⟨wt, T.mk Γ mty (𝒰 k)⟩
+  | exf {Γ A b k} :
+    Wtf ⟨wt, T.mk Γ A (𝒰 k)⟩ →
+    Wtf ⟨wt, T.mk Γ b mty⟩ →
+    ---------------------------
+    Wtf ⟨wt, T.mk Γ (exf b) A⟩
+  | conv {Γ A B a k} :
+    A ≈ B →
+    Wtf ⟨wt, T.mk Γ a A⟩ →
+    Wtf ⟨wt, T.mk Γ B (𝒰 k)⟩ →
+    ---------------------------
+    Wtf ⟨wt, T.mk Γ a B⟩
+prefix:95 "⊢" => Wtf (Sigma.mk wf ·)
+notation:40 Γ "⊢" a "⦂" A => Wtf (Sigma.mk wt (T.mk Γ a A))
+
+/-*---------------------------------------------
+  Lean currently doesn't support induction on
+  mutual inductives, nor structural recursion
+  on inductive predicates in Prop.
+  Put the below back when it does.
 
 mutual
 inductive Wf : Ctxt → Prop where
@@ -132,3 +214,4 @@ end
 
 prefix:95 "⊢" => Wf
 notation:40 Γ "⊢" a "⦂" A => Wt Γ a A
+---------------------------------------------*-/

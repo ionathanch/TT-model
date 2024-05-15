@@ -9,11 +9,16 @@ open Ctxt (nil)
 
 set_option autoImplicit false
 
-theorem soundness {Γ a A} : (Γ ⊢ a ⦂ A) → (Γ ⊨ a ⦂ A)
-  | Wt.var wf mem => by intro σ hσ; apply hσ <;> assumption
-  | Wt.pi thA thB => by
-    intro σ hσ
-    match soundness thA σ hσ with
+theorem soundness {Γ a A} (h : Γ ⊢ a ⦂ A) : (Γ ⊨ a ⦂ A) := by
+  generalize e : @Sigma.mk I idx I.wt (T.mk Γ a A) = t at h
+  revert Γ a A e; induction h
+  all_goals intro Γ a A e; injection e with eI e; injection eI
+  all_goals injection e with eCtxt eTerm eType;
+            subst eCtxt; subst eTerm; subst eType
+  all_goals intro σ hσ
+  case var mem => apply hσ <;> assumption
+  case pi ihA ihB =>
+    match ihA rfl σ hσ with
     | ⟨i, P, h𝒰, hA⟩ =>
     match interps𝒰Inv h𝒰 with
     | ⟨_, e⟩ =>
@@ -24,13 +29,12 @@ theorem soundness {Γ a A} : (Γ ⊢ a ⦂ A) → (Γ ⊨ a ⦂ A)
     . assumption
     . constructor; apply interpsPi hA _ rfl
       intro x PAx; rw [← substUnion]
-      match soundness thB (x +: σ) (semSubstCons hA PAx hσ) with
+      match ihB rfl (x +: σ) (semSubstCons hA PAx hσ) with
       | ⟨_, _, h𝒰, hB⟩ =>
       match interps𝒰Inv h𝒰 with
       | ⟨_, e⟩ => subst e; exact hB
-  | Wt.abs thpi thb => by
-    intro σ hσ
-    match soundness thpi σ hσ with
+  case abs ihpi ihb =>
+    match ihpi rfl σ hσ with
     | ⟨_, _, h𝒰, hpi⟩ =>
     match interps𝒰Inv h𝒰 with
     | ⟨_, e⟩ =>
@@ -42,16 +46,15 @@ theorem soundness {Γ a A} : (Γ ⊢ a ⦂ A) → (Γ ⊨ a ⦂ A)
     constructor; exists P; constructor
     . exact hpi
     . subst e; intro x Pb PAx hB; rw [← substUnion] at hB
-      match soundness thb (x +: σ) (semSubstCons hA PAx hσ) with
+      match ihb rfl (x +: σ) (semSubstCons hA PAx hσ) with
       | ⟨_, _, hB', hb⟩ =>
       rw [interpsDet hB hB']
       apply interpsBwdsP _ hB' hb
       apply parsβ
-  | Wt.app thb tha => by
-    intro σ hσ
-    match soundness thb σ hσ with
+  case app ihb iha =>
+    match ihb rfl σ hσ with
     | ⟨i, _, hpi, hb⟩ =>
-    match soundness tha σ hσ with
+    match iha rfl σ hσ with
     | ⟨_, PA, hA, ha⟩ =>
     match interpsPiInv hpi with
     | ⟨PA', hA', hB, e⟩ =>
@@ -62,33 +65,25 @@ theorem soundness {Γ a A} : (Γ ⊢ a ⦂ A) → (Γ ⊨ a ⦂ A)
     exists i, PB; constructor
     . exact hB
     . apply hb <;> assumption
-  | @Wt.𝒰 _ _ j _ lt => by
-    intro σ hσ
+  case 𝒰 j lt _ _ =>
     exists (succ j), (∃ P, ⟦ · ⟧ j ↘ P); constructor
-    . apply interps𝒰; omega
+    . simp; apply interps𝒰; omega
     . constructor; apply interps𝒰 lt
-  | @Wt.mty _ i _ => by
-    intro σ hσ
+  case mty i _ _ =>
     exists (succ i), (∃ P, ⟦ · ⟧ i ↘ P); constructor
     . apply interps𝒰; omega
     . constructor; apply interpsMty
-  | Wt.exf _ thb => by
-    intro σ hσ
-    match soundness thb σ hσ with
+  case exf ihb _ _ =>
+    match ihb rfl σ hσ with
     | ⟨_, _, hmty, hb⟩ =>
     rw [interpsMtyInv hmty] at hb
     contradiction
-  | Wt.conv conv tha thB => by
-    intro σ hσ
-    match soundness tha σ hσ with
+  case conv iha conv _ _ =>
+    match iha rfl σ hσ with
     | ⟨i, P, hA, ha⟩ =>
     exists i, P; constructor
     . apply interpsConv _ hA; apply convSubst σ; apply eqvConv conv
     . exact ha
-termination_by sizeOf Wt
-decreasing_by repeat sorry
--- FIXME: temporary measure as Lean doesn't support `induction` on mutual inductives
--- or structural recursion on inductive predicates...
 
 theorem consistency {b} : ¬ (nil ⊢ b ⦂ mty) := by
   intro h; match soundness h var (semSubstNil _) with
