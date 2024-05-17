@@ -12,8 +12,9 @@ inductive Interp i (I : Nat → Term → Prop) : Term → (Term → Prop) → Pr
     (∀ x, Pa x → ∃ Pb, Pf x Pb) →
     (∀ x Pb, Pf x Pb → Interp i I (subst (x +: var) b) Pb) →
     Interp i I (pi a b) (λ f ↦ ∀ x Pb, Pa x → Pf x Pb → Pb (app f x))
-  | 𝒰 j : j < i → Interp i I (𝒰 j) (I j)
+  | 𝒰 j : j < i → Interp i I (𝒰 (lof j)) (I j)
   | mty : Interp i I mty (λ _ ↦ False)
+  | lvl k : Interp i I (lvl (lof k)) (λ a ↦ ∃ j, a ⇒⋆ lof j ∧ j < k)
   | step a b P :
     a ⇒ b →
     Interp i I b P →
@@ -24,7 +25,7 @@ def Interps (i : Nat) : Term → (Term → Prop) → Prop :=
   Interp i (λ j a ↦ if j < i then ∃ P, Interps j a P else False)
 notation:40 "⟦" a "⟧" i "↘" P => Interps i a P
 
-theorem interp𝒰 {i I j P} : P = I j → j < i → ⟦ 𝒰 j ⟧ i , I ↘ P := by
+theorem interp𝒰 {i I j P} : P = I j → j < i → ⟦ 𝒰 (lof j) ⟧ i , I ↘ P := by
   intros e lt; subst e; constructor; assumption
 
 /-*------------------------
@@ -44,6 +45,7 @@ theorem interpPiInv {i I a b P} (h : ⟦ pi a b ⟧ i , I ↘ P) :
     exact ⟨Pa, Pf, ha, hPf, hb, rfl⟩
   case 𝒰 => contradiction
   case mty => contradiction
+  case lvl => contradiction
   case step r _ ih =>
     subst e; cases r
     match ih rfl with
@@ -54,21 +56,30 @@ theorem interpPiInv {i I a b P} (h : ⟦ pi a b ⟧ i , I ↘ P) :
         . apply parCong; apply parRefl; assumption
         . exact hb x Pb PfxPb
 
-theorem interp𝒰Inv {i I j P} (h : ⟦ 𝒰 j ⟧ i , I ↘ P) : j < i ∧ P = I j := by
-  generalize e : 𝒰 j = a at h
-  revert e; induction h <;> intro e
-  case pi => contradiction
-  case 𝒰 lt => injection e with e; simp [lt, e]
-  case mty => contradiction
-  case step r _ ih => subst e; cases r; simp [ih]
+theorem interp𝒰Inv {i I a P} (h : ⟦ 𝒰 a ⟧ i , I ↘ P) : ∃ j, a ⇒⋆ lof j ∧ j < i ∧ P = I j := by
+  generalize e : 𝒰 a = b at h
+  revert a; induction h
+  all_goals intro a e; try contradiction
+  case 𝒰 j lt => injection e with e; subst e; exists j, Pars.refl _
+  case step r _ ih => subst e; cases r; case 𝒰 r _ =>
+    match ih rfl with
+    | ⟨j, r, lt, e⟩ => refine ⟨j, ?_, lt, e⟩; constructor <;> assumption
 
 theorem interpMtyInv {i I P} (h : ⟦ mty ⟧ i , I ↘ P) : P = (λ _ ↦ False) := by
   generalize e : mty = a at h
-  revert e; induction h <;> intro e
-  case pi => contradiction
-  case 𝒰 => contradiction
+  revert e; induction h
+  all_goals intro e; try contradiction
   case mty => rfl
   case step r _ ih => subst e; cases r; simp [ih]
+
+theorem interpLvlInv {i I a P} (h : ⟦ lvl a ⟧ i , I ↘ P) : ∃ k, a ⇒⋆ lof k ∧ P = (λ a ↦ ∃ j, a ⇒⋆ lof j ∧ j < k) := by
+  generalize e : lvl a = b at h
+  revert a; induction h
+  all_goals intro a e; try contradiction
+  case lvl k => injection e with e; subst e; exists k, Pars.refl _
+  case step r _ ih => subst e; cases r; case lvl r _ =>
+    match ih rfl with
+    | ⟨k, r, e⟩ => refine ⟨k, ?_, e⟩; constructor <;> assumption
 
 /-*--------------------------------
   Getting rid of the < in Interps
@@ -110,10 +121,13 @@ theorem interpsPi {i a b Pa P}
   rw [interpLt] at *; apply interpPi ha hb
 
 theorem interps𝒰 {i j} (lt : j < i) :
-  ⟦ 𝒰 j ⟧ i ↘ (λ a ↦ ∃ P, ⟦ a ⟧ j ↘ P) := by
+  ⟦ 𝒰 (lof j) ⟧ i ↘ (λ a ↦ ∃ P, ⟦ a ⟧ j ↘ P) := by
   rw [interpLt]; apply interp𝒰 rfl lt
 
 theorem interpsMty {i} : ⟦ mty ⟧ i ↘ (λ _ ↦ False) := by
+  rw [interpLt]; constructor
+
+theorem interpsLvl {i k} : ⟦ lvl (lof k) ⟧ i ↘ (λ a ↦ ∃ j, a ⇒⋆ lof j ∧ j < k) := by
   rw [interpLt]; constructor
 
 /-*------------------------------------------------
@@ -127,8 +141,9 @@ theorem interpFwd {i I a b P} (r : a ⇒ b) (h : ⟦ a ⟧ i , I ↘ P) : ⟦ b 
     . apply iha; assumption
     . assumption
     . intros; apply ihb; assumption; apply parCong; apply parRefl; assumption
-  case 𝒰 => cases r; constructor; assumption
+  case 𝒰 => cases r; case 𝒰 r => cases r; constructor; assumption
   case mty => cases r; apply Interp.step <;> constructor
+  case lvl => cases r; case lvl r => cases r; constructor
   case step r' _ ih =>
     match diamond r r' with
     | ⟨c, rc, rc'⟩ => constructor; exact rc; exact (ih rc')
@@ -165,6 +180,10 @@ theorem interpsBwdsP {i a x y P} (r : x ⇒⋆ y) (h : ⟦ a ⟧ i ↘ P) : P y 
     exact ihb x Pb PfxPb (parsApp r (Pars.refl x)) (h x Pb Pax PfxPb)
   case 𝒰 => exact λ r ⟨P, h⟩ ↦ ⟨P, interpsBwds r h⟩
   case mty => simp
+  case lvl =>
+    intro _ _ _ ⟨j, _, lt⟩
+    refine ⟨j, ?_, lt⟩
+    apply parsTrans <;> assumption
   case step ih => exact ih
 
 /-*--------------------------------
@@ -191,8 +210,13 @@ theorem interpDet' {i I a P Q} (hP : ⟦ a ⟧ i , I ↘ P) (hQ : ⟦ a ⟧ i , 
         | ⟨Pb', PfxPb'⟩ =>
           rw [ihb x Pb PfxPb (hb' x Pb' PfxPb')]
           exact h x Pb' Pax' PfxPb'
-  case 𝒰 => simp [interp𝒰Inv hQ]
+  case 𝒰 =>
+    match interp𝒰Inv hQ with
+    | ⟨j, r, _, e⟩ => injection (parsLofInv r) with ej; subst ej; simp [e]
   case mty => simp [interpMtyInv hQ]
+  case lvl =>
+    match interpLvlInv hQ with
+    | ⟨k, r, e⟩ => injection (parsLofInv r) with ek; subst ek; simp [e]
   case step r _ ih => exact ih (interpFwd r hQ)
 
 theorem interpsDet' {i a P Q} (hP : ⟦ a ⟧ i ↘ P) (hQ : ⟦ a ⟧ i ↘ Q) : P = Q := by
@@ -207,6 +231,7 @@ theorem interpCumul {i j I a P} : i ≤ j → (⟦ a ⟧ i , I ↘ P) → (⟦ a
     . intros; apply ihb <;> assumption
   case 𝒰 => constructor; omega
   case mty => constructor
+  case lvl => constructor
   case step ih => constructor; assumption; apply ih lt
 
 theorem interpsCumul {i j a P} : i ≤ j → (⟦ a ⟧ i ↘ P) → (⟦ a ⟧ j ↘ P) := by
@@ -251,14 +276,18 @@ theorem interpsPiInv {i a b P} (h : ⟦ pi a b ⟧ i ↘ P) :
     P = λ f ↦ ∀ x Pb, Pa x → (⟦ subst (x +: var) b⟧ i ↘ Pb) → Pb (app f x) := by
   rw [interpLt] at *; apply interpPiInv' h
 
-theorem interps𝒰Inv {i j P} (h : ⟦ 𝒰 j ⟧ i ↘ P) :
-  j < i ∧ P = λ a ↦ ∃ P, ⟦ a ⟧ j ↘ P := by
+theorem interps𝒰Inv {i a P} (h : ⟦ 𝒰 a ⟧ i ↘ P) :
+  ∃ j, a ⇒⋆ lof j ∧ j < i ∧ P = λ a ↦ ∃ P, ⟦ a ⟧ j ↘ P := by
   rw [interpLt] at h
   apply interp𝒰Inv h
 
 theorem interpsMtyInv {i P} (h : ⟦ mty ⟧ i ↘ P) : P = (λ _ ↦ False) := by
   rw [interpLt] at h
   apply interpMtyInv h
+
+theorem interpsLvlInv {i a P} (h : ⟦ lvl a ⟧ i ↘ P) : ∃ k, a ⇒⋆ lof k ∧ P = (λ a ↦ ∃ j, a ⇒⋆ lof j ∧ j < k) := by
+  rw [interpLt] at h
+  apply interpLvlInv h
 
 /-*----------------
   Semantic typing
@@ -278,11 +307,5 @@ theorem semSubstCons {Γ : Ctxt} {σ i a A P} :
   σ ⊨ Γ → a +: σ ⊨ Γ ∷ A := by
   intro hA ha hσ x B mem
   cases mem
-  case here =>
-    have e : subst (a +: σ) (rename succ A) = (subst (a +: σ) ∘ rename succ) A := by rfl
-    rw [e, substRename]
-    exists i, P
-  case there B mem =>
-    have e : subst (a +: σ) (rename succ B) = (subst (a +: σ) ∘ rename succ) B := by rfl
-    rw [e, substRename]
-    apply hσ <;> assumption
+  case here => rw [substRenamed]; exists i, P
+  case there B mem => rw [substRenamed]; apply hσ <;> assumption

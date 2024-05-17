@@ -19,7 +19,10 @@ inductive Par : Term → Term → Prop where
     ------------------------------------
     app (abs b) a ⇒ subst (a' +: var) b'
   | var s : var s ⇒ var s
-  | 𝒰 k : 𝒰 k ⇒ 𝒰 k
+  | 𝒰 {a a'} :
+    a ⇒ a' →
+    ------------
+    𝒰 a ⇒ 𝒰 a'
   | pi {a a' b b'} :
     a ⇒ a' →
     b ⇒ b' →
@@ -34,11 +37,16 @@ inductive Par : Term → Term → Prop where
     a ⇒ a' →
     -------------------
     app b a ⇒ app b' a'
-  | mty : Par mty mty
+  | mty : mty ⇒ mty
   | exf {b b'} :
     b ⇒ b' →
     --------------
     exf b ⇒ exf b'
+  | lvl {a a'} :
+    a ⇒ a' →
+    --------------
+    lvl a ⇒ lvl a'
+  | lof k : lof k ⇒ lof k
 end
 
 infix:40 "⇒" => Par
@@ -49,12 +57,14 @@ theorem parRefl a : a ⇒ a := by
 theorem parRename {a b} ξ (r : a ⇒ b) : rename ξ a ⇒ rename ξ b := by
   revert ξ; induction r <;> intro ξ <;> try constructor
   case β ihb iha => rw [← renameDist]; constructor; apply ihb; apply iha
+  case 𝒰 ih => apply ih
   case pi ih _ => apply ih
   case pi _ ih => apply ih
   case abs ih => apply ih
   case app ih _ => apply ih
   case app _ ih => apply ih
   case exf ih => apply ih
+  case lvl ih => apply ih
 
 theorem parLift σ τ (h : ∀ x, σ x ⇒ τ x) : ∀ x, (⇑ σ) x ⇒ (⇑ τ) x := by
   intro n; cases n
@@ -68,12 +78,14 @@ theorem parMorphing {a b} σ τ (h : ∀ x, σ x ⇒ τ x) (r : a ⇒ b) : subst
     . apply ihb; apply parLift; assumption
     . apply iha; assumption
   case var => apply h
+  case 𝒰 ih => apply ih; assumption
   case pi ih _ => apply ih; assumption
   case pi _ ih => apply ih; apply parLift; assumption
   case abs ih => apply ih; apply parLift; assumption
   case app ih _ => apply ih; assumption
   case app _ ih => apply ih; assumption
   case exf ih => apply ih; assumption
+  case lvl ih => apply ih; assumption
 
 theorem parSubst {a b} σ (r : a ⇒ b) : subst σ a ⇒ subst σ b := by
   apply parMorphing (r := r); intros; apply parRefl
@@ -129,6 +141,11 @@ theorem parsCong {a a' b b'} (ra : a ⇒⋆ a') (rb : b ⇒⋆ b') : subst (a +:
   Constructors for parallel multi-reduction
 ------------------------------------------*-/
 
+theorem pars𝒰 {a a'} (r : a ⇒⋆ a') : 𝒰 a ⇒⋆ 𝒰 a' := by
+  induction r
+  case refl => constructor
+  case trans => constructor; constructor; assumption; assumption
+
 theorem parsPi {a a' b b'} (ra : a ⇒⋆ a') (rb : b ⇒⋆ b') : pi a b ⇒⋆ pi a' b' := by
   revert b b' rb; induction ra <;> intro b b' rb <;> induction rb
   case refl.refl => constructor
@@ -159,6 +176,11 @@ theorem parsExf {b b'} (r : b ⇒⋆ b') : exf b ⇒⋆ exf b' := by
   case refl => constructor
   case trans => constructor; constructor; assumption; assumption
 
+theorem parsLvl {a a'} (r : a ⇒⋆ a') : lvl a ⇒⋆ lvl a' := by
+  induction r
+  case refl => constructor
+  case trans => constructor; constructor; assumption; assumption
+
 theorem parsβ σ b a : app (abs (subst (⇑ σ) b)) a ⇒⋆ subst (a +: σ) b := by
   constructor
   . constructor; apply parRefl; apply parRefl
@@ -168,11 +190,14 @@ theorem parsβ σ b a : app (abs (subst (⇑ σ) b)) a ⇒⋆ subst (a +: σ) b 
   Inversion principles for parallel multi-reduction
 --------------------------------------------------*-/
 
-theorem pars𝒰Inv {k b} (r : 𝒰 k ⇒⋆ b) : b = 𝒰 k := by
-  generalize e : 𝒰 k = a at r
-  induction r
-  case refl => rfl
-  case trans ra rb ih => subst e; cases ra; apply ih; rfl
+theorem pars𝒰Inv {a b} (r : 𝒰 a ⇒⋆ b) : ∃ a', b = 𝒰 a' ∧ a ⇒⋆ a' := by
+  generalize e : 𝒰 a = c at r
+  revert a; induction r
+  case refl => intro a e; subst e; exists a, rfl; apply Pars.refl
+  case trans ra rb ih =>
+    intro a e; subst e; cases ra
+    match ih rfl with
+    | ⟨a', e, r⟩ => exists a', e; apply Pars.trans <;> assumption
 
 theorem parsMtyInv {b} (r : mty ⇒⋆ b) : b = mty := by
   generalize e : mty = a at r
@@ -185,11 +210,17 @@ theorem parsPiInv {a b c} (r : pi a b ⇒⋆ c) : ∃ a' b', c = pi a' b' ∧ a 
   revert a b e; induction r <;> intro a b e
   case refl => subst e; exact ⟨a, b, by simp; repeat constructor⟩
   case trans r _ ih =>
-    subst e; cases r;
+    subst e; cases r
     match ih rfl with
     | ⟨a', b', e, _, _⟩ =>
       refine ⟨a', b', e, ?_, ?_⟩
       all_goals constructor <;> assumption
+
+theorem parsLofInv {j b} (r : lof j ⇒⋆ b) : b = lof j := by
+  generalize e : lof j = a at r
+  revert e; induction r <;> intro e <;> subst e
+  case refl => rfl
+  case trans ih r => cases r; simp [ih]
 
 /-*---------------------------------------
   Confluence via Takahashi's translation
@@ -197,12 +228,14 @@ theorem parsPiInv {a b c} (r : pi a b ⇒⋆ c) : ∃ a' b', c = pi a' b' ∧ a 
 
 @[simp]
 def taka : Term → Term
+  | 𝒰 a => 𝒰 (taka a)
   | pi a b => pi (taka a) (taka b)
   | abs b => abs (taka b)
   | app b a => match b with
     | abs b => subst (taka a +: var) (taka b)
     | b => app (taka b) (taka a)
   | exf b => exf (taka b)
+  | lvl a => lvl (taka a)
   | t => t
 
 theorem parTaka {a b} (r : a ⇒ b) : b ⇒ taka a := by
@@ -294,6 +327,10 @@ theorem convCong {a a' b b'} (ra : a ⇔ a') (rb : b ⇔ b') : subst (a +: var) 
   Constructors for conversion
 ----------------------------*-/
 
+theorem conv𝒰 {a a'} (r : a ⇔ a') : 𝒰 a ⇔ 𝒰 a' :=
+  match r with
+  | ⟨a'', ra, ra'⟩ => ⟨𝒰 a'', pars𝒰 ra, pars𝒰 ra'⟩
+
 theorem convPi {a a' b b'} (ra : a ⇔ a') (rb : b ⇔ b') : pi a b ⇔ pi a' b' :=
   match ra, rb with
   | ⟨a'', ra, ra'⟩, ⟨b'', rb, rb'⟩ =>
@@ -312,19 +349,25 @@ theorem convExf {b b'} (r : b ⇔ b') : exf b ⇔ exf b' :=
   match r with
   | ⟨b'', rb, rb'⟩ => ⟨exf b'', parsExf rb, parsExf rb'⟩
 
+theorem convLvl {a a'} (r : a ⇔ a') : lvl a ⇔ lvl a' :=
+  match r with
+  | ⟨a'', ra, ra'⟩ => ⟨lvl a'', parsLvl ra, parsLvl ra'⟩
+
 /-*------------------------------------
   Inversion principles for conversion
 ------------------------------------*-/
 
-theorem conv𝒰Mty {k} : ¬ 𝒰 k ⇔ mty
+theorem conv𝒰Mty {a} : ¬ 𝒰 a ⇔ mty
   | ⟨_, r𝒰, rmty⟩ => by
-    have e𝒰 := pars𝒰Inv r𝒰
+    match pars𝒰Inv r𝒰 with
+    | ⟨_, e𝒰, _⟩ =>
     have emty := parsMtyInv rmty
     subst emty; contradiction
 
-theorem conv𝒰Pi {k a b} : ¬ 𝒰 k ⇔ pi a b
+theorem conv𝒰Pi {c a b} : ¬ 𝒰 c ⇔ pi a b
   | ⟨_, r𝒰, rpi⟩ => by
-    have e𝒰 := pars𝒰Inv r𝒰
+    match pars𝒰Inv r𝒰 with
+    | ⟨_, e𝒰, _⟩ =>
     match parsPiInv rpi with
     | ⟨_, _, epi, _, _⟩ => subst epi; contradiction
 
@@ -334,11 +377,14 @@ theorem convMtyPi {a b} : ¬ mty ⇔ pi a b
     match parsPiInv rpi with
     | ⟨_, _, epi, _, _⟩ => subst epi; contradiction
 
-theorem conv𝒰Inv {j k} : 𝒰 j ⇔ 𝒰 k → j = k
-  | ⟨_, rj, rk⟩ => by
-    have ej := pars𝒰Inv rj
-    have ek := pars𝒰Inv rk
-    subst ej; injection ek
+theorem conv𝒰Inv {a b} : 𝒰 a ⇔ 𝒰 b → a ⇔ b
+  | ⟨_, ra, rb⟩ => by
+    match pars𝒰Inv ra with
+    | ⟨a, e𝒰a, ra'⟩ =>
+    match pars𝒰Inv rb with
+    | ⟨b, e𝒰b, rb'⟩ =>
+    subst e𝒰a; injection e𝒰b with eab; subst eab
+    exact ⟨a, ra', rb'⟩
 
 theorem convPiInv {a₁ a₂ b₁ b₂} : pi a₁ b₁ ⇔ pi a₂ b₂ → a₁ ⇔ a₂ ∧ b₁ ⇔ b₂
   | ⟨_, r₁, r₂⟩ =>
