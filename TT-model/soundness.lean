@@ -102,7 +102,7 @@ theorem soundness {Γ a A} (h : Γ ⊢ a ∶ A) : Γ ⊨ a ∶ A := by
       | ⟨k, r, _⟩ =>
       exists (∃ j, · ⇒⋆ lof j ∧ j < k)
       exact interpsBwds (parsLvl r) interpsLvl
-  case lof j k lt =>
+  case lof j k lt _ _ =>
     refine ⟨0, (∃ j, · ⇒⋆ lof j ∧ j < k), ?_, ?_⟩
     . exact interpsLvl
     . exists j, Pars.refl _
