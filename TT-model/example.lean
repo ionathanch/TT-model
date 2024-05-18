@@ -12,13 +12,12 @@ def idid : ⬝ ⊢ (abs (app (app ((app (var 0) (lof 3))) (idType 3)) (abs (app 
   apply Wtf.abs (k := lof 4)
   . apply Wtf.pi
     . apply Wtf.pi
-      . apply Wtf.lvl; apply @Wtf.lof _ 4 5; omega
+      . apply Wtf.lvl; apply @Wtf.lof _ 4 5; sorry; omega
       . apply Wtf.pi
         . apply Wtf.𝒰
+          apply Wtf.var
           . sorry
-          . apply Wtf.var
-            . sorry
-            . apply inHere; rfl
+          . apply inHere; rfl
         . apply Wtf.pi
           . apply Wtf.sub
             . apply Wtf.var
@@ -35,15 +34,14 @@ def idid : ⬝ ⊢ (abs (app (app ((app (var 0) (lof 3))) (idType 3)) (abs (app 
               . sorry
               . apply inThere; apply inHere; rfl; rfl
     . apply Wtf.sub
-      . apply @Wtf.lof _ 3; omega
+      . apply @Wtf.lof _ 3; sorry; omega
       . apply Wtf.pi
-        . apply Wtf.lvl; apply @Wtf.lof _ 3 4; omega
+        . apply Wtf.lvl; apply @Wtf.lof _ 3 4; sorry; omega
         . apply Wtf.pi
           . apply Wtf.𝒰
+            apply Wtf.var
             . sorry
-            . apply Wtf.var
-              . sorry
-              . apply inHere; rfl
+            . apply inHere; rfl
           . apply Wtf.pi
             . apply Wtf.sub
               . apply Wtf.var
@@ -65,18 +63,17 @@ def idid : ⬝ ⊢ (abs (app (app ((app (var 0) (lof 3))) (idType 3)) (abs (app 
         . apply Wtf.var
           . sorry
           . apply inHere; rfl
-        . apply Wtf.lof; omega
+        . apply Wtf.lof; sorry; omega
         . simp; exact ⟨rfl, rfl⟩
       . apply Wtf.pi
         . apply Wtf.lvl
           have lt : 3 < 4 := by omega
-          apply Wtf.lof lt
+          apply Wtf.lof _ lt; sorry
         . apply Wtf.pi
           . apply Wtf.𝒰
+            apply Wtf.var
             . sorry
-            . apply Wtf.var
-              . sorry
-              . apply inHere; rfl
+            . apply inHere; rfl
           . apply Wtf.pi
             . apply Wtf.sub
               . apply Wtf.var
@@ -95,13 +92,12 @@ def idid : ⬝ ⊢ (abs (app (app ((app (var 0) (lof 3))) (idType 3)) (abs (app 
       . simp; exact ⟨rfl, rfl⟩
     . apply Wtf.abs (k := lof 3)
       . apply Wtf.pi
-        . apply Wtf.lvl; apply @Wtf.lof _ 3 4; omega
+        . apply Wtf.lvl; apply @Wtf.lof _ 3 4; sorry; omega
         . apply Wtf.pi
           . apply Wtf.𝒰
+            apply Wtf.var
             . sorry
-            . apply Wtf.var
-              . sorry
-              . apply inHere; rfl
+            . apply inHere; rfl
           . apply Wtf.pi
             . apply Wtf.sub
               . apply Wtf.var
@@ -125,6 +121,6 @@ def idid : ⬝ ⊢ (abs (app (app ((app (var 0) (lof 3))) (idType 3)) (abs (app 
           . apply Wtf.var
             . sorry
             . apply inHere; rfl
-          . apply Wtf.lof; omega
+          . apply Wtf.lof; sorry; omega
         . simp
     . simp
