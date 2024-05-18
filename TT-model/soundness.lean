@@ -81,9 +81,16 @@ theorem soundness {Γ a A} (h : Γ ⊢ a ∶ A) : Γ ⊨ a ∶ A := by
     exists (succ k), (∃ P, ⟦ · ⟧ k ↘ P); constructor
     . simp; exact interpsBwds (pars𝒰 rk) (interps𝒰 (by omega))
     . constructor; exact interpsBwds (pars𝒰 rj) (interps𝒰 lt)
-  case mty i _ _ =>
-    refine ⟨succ i, (∃ P, ⟦ · ⟧ i ↘ P), ?_, ?_⟩
-    . exact interps𝒰 (by omega)
+  case mty ih =>
+    match ih rfl σ hσ with
+    | ⟨_, _, hj, hi⟩ =>
+    match interpsLvlInv hj with
+    | ⟨j, _, e⟩ =>
+    subst e
+    match hi with
+    | ⟨i, ri, lt⟩ =>
+    refine ⟨j, (∃ P, ⟦ · ⟧ i ↘ P), ?_, ?_⟩
+    . exact interpsBwds (pars𝒰 ri) (interps𝒰 lt)
     . constructor; exact interpsMty
   case exf ihb _ _ =>
     match ihb rfl σ hσ with
