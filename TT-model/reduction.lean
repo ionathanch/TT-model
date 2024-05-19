@@ -4,6 +4,8 @@ open Term
 
 set_option autoImplicit false
 
+variable [LevelClass]
+
 /-*-------------------
   Parallel reduction
 -------------------*-/

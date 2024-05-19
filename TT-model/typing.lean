@@ -2,9 +2,12 @@ import «TT-model».syntactics
 import «TT-model».reduction
 
 open Nat
+open LevelClass (L)
 open Term
 
 set_option autoImplicit false
+
+variable [LevelClass]
 
 /-*----------------------
   Definitional equality
@@ -12,7 +15,7 @@ set_option autoImplicit false
 
 section
 set_option hygiene false
-local infix:40 "≈" => Eqv
+local infix:40 (priority := 1001) "≈" => Eqv -- override HasEquiv.Equiv
 
 inductive Eqv : Term → Term → Prop where
   | β {b a} : app (abs b) a ≈ subst (a +: var) b
@@ -54,7 +57,7 @@ inductive Eqv : Term → Term → Prop where
     a ≈ c
 end
 
-infix:40 "≈" => Eqv
+infix:40 (priority := 1001) "≈" => Eqv
 
 /-* Conversion is sound and complete with respect to definitional equality,
     making conversion an appropriate implementation of definitional equality *-/
@@ -170,7 +173,7 @@ inductive Wtf : (Σ w, idx w) → Prop where
     Γ ⊢ a ∶ lvl b →
     ----------------------
     Γ ⊢ lvl a ∶ 𝒰 (lof k)
-  | lof {Γ j k} :
+  | lof {Γ} {j k : L} :
     ⊢ Γ →
     j < k →
     -----------------------

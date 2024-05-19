@@ -3,10 +3,12 @@ import «TT-model».reduction
 import «TT-model».typing
 import «TT-model».semantics
 
-open Nat
+open LevelClass (lsucc)
 open Term
 
 set_option autoImplicit false
+
+variable [lc : LevelClass]
 
 theorem soundness {Γ a A} (h : Γ ⊢ a ∶ A) : Γ ⊨ a ∶ A := by
   generalize e : @Sigma.mk I idx I.wt ⟨Γ, a, A⟩ = t at h
@@ -15,7 +17,7 @@ theorem soundness {Γ a A} (h : Γ ⊢ a ∶ A) : Γ ⊨ a ∶ A := by
   all_goals injection e with eCtxt eTerm eType;
             subst eCtxt; subst eTerm; subst eType
   all_goals intro σ hσ
-  case var mem => apply hσ <;> assumption
+  case var mem => apply hσ; assumption
   case pi ihA ihB =>
     match ihA rfl σ hσ with
     | ⟨i, P, h𝒰, hA⟩ =>
@@ -77,10 +79,12 @@ theorem soundness {Γ a A} (h : Γ ⊢ a ∶ A) : Γ ⊨ a ∶ A := by
     | ⟨k, rk, e⟩ =>
     subst e
     match hj with
-    | ⟨j, rj, lt⟩ =>
-    exists (succ k), (∃ P, ⟦ · ⟧ k ↘ P); constructor
-    . simp; exact interpsBwds (pars𝒰 rk) (interps𝒰 (by omega))
-    . constructor; exact interpsBwds (pars𝒰 rj) (interps𝒰 lt)
+    | ⟨j, rj, ltj⟩ =>
+    match lsucc k with
+    | ⟨ℓ, ltk⟩ =>
+    exists ℓ, (∃ P, ⟦ · ⟧ k ↘ P); constructor
+    . simp; exact interpsBwds (pars𝒰 rk) (interps𝒰 ltk)
+    . constructor; exact interpsBwds (pars𝒰 rj) (interps𝒰 ltj)
   case mty ih =>
     match ih rfl σ hσ with
     | ⟨_, _, hj, hi⟩ =>
@@ -100,8 +104,10 @@ theorem soundness {Γ a A} (h : Γ ⊢ a ∶ A) : Γ ⊨ a ∶ A := by
   case lvl k _ iha =>
     match iha rfl σ hσ with
     | ⟨_, P, hlvl, ha⟩ =>
-    refine ⟨succ k, (∃ P, ⟦ · ⟧ k ↘ P), ?_, ?_⟩
-    . apply interps𝒰; omega
+    match lsucc k with
+    | ⟨ℓ, lt⟩ =>
+    refine ⟨ℓ, (∃ P, ⟦ · ⟧ k ↘ P), ?_, ?_⟩
+    . apply interps𝒰 lt
     . match interpsLvlInv hlvl with
       | ⟨_, _, e⟩ =>
       subst e
@@ -109,8 +115,8 @@ theorem soundness {Γ a A} (h : Γ ⊢ a ∶ A) : Γ ⊨ a ∶ A := by
       | ⟨k, r, _⟩ =>
       exists (∃ j, · ⇒⋆ lof j ∧ j < k)
       exact interpsBwds (parsLvl r) interpsLvl
-  case lof j k lt _ _ =>
-    refine ⟨0, (∃ j, · ⇒⋆ lof j ∧ j < k), ?_, ?_⟩
+  case lof j k _ _ _ =>
+    refine ⟨j, (∃ j, · ⇒⋆ lof j ∧ j < k), ?_, ?_⟩
     . exact interpsLvl
     . exists j, Pars.refl _
   case trans j k _ ihk _ ihj =>
@@ -120,20 +126,20 @@ theorem soundness {Γ a A} (h : Γ ⊢ a ∶ A) : Γ ⊨ a ∶ A := by
     | ⟨k, _, ePj⟩ =>
     subst ePj
     match hj with
-    | ⟨j, rj, ltjk⟩ =>
+    | ⟨j, rj, _⟩ =>
     match ihj rfl σ hσ with
     | ⟨_, Pi, hj, hi⟩ =>
     match interpsLvlInv hj with
     | ⟨j', rj', ePi⟩ =>
     subst ePi
     match hi with
-    | ⟨i, r, ltij⟩ =>
+    | ⟨i, r, _⟩ =>
     match confluence rj rj' with
     | ⟨j'', rj, rj'⟩ =>
     rw [parsLofInv rj] at rj'
     injection (parsLofInv rj') with e; subst e
     refine ⟨_, (∃ j, · ⇒⋆ lof j ∧ j < k), hk, ?_⟩
-    . exists i, r; omega
+    . exists i, r; apply IsTrans.trans <;> assumption
   case conv iha conv _ _ =>
     match iha rfl σ hσ with
     | ⟨i, P, hA, ha⟩ =>
@@ -144,7 +150,7 @@ theorem soundness {Γ a A} (h : Γ ⊢ a ∶ A) : Γ ⊨ a ∶ A := by
     match ihA rfl σ hσ with
     | ⟨_, Pj, h𝒰, hA⟩ =>
     match interps𝒰Inv h𝒰 with
-    | ⟨j, rj, lt , e⟩ =>
+    | ⟨j, rj, _ , e⟩ =>
     subst e
     match hA with
     | ⟨P, hA⟩ =>
@@ -154,14 +160,16 @@ theorem soundness {Γ a A} (h : Γ ⊢ a ∶ A) : Γ ⊨ a ∶ A := by
     | ⟨k, rk, e⟩ =>
     subst e
     match hj with
-    | ⟨j', rj', lt'⟩ =>
+    | ⟨j', rj', ltj'⟩ =>
     match confluence rj rj' with
     | ⟨j'', rj, rj'⟩ =>
     rw [parsLofInv rj'] at rj
     injection (parsLofInv rj) with e; subst e
-    refine ⟨succ k, (∃ P, ⟦ · ⟧ k ↘ P), ?_, ?_⟩
-    . exact interpsBwds (pars𝒰 rk) (interps𝒰 (by omega))
-    . exists P; exact interpsCumul (by omega) hA
+    match lsucc k with
+    | ⟨ℓ, ltk⟩ =>
+    refine ⟨ℓ, (∃ P, ⟦ · ⟧ k ↘ P), ?_, ?_⟩
+    . exact interpsBwds (pars𝒰 rk) (interps𝒰 ltk)
+    . exists P; exact interpsCumul ltj' hA
 
 theorem consistency {b} : ¬ ⬝ ⊢ b ∶ mty := by
   intro h; match soundness h var (semSubstNil _) with

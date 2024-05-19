@@ -1,12 +1,17 @@
+import «TT-model».level
+
 open Nat
+open LevelClass (L)
 
 set_option autoImplicit false
+
+variable [LevelClass]
 
 @[simp]
 def cons {A : Type} (x : A) (ξ : Nat → A) : Nat → A
   | 0 => x
   | n + 1 => ξ n
-infixr:50 " +: " => cons
+infixr:50 "+:" => cons
 
 /-*------
   Terms
@@ -21,8 +26,8 @@ inductive Term : Type where
   | mty : Term
   | exf : Term → Term
   | lvl : Term → Term
-  | lof : Nat → Term
-namespace Term
+  | lof : L → Term
+open Term
 
 /-*------------------
   Lifting renamings

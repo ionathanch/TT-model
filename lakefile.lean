@@ -2,10 +2,11 @@ import Lake
 open Lake DSL
 
 package «TT-model» where
-  -- add package configuration options here
 
 lean_lib «TT-model» where
-  -- add library configuration options here
+
+require mathlib from git
+  "https://github.com/leanprover-community/mathlib4"
 
 @[default_target]
 lean_exe «tt-model» where
