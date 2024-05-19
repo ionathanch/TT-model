@@ -2,7 +2,6 @@ import «TT-model».syntactics
 import «TT-model».reduction
 
 open Nat
-open LevelClass (L)
 open Term
 
 set_option autoImplicit false
@@ -173,7 +172,7 @@ inductive Wtf : (Σ w, idx w) → Prop where
     Γ ⊢ a ∶ lvl b →
     ----------------------
     Γ ⊢ lvl a ∶ 𝒰 (lof k)
-  | lof {Γ} {j k : L} :
+  | lof {Γ j k} :
     ⊢ Γ →
     j < k →
     -----------------------

@@ -3,7 +3,6 @@ import «TT-model».reduction
 import «TT-model».typing
 import «TT-model».semantics
 
-open LevelClass (lsucc)
 open Term
 
 set_option autoImplicit false
@@ -80,7 +79,7 @@ theorem soundness {Γ a A} (h : Γ ⊢ a ∶ A) : Γ ⊨ a ∶ A := by
     subst e
     match hj with
     | ⟨j, rj, ltj⟩ =>
-    match lsucc k with
+    match exists_gt k with
     | ⟨ℓ, ltk⟩ =>
     exists ℓ, (∃ P, ⟦ · ⟧ k ↘ P); constructor
     . simp; exact interpsBwds (pars𝒰 rk) (interps𝒰 ltk)
@@ -104,7 +103,7 @@ theorem soundness {Γ a A} (h : Γ ⊢ a ∶ A) : Γ ⊨ a ∶ A := by
   case lvl k _ iha =>
     match iha rfl σ hσ with
     | ⟨_, P, hlvl, ha⟩ =>
-    match lsucc k with
+    match exists_gt k with
     | ⟨ℓ, lt⟩ =>
     refine ⟨ℓ, (∃ P, ⟦ · ⟧ k ↘ P), ?_, ?_⟩
     . apply interps𝒰 lt
@@ -165,7 +164,7 @@ theorem soundness {Γ a A} (h : Γ ⊢ a ∶ A) : Γ ⊨ a ∶ A := by
     | ⟨j'', rj, rj'⟩ =>
     rw [parsLofInv rj'] at rj
     injection (parsLofInv rj) with e; subst e
-    match lsucc k with
+    match exists_gt k with
     | ⟨ℓ, ltk⟩ =>
     refine ⟨ℓ, (∃ P, ⟦ · ⟧ k ↘ P), ?_, ?_⟩
     . exact interpsBwds (pars𝒰 rk) (interps𝒰 ltk)

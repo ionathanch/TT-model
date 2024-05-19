@@ -1,20 +1,19 @@
 import «TT-model».syntactics
 import «TT-model».reduction
 
-open LevelClass (L)
 open Term
 
 set_option autoImplicit false
 
 variable [lc : LevelClass]
 
-inductive Interp i (I : (j : L) → j < i → Term → Prop) : Term → (Term → Prop) → Prop where
+inductive Interp (i : lc.L) (I : ∀ j, j < i → Term → Prop) : Term → (Term → Prop) → Prop where
   | pi a b Pa (Pf : Term → (Term → Prop) → Prop) :
     Interp i I a Pa →
     (∀ x, Pa x → ∃ Pb, Pf x Pb) →
     (∀ x Pb, Pf x Pb → Interp i I (subst (x +: var) b) Pb) →
     Interp i I (pi a b) (λ f ↦ ∀ x Pb, Pa x → Pf x Pb → Pb (app f x))
-  | 𝒰 (j : L) (lt : j < i) : Interp i I (𝒰 (lof j)) (I j lt)
+  | 𝒰 j (lt : j < i) : Interp i I (𝒰 (lof j)) (I j lt)
   | mty : Interp i I mty (λ _ ↦ False)
   | lvl k : Interp i I (lvl (lof k)) (λ a ↦ ∃ j, a ⇒⋆ lof j ∧ j < k)
   | step a b P :
@@ -23,7 +22,7 @@ inductive Interp i (I : (j : L) → j < i → Term → Prop) : Term → (Term �
     Interp i I a P
 notation:40 "⟦" a "⟧" i "," I "↘" P => Interp i I a P
 
-def Interps (i : L) : Term → (Term → Prop) → Prop :=
+def Interps (i : lc.L) : Term → (Term → Prop) → Prop :=
   Interp i (λ j _ a ↦ ∃ P, Interps j a P)
 termination_by i
 
@@ -93,7 +92,7 @@ theorem interpsPi {i a b Pa P}
   ⟦ pi a b ⟧ i ↘ P := by
   unfold Interps at *; intro e; subst e; constructor; assumption; assumption; simp
 
-theorem interps𝒰 {i j : L} (lt : j < i) :
+theorem interps𝒰 {i j} (lt : j < i) :
   ⟦ 𝒰 (lof j) ⟧ i ↘ (λ a ↦ ∃ P, ⟦ a ⟧ j ↘ P) := by
   unfold Interps at *; constructor; assumption
 
@@ -195,7 +194,7 @@ theorem interpDet' {i I a P Q} (hP : ⟦ a ⟧ i , I ↘ P) (hQ : ⟦ a ⟧ i , 
 theorem interpsDet' {i a P Q} (hP : ⟦ a ⟧ i ↘ P) (hQ : ⟦ a ⟧ i ↘ Q) : P = Q := by
   unfold Interps at *; apply interpDet' <;> assumption
 
-theorem interpsCumul {i j : L} {a P} (lt : i < j) (h : ⟦ a ⟧ i ↘ P) : ⟦ a ⟧ j ↘ P := by
+theorem interpsCumul {i j a P} (lt : i < j) (h : ⟦ a ⟧ i ↘ P) : ⟦ a ⟧ j ↘ P := by
   revert j; unfold Interps at h; induction h
   all_goals intro j lt; unfold Interps
   case pi iha ihb =>
@@ -210,7 +209,7 @@ theorem interpsCumul {i j : L} {a P} (lt : i < j) (h : ⟦ a ⟧ i ↘ P) : ⟦ 
 
 -- this is the only place we need trichotomy of <
 theorem interpsDet {i j a P Q} (hP : ⟦ a ⟧ i ↘ P) (hQ : ⟦ a ⟧ j ↘ Q) : P = Q := by
-  rcases IsTrichotomous.trichotomous (lt := lc.lt) i j with lt | eq | gt
+  rcases trichotomous (r := lc.lt.lt) i j with lt | eq | gt
   . apply interpsDet' _ hQ; apply interpsCumul lt hP
   . rw [eq] at hP; apply interpsDet' hP hQ
   . apply interpsDet' hP; apply interpsCumul gt hQ

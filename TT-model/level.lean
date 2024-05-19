@@ -1,23 +1,24 @@
 import Mathlib.Order.RelClasses
+import Mathlib.Order.Max
 
 /-*----------------------------------------------------------
   Typeclass for levels and their required properties:
   * Wellfoundedness is needed to build the logical relation
   * Transitivity is needed for cumulativity of the LR
   * Trichotomy is needed for determinism of the LR
-  * Lsucc is needed since every type has a type
+  * Cofinality is needed since every type has a type
 ----------------------------------------------------------*-/
 
 class LevelClass where
   L : Type
-  lt : L → L → Prop
-  wo : IsWellOrder L lt
-  lsucc i : ∃ j, lt i j
+  lt : LT L
+  wo : IsWellOrder L lt.lt
+  cf : NoMaxOrder L
 open LevelClass
 
-infix:50 "<" => lt
-
+attribute [instance] lt
 attribute [instance] wo
+attribute [instance] cf
 
 instance [LevelClass] : WellFoundedRelation L :=
   wo.toWellFoundedRelation
@@ -26,12 +27,15 @@ instance [LevelClass] : WellFoundedRelation L :=
   The naturals are suitable levels
 ---------------------------------*-/
 
-@[simp]
-instance LNat : LevelClass where
-  L := Nat
-  lt := LT.lt
-  wo := Nat.lt.isWellOrder
-  lsucc := λ i ↦ ⟨Nat.succ i, by omega⟩
+instance instNoMaxOrderNat : NoMaxOrder Nat where
+  exists_gt := λ i ↦ ⟨Nat.succ i, by omega⟩
 
-instance LOfNat : OfNat L n where
+@[simp]
+instance : LevelClass where
+  L := Nat
+  lt := instLTNat
+  wo := Nat.lt.isWellOrder
+  cf := instNoMaxOrderNat
+
+instance : OfNat L n where
   ofNat := n

@@ -1,11 +1,10 @@
 import «TT-model».level
 
 open Nat
-open LevelClass (L)
 
 set_option autoImplicit false
 
-variable [LevelClass]
+variable [lc : LevelClass]
 
 @[simp]
 def cons {A : Type} (x : A) (ξ : Nat → A) : Nat → A
@@ -26,7 +25,7 @@ inductive Term : Type where
   | mty : Term
   | exf : Term → Term
   | lvl : Term → Term
-  | lof : L → Term
+  | lof : lc.L → Term
 open Term
 
 /-*------------------
