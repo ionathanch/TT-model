@@ -62,7 +62,7 @@ def rename (ξ : Nat → Nat) : Term → Term
 theorem renameComp' ξ ζ ς (h : ∀ x, (ξ ∘ ζ) x = ς x) : ∀ s, (rename ξ ∘ rename ζ) s = rename ς s := by
   intro s; revert ξ ζ ς h; induction s
   all_goals intro ξ ζ ς h; simp; try constructor
-  case var s => rw [← h]; rfl
+  case var s => simp [← h]
   case 𝒰 ih => apply ih; assumption
   case pi.left ih _ => apply ih; assumption
   case pi.right _ ih => apply ih; apply liftComp; assumption
@@ -94,15 +94,15 @@ theorem upUp σ x : (⇑ ⇑ σ) x = (var 0 +: var 1 +: (rename succ ∘ rename 
 
 -- Lifting var "substitution" does nothing
 theorem upId σ (h : ∀ x, σ x = var x) : ∀ x, (⇑ σ) x = var x := by
-  intro n; cases n <;> simp; rw [h]; rfl
+  intro n; cases n <;> simp [h]
 
 -- Lifting respects subsitution extensionality
 theorem upExt σ τ (h : ∀ x, σ x = τ x) : ∀ x, (⇑ σ) x = (⇑ τ) x := by
-  intro n; cases n <;> simp; rw [h]
+  intro n; cases n <;> simp [h]
 
 -- Lifting commutes with composition
 theorem upLift ξ σ τ (h : ∀ x, (σ ∘ ξ) x = τ x) : ∀ x, (⇑ σ ∘ lift ξ) x = (⇑ τ) x := by
-  intro n; cases n <;> simp; rw [← h]; rfl
+  intro n; cases n <;> simp [← h]
 
 -- Lifting commutes with renaming
 theorem upRename ξ σ τ (h : ∀ x, (rename ξ ∘ σ) x = τ x) : ∀ x, (rename (lift ξ) ∘ ⇑ σ) x = (⇑ τ) x := by
@@ -163,7 +163,7 @@ theorem substId' σ (h : ∀ x, σ x = var x) : ∀ s, subst σ s = s := by
 theorem substRename' ξ σ τ (h : ∀ x, (σ ∘ ξ) x = τ x) : ∀ s, subst σ (rename ξ s) = subst τ s := by
   intro s; revert ξ σ τ h; induction s
   all_goals intro ξ σ τ h; simp; try constructor
-  case var => rw [← h]; rfl
+  case var => simp [← h]
   case 𝒰 ih => apply ih; assumption
   case pi.left ih _ => apply ih; assumption
   case pi.right _ ih => apply ih; apply upLift; assumption
@@ -177,7 +177,7 @@ theorem substRename' ξ σ τ (h : ∀ x, (σ ∘ ξ) x = τ x) : ∀ s, subst �
 theorem renameSubst' ξ σ τ (h : ∀ x, (rename ξ ∘ σ) x = τ x) : ∀ s, rename ξ (subst σ s) = subst τ s := by
   intro s; revert ξ σ τ h; induction s
   all_goals intro ξ σ τ h; simp; try constructor
-  case var => rw [← h]; rfl
+  case var => simp [← h]
   case 𝒰 ih => apply ih; assumption
   case pi.left ih _ => apply ih; assumption
   case pi.right _ ih => apply ih; apply upRename; assumption
@@ -202,7 +202,7 @@ theorem upSubst ρ σ τ (h : ∀ x, (subst ρ ∘ σ) x = τ x) : ∀ x, (subst
 theorem substComp' ρ σ τ (h : ∀ x, (subst ρ ∘ σ) x = τ x) : ∀ s, (subst ρ ∘ subst σ) s = subst τ s := by
   intro s; revert ρ σ τ h; induction s
   all_goals intro ξ σ τ h; simp; try constructor
-  case var => rw [← h]; rfl
+  case var => simp [← h]
   case 𝒰 ih => apply ih; assumption
   case pi.left ih _ => apply ih; assumption
   case pi.right _ ih => apply ih; apply upSubst; assumption
