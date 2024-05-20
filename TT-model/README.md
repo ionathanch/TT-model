@@ -34,7 +34,7 @@ x : A ∈ Γ    Γ ⊢ a : A    A ≈ B
   Γ ⊢ ⊥ : 𝒰 k            Γ ⊢ abs b : A
 
 --------------------    + reflexivity,  symmetry,
-(λx. b) a ≈ b{x ↦ a}      transitivity, congruence
+(λx. b) a ≈ b{x ↦ a}     transitivity, congruence
 ```
 
 Now here are the typing rules involving universes and levels,
