@@ -48,22 +48,22 @@ theorem interpPiInv {i I a b P} (h : ⟦ pi a b ⟧ i , I ↘ P) :
   case lvl => contradiction
   case step r _ ih =>
     subst e; cases r
-    match ih rfl with
-    | ⟨Pa, Pf, ha, hPf, hb, e⟩ =>
-      refine ⟨Pa, Pf, ?_, hPf, ?_, e⟩
-      . constructor <;> assumption
-      . intro x Pb PfxPb; constructor
-        . apply parCong; apply parRefl; assumption
-        . exact hb x Pb PfxPb
+    let ⟨Pa, Pf, ha, hPf, hb, e⟩ := ih rfl
+    refine ⟨Pa, Pf, ?_, hPf, ?_, e⟩
+    . constructor <;> assumption
+    . intro x Pb PfxPb; constructor
+      . apply parCong; apply parRefl; assumption
+      . exact hb x Pb PfxPb
 
 theorem interp𝒰Inv {i I a P} (h : ⟦ 𝒰 a ⟧ i , I ↘ P) : ∃ j lt, a ⇒⋆ lof j ∧ P = I j lt := by
   generalize e : 𝒰 a = b at h
   revert a; induction h
   all_goals intro a e; try contradiction
   case 𝒰 j lt => injection e with e; subst e; exists j, lt, Pars.refl _
-  case step r _ ih => subst e; cases r; case 𝒰 r _ =>
-    match ih rfl with
-    | ⟨j, lt, r, e⟩ => refine ⟨j, lt, ?_, e⟩; constructor <;> assumption
+  case step r _ ih =>
+    subst e; let (Par.𝒰 r₁) := r
+    let ⟨j, lt, r₂, e⟩ := ih rfl
+    exact ⟨j, lt, Pars.trans r₁ r₂, e⟩
 
 theorem interpMtyInv {i I P} (h : ⟦ mty ⟧ i , I ↘ P) : P = (λ _ ↦ False) := by
   generalize e : mty = a at h
@@ -77,9 +77,10 @@ theorem interpLvlInv {i I a P} (h : ⟦ lvl a ⟧ i , I ↘ P) : ∃ k, a ⇒⋆
   revert a; induction h
   all_goals intro a e; try contradiction
   case lvl k => injection e with e; subst e; exists k, Pars.refl _
-  case step r _ ih => subst e; cases r; case lvl r _ =>
-    match ih rfl with
-    | ⟨k, r, e⟩ => refine ⟨k, ?_, e⟩; constructor <;> assumption
+  case step r _ ih =>
+    subst e; let (Par.lvl r₁) := r
+    let ⟨k, r₂, e⟩ := ih rfl
+    exact ⟨k, Pars.trans r₁ r₂, e⟩
 
 /-*--------------------
   Better constructors
@@ -117,8 +118,8 @@ theorem interpFwd {i I a b P} (r : a ⇒ b) (h : ⟦ a ⟧ i , I ↘ P) : ⟦ b 
   case mty => cases r; apply Interp.step <;> constructor
   case lvl => cases r; case lvl r => cases r; constructor
   case step r' _ ih =>
-    match diamond r r' with
-    | ⟨c, rc, rc'⟩ => constructor; exact rc; exact (ih rc')
+    let ⟨c, rc, rc'⟩ := diamond r r'
+    constructor; exact rc; exact (ih rc')
 
 theorem interpsFwd {i a b P} (r : a ⇒ b) (h : ⟦ a ⟧ i ↘ P) : ⟦ b ⟧ i ↘ P := by
   unfold Interps at *; apply interpFwd; exact r; assumption
@@ -137,8 +138,8 @@ theorem interpsBwds {i a b P} (r : a ⇒⋆ b) (h : ⟦ b ⟧ i ↘ P) : ⟦ a �
   case trans ih => intro P h; apply interpsBwd; assumption; apply ih; assumption
 
 theorem interpsConv {i a b P} (r : a ⇔ b) (h : ⟦ a ⟧ i ↘ P) : ⟦ b ⟧ i ↘ P :=
-  match r with
-  | ⟨_, ra, rb⟩ => interpsBwds rb (interpsFwds ra h)
+  let ⟨_, ra, rb⟩ := r
+  interpsBwds rb (interpsFwds ra h)
 
 /-*----------------------------------------------------
   Backward preservation of interpretation predicate
@@ -166,29 +167,26 @@ theorem interpsBwdsP {i a x y P} (r : x ⇒⋆ y) (h : ⟦ a ⟧ i ↘ P) : P y 
 theorem interpDet' {i I a P Q} (hP : ⟦ a ⟧ i , I ↘ P) (hQ : ⟦ a ⟧ i , I ↘ Q) : P = Q := by
   revert Q; induction hP <;> intro Q hQ
   case pi Pa Pf _ hPf _ iha ihb =>
-    match interpPiInv hQ with
-    | ⟨Pa', Pf', ha', hPf', hb', e⟩ =>
-      subst e; apply funext; intro f
-      apply propext; constructor
-      . intro h x Pb' Pax' PfxPb'
-        have Pax : Pa x := by rw [iha ha']; exact Pax'
-        match hPf x Pax with
-        | ⟨Pb, PfxPb⟩ =>
-          rw [← ihb x Pb PfxPb (hb' x Pb' PfxPb')]
-          exact h x Pb Pax PfxPb
-      . intro h x Pb Pax PfxPb
-        have Pax' : Pa' x := by rw [← iha ha']; exact Pax
-        match hPf' x Pax' with
-        | ⟨Pb', PfxPb'⟩ =>
-          rw [ihb x Pb PfxPb (hb' x Pb' PfxPb')]
-          exact h x Pb' Pax' PfxPb'
+    let ⟨Pa', Pf', ha', hPf', hb', e⟩ := interpPiInv hQ
+    subst e; apply funext; intro f
+    apply propext; constructor
+    . intro h x Pb' Pax' PfxPb'
+      have Pax : Pa x := by rw [iha ha']; exact Pax'
+      let ⟨Pb, PfxPb⟩ := hPf x Pax
+      rw [← ihb x Pb PfxPb (hb' x Pb' PfxPb')]
+      exact h x Pb Pax PfxPb
+    . intro h x Pb Pax PfxPb
+      have Pax' : Pa' x := by rw [← iha ha']; exact Pax
+      let ⟨Pb', PfxPb'⟩ := hPf' x Pax'
+      rw [ihb x Pb PfxPb (hb' x Pb' PfxPb')]
+      exact h x Pb' Pax' PfxPb'
   case 𝒰 =>
-    match interp𝒰Inv hQ with
-    | ⟨j, _, r, e⟩ => injection (parsLofInv r) with ej; subst ej; simp [e]
+    let ⟨j, _, r, e⟩ := interp𝒰Inv hQ
+    injection (parsLofInv r) with ej; subst ej; simp [e]
   case mty => simp [interpMtyInv hQ]
   case lvl =>
-    match interpLvlInv hQ with
-    | ⟨k, r, e⟩ => injection (parsLofInv r) with ek; subst ek; simp [e]
+    let ⟨k, r, e⟩ := interpLvlInv hQ
+    injection (parsLofInv r) with ek; subst ek; simp [e]
   case step r _ ih => exact ih (interpFwd r hQ)
 
 theorem interpsDet' {i a P Q} (hP : ⟦ a ⟧ i ↘ P) (hQ : ⟦ a ⟧ i ↘ Q) : P = Q := by
@@ -223,21 +221,19 @@ theorem interpPiInv' {i I a b P} (h : ⟦ pi a b ⟧ i , I ↘ P) :
   ∃ Pa, (⟦ a ⟧ i , I ↘ Pa) ∧
     (∀ x, Pa x → ∃ Pb, ⟦ subst (x +: var) b ⟧ i , I ↘ Pb) ∧
     P = λ f ↦ ∀ x Pb, Pa x → (⟦ subst (x +: var) b⟧ i , I ↘ Pb) → Pb (app f x) := by
-  match interpPiInv h with
-  | ⟨Pa, Pf, ha, hPf, hfb, e⟩ =>
-    refine ⟨Pa, ha, ?_, ?_⟩
-    . intro x Pax; match hPf x Pax with
-      | ⟨Pb, PfxPb⟩ => exact ⟨Pb, hfb x Pb PfxPb⟩
-    . subst e; apply funext; intro f; apply propext; constructor
-      . intro h x Pb Pax hb
-        apply h x Pb Pax
-        match hPf x Pax with
-        | ⟨Pb', PfxPb'⟩ =>
-        have e : Pb = Pb' := by apply interpDet' hb (hfb x Pb' PfxPb')
-        rw [e]; exact PfxPb'
-      . intro h x Pb Pax PfxPb
-        apply h x Pb Pax
-        apply hfb x Pb PfxPb
+  let ⟨Pa, Pf, ha, hPf, hfb, e⟩ := interpPiInv h
+  refine ⟨Pa, ha, ?_, ?_⟩
+  . intro x Pax; let ⟨Pb, PfxPb⟩ := hPf x Pax
+    exact ⟨Pb, hfb x Pb PfxPb⟩
+  . subst e; apply funext; intro f; apply propext; constructor
+    . intro h x Pb Pax hb
+      apply h x Pb Pax
+      let ⟨Pb', PfxPb'⟩ := hPf x Pax
+      have e : Pb = Pb' := by apply interpDet' hb (hfb x Pb' PfxPb')
+      rw [e]; exact PfxPb'
+    . intro h x Pb Pax PfxPb
+      apply h x Pb Pax
+      apply hfb x Pb PfxPb
 
 theorem interpsPiInv {i a b P} (h : ⟦ pi a b ⟧ i ↘ P) :
   ∃ Pa, (⟦ a ⟧ i ↘ Pa) ∧
@@ -246,10 +242,10 @@ theorem interpsPiInv {i a b P} (h : ⟦ pi a b ⟧ i ↘ P) :
   unfold Interps at *; apply interpPiInv' h
 
 theorem interps𝒰Inv {i a P} (h : ⟦ 𝒰 a ⟧ i ↘ P) :
-  ∃ j, a ⇒⋆ lof j ∧ j < i ∧ P = λ a ↦ ∃ P, ⟦ a ⟧ j ↘ P := by
+  ∃ j, j < i ∧ a ⇒⋆ lof j ∧ P = λ a ↦ ∃ P, ⟦ a ⟧ j ↘ P := by
   unfold Interps at h
-  match interp𝒰Inv h with
-  | ⟨j, lt, r, e⟩ => exact ⟨j, r, lt, e⟩
+  let ⟨j, lt, r, e⟩ := interp𝒰Inv h
+  exact ⟨j, lt, r, e⟩
 
 theorem interpsMtyInv {i P} (h : ⟦ mty ⟧ i ↘ P) : P = (λ _ ↦ False) := by
   unfold Interps at h; apply interpMtyInv h

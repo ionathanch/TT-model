@@ -194,35 +194,33 @@ theorem parsβ σ b a : app (abs (subst (⇑ σ) b)) a ⇒⋆ subst (a +: σ) b 
 
 theorem pars𝒰Inv {a b} (r : 𝒰 a ⇒⋆ b) : ∃ a', b = 𝒰 a' ∧ a ⇒⋆ a' := by
   generalize e : 𝒰 a = c at r
-  revert a; induction r
-  case refl => intro a e; subst e; exists a, rfl; apply Pars.refl
-  case trans ra rb ih =>
-    intro a e; subst e; cases ra
-    match ih rfl with
-    | ⟨a', e, r⟩ => exists a', e; apply Pars.trans <;> assumption
+  induction r generalizing a <;> subst e
+  case refl => exists a; repeat constructor
+  case trans ih r =>
+    cases r with | 𝒰 r₁ =>
+    let ⟨a', e, r₂⟩ := ih rfl
+    exact ⟨a', e, trans r₁ r₂⟩
 
 theorem parsMtyInv {b} (r : mty ⇒⋆ b) : b = mty := by
   generalize e : mty = a at r
   induction r
   case refl => rfl
-  case trans ra rb ih => subst e; cases ra; apply ih; rfl
+  case trans r _ ih => subst e; cases r; simp [ih]
 
 theorem parsPiInv {a b c} (r : pi a b ⇒⋆ c) : ∃ a' b', c = pi a' b' ∧ a ⇒⋆ a' ∧ b ⇒⋆ b' := by
   generalize e : pi a b = c' at r
-  revert a b e; induction r <;> intro a b e
-  case refl => subst e; exact ⟨a, b, by simp; repeat constructor⟩
-  case trans r _ ih =>
-    subst e; cases r
-    match ih rfl with
-    | ⟨a', b', e, _, _⟩ =>
-      refine ⟨a', b', e, ?_, ?_⟩
-      all_goals constructor <;> assumption
+  induction r generalizing a b <;> subst e
+  case refl => exists a, b; repeat constructor
+  case trans ih r =>
+    cases r with | pi ra₁ rb₁ =>
+    let ⟨a', b', e, ra₂, rb₂⟩ := ih rfl
+    exact ⟨a', b', e, trans ra₁ ra₂, trans rb₁ rb₂⟩
 
 theorem parsLofInv {j b} (r : lof j ⇒⋆ b) : b = lof j := by
   generalize e : lof j = a at r
-  revert e; induction r <;> intro e <;> subst e
+  induction r
   case refl => rfl
-  case trans ih r => cases r; simp [ih]
+  case trans r _ ih => subst e; cases r; simp [ih]
 
 /-*---------------------------------------
   Confluence via Takahashi's translation
@@ -243,7 +241,7 @@ def taka : Term → Term
 theorem parTaka {a b} (r : a ⇒ b) : b ⇒ taka a := by
   induction r <;> try simp; (constructor <;> assumption)
   case β ihb iha => apply parCong <;> assumption
-  case app b _ a _ r _ ih _ =>
+  case app r _ ih _ =>
     unfold taka; split
     . cases r; cases ih; apply Par.β <;> assumption
     . constructor <;> assumption
@@ -265,10 +263,9 @@ theorem diacon {a b c} (r₁ : a ⇒⋆ b) (r₂ : a ⇒ c) : ∃ d, b ⇒⋆ d 
   revert c; induction r₁ <;> intro d r
   case refl a => exact ⟨d, parPars r, refl d⟩
   case trans a b c r₁ _ ih =>
-    match diamond r₁ r with
-    | ⟨e, r₃, r₄⟩ =>
-    match ih r₃ with
-    | ⟨f, r₅, r₆⟩ => exact ⟨f, r₅, trans r₄ r₆⟩
+    let ⟨e, r₃, r₄⟩ := diamond r₁ r
+    let ⟨f, r₅, r₆⟩ := ih r₃
+    exact ⟨f, r₅, trans r₄ r₆⟩
 
 /-*---------------------------
      a
@@ -284,10 +281,9 @@ theorem confluence {a b c} (r₁ : a ⇒⋆ b) (r₂ : a ⇒⋆ c) : ∃ d, b �
   revert b r₁; induction r₂ <;> intro c r
   case refl b => exact ⟨c, refl c, r⟩
   case trans a b c r₁ _ ih =>
-    match diacon r r₁ with
-    | ⟨e, r₃, r₄⟩ =>
-    match ih r₄ with
-    | ⟨f, r₅, r₆⟩ => exact ⟨f, parsTrans r₃ r₅, r₆⟩
+    let ⟨e, r₃, r₄⟩ := diacon r r₁
+    let ⟨f, r₅, r₆⟩ := ih r₄
+    exact ⟨f, parsTrans r₃ r₅, r₆⟩
 
 /-*-----------
   Conversion
@@ -305,54 +301,43 @@ theorem parConv {a b} (r : a ⇒ b) : a ⇔ b :=
 theorem convRefl {a} : a ⇔ a :=
   ⟨a, refl a, refl a⟩
 
-theorem convSym {a b} (r : a ⇔ b) : b ⇔ a :=
-  match r with
+theorem convSym {a b} : a ⇔ b → b ⇔ a
   | ⟨c, ra, rb⟩ => ⟨c, rb, ra⟩
 
-theorem convTrans {a b c} (r₁ : a ⇔ b) (r₂ : b ⇔ c) : a ⇔ c :=
-  match r₁, r₂ with
+theorem convTrans {a b c} : a ⇔ b → b ⇔ c → a ⇔ c
   | ⟨_, rac, rbc⟩, ⟨_, rbd, rcd⟩ =>
-  match confluence rbc rbd with
-  | ⟨e, rce, rde⟩ =>
-    ⟨e, parsTrans rac rce, parsTrans rcd rde⟩
+  let ⟨e, rce, rde⟩ := confluence rbc rbd
+  ⟨e, parsTrans rac rce, parsTrans rcd rde⟩
 
-theorem convSubst {a b} σ (r : a ⇔ b) : subst σ a ⇔ subst σ b :=
-  match r with
+theorem convSubst {a b} σ : a ⇔ b → subst σ a ⇔ subst σ b
   | ⟨c, ra, rb⟩ => ⟨subst σ c, parsSubst σ ra, parsSubst σ rb⟩
 
-theorem convCong {a a' b b'} (ra : a ⇔ a') (rb : b ⇔ b') : subst (a +: var) b ⇔ subst (a' +: var) b' :=
-  match ra, rb with
+theorem convCong {a a' b b'} : a ⇔ a' → b ⇔ b' → subst (a +: var) b ⇔ subst (a' +: var) b'
   | ⟨a'', ra, ra'⟩, ⟨b'', rb, rb'⟩ =>
-    ⟨subst (a'' +: var) b'', parsCong ra rb, parsCong ra' rb'⟩
+  ⟨subst (a'' +: var) b'', parsCong ra rb, parsCong ra' rb'⟩
 
 /-*----------------------------
   Constructors for conversion
 ----------------------------*-/
 
-theorem conv𝒰 {a a'} (r : a ⇔ a') : 𝒰 a ⇔ 𝒰 a' :=
-  match r with
+theorem conv𝒰 {a a'} : a ⇔ a' → 𝒰 a ⇔ 𝒰 a'
   | ⟨a'', ra, ra'⟩ => ⟨𝒰 a'', pars𝒰 ra, pars𝒰 ra'⟩
 
-theorem convPi {a a' b b'} (ra : a ⇔ a') (rb : b ⇔ b') : pi a b ⇔ pi a' b' :=
-  match ra, rb with
+theorem convPi {a a' b b'} : a ⇔ a' → b ⇔ b' → pi a b ⇔ pi a' b'
   | ⟨a'', ra, ra'⟩, ⟨b'', rb, rb'⟩ =>
-    ⟨pi a'' b'', parsPi ra rb, parsPi ra' rb'⟩
+  ⟨pi a'' b'', parsPi ra rb, parsPi ra' rb'⟩
 
-theorem convAbs {b b'} (r : b ⇔ b') : abs b ⇔ abs b' :=
-  match r with
+theorem convAbs {b b'} : b ⇔ b' → abs b ⇔ abs b'
   | ⟨b'', rb, rb'⟩ => ⟨abs b'', parsAbs rb, parsAbs rb'⟩
 
-theorem convApp {b b' a a'} (rb : b ⇔ b') (ra : a ⇔ a') : app b a ⇔ app b' a' :=
-  match rb, ra with
+theorem convApp {b b' a a'} : b ⇔ b' → a ⇔ a' → app b a ⇔ app b' a'
   | ⟨b'', rb, rb'⟩, ⟨a'', ra, ra'⟩ =>
-    ⟨app b'' a'', parsApp rb ra, parsApp rb' ra'⟩
+  ⟨app b'' a'', parsApp rb ra, parsApp rb' ra'⟩
 
-theorem convExf {b b'} (r : b ⇔ b') : exf b ⇔ exf b' :=
-  match r with
+theorem convExf {b b'} : b ⇔ b' → exf b ⇔ exf b'
   | ⟨b'', rb, rb'⟩ => ⟨exf b'', parsExf rb, parsExf rb'⟩
 
-theorem convLvl {a a'} (r : a ⇔ a') : lvl a ⇔ lvl a' :=
-  match r with
+theorem convLvl {a a'} : a ⇔ a' → lvl a ⇔ lvl a'
   | ⟨a'', ra, ra'⟩ => ⟨lvl a'', parsLvl ra, parsLvl ra'⟩
 
 /-*------------------------------------
@@ -360,38 +345,34 @@ theorem convLvl {a a'} (r : a ⇔ a') : lvl a ⇔ lvl a' :=
 ------------------------------------*-/
 
 theorem conv𝒰Mty {a} : ¬ 𝒰 a ⇔ mty
-  | ⟨_, r𝒰, rmty⟩ => by
-    match pars𝒰Inv r𝒰 with
-    | ⟨_, e𝒰, _⟩ =>
-    have emty := parsMtyInv rmty
-    subst emty; contradiction
+  | ⟨_, r𝒰, rmty⟩ =>
+  let ⟨_, e𝒰, _⟩ := pars𝒰Inv r𝒰
+  have emty := parsMtyInv rmty
+  by subst emty; contradiction
 
 theorem conv𝒰Pi {c a b} : ¬ 𝒰 c ⇔ pi a b
-  | ⟨_, r𝒰, rpi⟩ => by
-    match pars𝒰Inv r𝒰 with
-    | ⟨_, e𝒰, _⟩ =>
-    match parsPiInv rpi with
-    | ⟨_, _, epi, _, _⟩ => subst epi; contradiction
+  | ⟨_, r𝒰, rpi⟩ =>
+  let ⟨_, e𝒰, _⟩ := pars𝒰Inv r𝒰
+  let ⟨_, _, epi, _, _⟩ := parsPiInv rpi
+  by subst epi; contradiction
 
 theorem convMtyPi {a b} : ¬ mty ⇔ pi a b
-  | ⟨_, rmty, rpi⟩ => by
-    have emty := parsMtyInv rmty
-    match parsPiInv rpi with
-    | ⟨_, _, epi, _, _⟩ => subst epi; contradiction
+  | ⟨_, rmty, rpi⟩ =>
+  let ⟨_, _, epi, _, _⟩ := parsPiInv rpi
+  have emty := parsMtyInv rmty
+  by subst epi; contradiction
 
 theorem conv𝒰Inv {a b} : 𝒰 a ⇔ 𝒰 b → a ⇔ b
-  | ⟨_, ra, rb⟩ => by
-    match pars𝒰Inv ra with
-    | ⟨a, e𝒰a, ra'⟩ =>
-    match pars𝒰Inv rb with
-    | ⟨b, e𝒰b, rb'⟩ =>
-    subst e𝒰a; injection e𝒰b with eab; subst eab
-    exact ⟨a, ra', rb'⟩
+  | ⟨_, ra, rb⟩ =>
+  let ⟨a, e𝒰a, ra'⟩ := pars𝒰Inv ra
+  let ⟨b, e𝒰b, rb'⟩ := pars𝒰Inv rb
+  by subst e𝒰a; injection e𝒰b with eab; subst eab
+     exact ⟨a, ra', rb'⟩
 
 theorem convPiInv {a₁ a₂ b₁ b₂} : pi a₁ b₁ ⇔ pi a₂ b₂ → a₁ ⇔ a₂ ∧ b₁ ⇔ b₂
   | ⟨_, r₁, r₂⟩ =>
-  match parsPiInv r₁, parsPiInv r₂ with
-  | ⟨a₁', b₁', e₁, ra₁, rb₁⟩, ⟨a₂', b₂', e₂, ra₂, rb₂⟩ => by
-    subst e₁; injection e₂ with ea eb
-    subst ea; subst eb
-    exact ⟨⟨a₁', ra₁, ra₂⟩, ⟨b₁', rb₁, rb₂⟩⟩
+  let ⟨a₁', b₁', e₁, ra₁, rb₁⟩ := parsPiInv r₁
+  let ⟨a₂', b₂', e₂, ra₂, rb₂⟩ := parsPiInv r₂
+  by subst e₁; injection e₂ with ea eb
+     subst ea; subst eb
+     exact ⟨⟨a₁', ra₁, ra₂⟩, ⟨b₁', rb₁, rb₂⟩⟩

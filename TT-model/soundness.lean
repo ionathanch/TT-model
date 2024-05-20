@@ -18,100 +18,73 @@ theorem soundness {Γ a A} (h : Γ ⊢ a ∶ A) : Γ ⊨ a ∶ A := by
   all_goals intro σ hσ
   case var mem => apply hσ; assumption
   case pi ihA ihB =>
-    match ihA rfl σ hσ with
-    | ⟨i, P, h𝒰, hA⟩ =>
-    match interps𝒰Inv h𝒰 with
-    | ⟨_, ra, _, e⟩ =>
+    let ⟨i, P, h𝒰, hA⟩ := ihA rfl σ hσ
+    let ⟨_, _, ra, e⟩ := interps𝒰Inv h𝒰
     exists i, P; subst e
-    match hA with
-    | ⟨PA, hA⟩ =>
+    let ⟨PA, hA⟩ := hA
     constructor
     . assumption
     . constructor; apply interpsPi hA _ rfl
       intro x PAx; rw [← substUnion]
-      match ihB rfl (x +: σ) (semSubstCons hA PAx hσ) with
-      | ⟨_, _, h𝒰, hB⟩ =>
-      match interps𝒰Inv h𝒰 with
-      | ⟨_, rb, _, e⟩ =>
+      let ⟨_, _, h𝒰, hB⟩ := ihB rfl (x +: σ) (semSubstCons hA PAx hσ)
+      let ⟨_, _, rb, e⟩ := interps𝒰Inv h𝒰
       subst e; rw [substRenamed] at rb
-      match confluence ra rb with
-      | ⟨_, ra', rb'⟩ =>
+      let ⟨_, ra', rb'⟩ := confluence ra rb
       rw [parsLofInv ra'] at rb';
       injection (parsLofInv rb') with e;
       simp [e, hB]
   case abs ihpi ihb =>
-    match ihpi rfl σ hσ with
-    | ⟨_, _, h𝒰, hpi⟩ =>
-    match interps𝒰Inv h𝒰 with
-    | ⟨_, _, _, e⟩ =>
+    let ⟨_, _, h𝒰, hpi⟩ := ihpi rfl σ hσ
+    let ⟨_, _, _, e⟩ := interps𝒰Inv h𝒰
     subst e
-    match hpi with
-    | ⟨P, hpi⟩ =>
-    match interpsPiInv hpi with
-    | ⟨Pa, hA, _, e⟩ =>
+    let ⟨P, hpi⟩ := hpi
+    let ⟨Pa, hA, _, e⟩ := interpsPiInv hpi
     constructor; exists P; constructor
     . exact hpi
     . subst e; intro x Pb PAx hB; rw [← substUnion] at hB
-      match ihb rfl (x +: σ) (semSubstCons hA PAx hσ) with
-      | ⟨_, _, hB', hb⟩ =>
+      let ⟨_, _, hB', hb⟩ := ihb rfl (x +: σ) (semSubstCons hA PAx hσ)
       rw [interpsDet hB hB']
       apply interpsBwdsP _ hB' hb
       apply parsβ
   case app ihb iha =>
-    match ihb rfl σ hσ with
-    | ⟨i, _, hpi, hb⟩ =>
-    match iha rfl σ hσ with
-    | ⟨_, PA, hA, ha⟩ =>
-    match interpsPiInv hpi with
-    | ⟨PA', hA', hB, e⟩ =>
+    let ⟨i, _, hpi, hb⟩ := ihb rfl σ hσ
+    let ⟨_, PA, hA, ha⟩ := iha rfl σ hσ
+    let ⟨PA', hA', hB, e⟩ := interpsPiInv hpi
     rw [interpsDet hA hA'] at ha
-    match hB (subst σ _) ha with
-    | ⟨PB, hB⟩ =>
+    let ⟨PB, hB⟩ := hB (subst σ _) ha
     subst e; rw [← substDist]
     exists i, PB; constructor
     . exact hB
     . apply hb <;> assumption
   case 𝒰 ih =>
-    match ih rfl σ hσ with
-    | ⟨_, P, hk, hj⟩ =>
-    match interpsLvlInv hk with
-    | ⟨k, rk, e⟩ =>
+    let ⟨_, P, hk, hj⟩ := ih rfl σ hσ
+    let ⟨k, rk, e⟩ := interpsLvlInv hk
     subst e
-    match hj with
-    | ⟨j, rj, ltj⟩ =>
-    match exists_gt k with
-    | ⟨ℓ, ltk⟩ =>
+    let ⟨j, rj, ltj⟩ := hj
+    let ⟨ℓ, ltk⟩ := exists_gt k
     exists ℓ, (∃ P, ⟦ · ⟧ k ↘ P); constructor
     . simp; exact interpsBwds (pars𝒰 rk) (interps𝒰 ltk)
     . constructor; exact interpsBwds (pars𝒰 rj) (interps𝒰 ltj)
   case mty ih =>
-    match ih rfl σ hσ with
-    | ⟨_, _, hj, hi⟩ =>
-    match interpsLvlInv hj with
-    | ⟨j, _, e⟩ =>
+    let ⟨_, _, hj, hi⟩ := ih rfl σ hσ
+    let ⟨j, _, e⟩ := interpsLvlInv hj
     subst e
-    match hi with
-    | ⟨i, ri, lt⟩ =>
+    let ⟨i, ri, lt⟩ := hi
     refine ⟨j, (∃ P, ⟦ · ⟧ i ↘ P), ?_, ?_⟩
     . exact interpsBwds (pars𝒰 ri) (interps𝒰 lt)
     . constructor; exact interpsMty
   case exf ihb _ _ =>
-    match ihb rfl σ hσ with
-    | ⟨_, _, hmty, hb⟩ =>
+    let ⟨_, _, hmty, hb⟩ := ihb rfl σ hσ
     rw [interpsMtyInv hmty] at hb
     contradiction
   case lvl k _ iha =>
-    match iha rfl σ hσ with
-    | ⟨_, P, hlvl, ha⟩ =>
-    match exists_gt k with
-    | ⟨ℓ, lt⟩ =>
+    let ⟨_, P, hlvl, ha⟩ := iha rfl σ hσ
+    let ⟨ℓ, lt⟩ := exists_gt k
     refine ⟨ℓ, (∃ P, ⟦ · ⟧ k ↘ P), ?_, ?_⟩
     . apply interps𝒰 lt
-    . match interpsLvlInv hlvl with
-      | ⟨_, _, e⟩ =>
+    . let ⟨_, _, e⟩ := interpsLvlInv hlvl
       subst e
-      match ha with
-      | ⟨k, r, _⟩ =>
+      let ⟨k, r, _⟩ := ha
       exists (∃ j, · ⇒⋆ lof j ∧ j < k)
       exact interpsBwds (parsLvl r) interpsLvl
   case lof j k _ _ _ =>
@@ -119,57 +92,42 @@ theorem soundness {Γ a A} (h : Γ ⊢ a ∶ A) : Γ ⊨ a ∶ A := by
     . exact interpsLvl
     . exists j, Pars.refl _
   case trans j k _ ihk _ ihj =>
-    match ihk rfl σ hσ with
-    | ⟨k, Pj, hk, hj⟩ =>
-    match interpsLvlInv hk with
-    | ⟨k, _, ePj⟩ =>
+    let ⟨k, Pj, hk, hj⟩ := ihk rfl σ hσ
+    let ⟨k, _, ePj⟩ := interpsLvlInv hk
     subst ePj
-    match hj with
-    | ⟨j, rj, _⟩ =>
-    match ihj rfl σ hσ with
-    | ⟨_, Pi, hj, hi⟩ =>
-    match interpsLvlInv hj with
-    | ⟨j', rj', ePi⟩ =>
+    let ⟨j, rj, _⟩ := hj
+    let ⟨_, Pi, hj, hi⟩ := ihj rfl σ hσ
+    let ⟨j', rj', ePi⟩ := interpsLvlInv hj
     subst ePi
-    match hi with
-    | ⟨i, r, _⟩ =>
-    match confluence rj rj' with
-    | ⟨j'', rj, rj'⟩ =>
+    let ⟨i, r, _⟩ := hi
+    let ⟨j'', rj, rj'⟩ := confluence rj rj'
     rw [parsLofInv rj] at rj'
     injection (parsLofInv rj') with e; subst e
     refine ⟨_, (∃ j, · ⇒⋆ lof j ∧ j < k), hk, ?_⟩
     . exists i, r; apply IsTrans.trans <;> assumption
   case conv iha conv _ _ =>
-    match iha rfl σ hσ with
-    | ⟨i, P, hA, ha⟩ =>
+    let ⟨i, P, hA, ha⟩ := iha rfl σ hσ
     exists i, P; constructor
     . exact interpsConv (convSubst σ (eqvConv conv)) hA
     . exact ha
   case sub ihj _ ihA =>
-    match ihA rfl σ hσ with
-    | ⟨_, Pj, h𝒰, hA⟩ =>
-    match interps𝒰Inv h𝒰 with
-    | ⟨j, rj, _ , e⟩ =>
+    let ⟨_, Pj, h𝒰, hA⟩ := ihA rfl σ hσ
+    let ⟨j, _, rj, e⟩ := interps𝒰Inv h𝒰
     subst e
-    match hA with
-    | ⟨P, hA⟩ =>
-    match ihj rfl σ hσ with
-    | ⟨_, Pk, hk, hj⟩ =>
-    match interpsLvlInv hk with
-    | ⟨k, rk, e⟩ =>
+    let ⟨P, hA⟩ := hA
+    let ⟨_, Pk, hk, hj⟩ := ihj rfl σ hσ
+    let ⟨k, rk, e⟩ := interpsLvlInv hk
     subst e
-    match hj with
-    | ⟨j', rj', ltj'⟩ =>
-    match confluence rj rj' with
-    | ⟨j'', rj, rj'⟩ =>
+    let ⟨j', rj', ltj'⟩ := hj
+    let ⟨j'', rj, rj'⟩ := confluence rj rj'
     rw [parsLofInv rj'] at rj
     injection (parsLofInv rj) with e; subst e
-    match exists_gt k with
-    | ⟨ℓ, ltk⟩ =>
+    let ⟨ℓ, ltk⟩ := exists_gt k
     refine ⟨ℓ, (∃ P, ⟦ · ⟧ k ↘ P), ?_, ?_⟩
     . exact interpsBwds (pars𝒰 rk) (interps𝒰 ltk)
     . exists P; exact interpsCumul ltj' hA
 
 theorem consistency {b} : ¬ ⬝ ⊢ b ∶ mty := by
-  intro h; match soundness h var (semSubstNil _) with
-  | ⟨_, _, hmty, hb⟩ => rw [interpsMtyInv hmty] at hb; exact hb
+  intro h
+  let ⟨_, _, hmty, hb⟩ := soundness h var (semSubstNil _)
+  simp [interpsMtyInv hmty] at hb
