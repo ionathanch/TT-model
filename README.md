@@ -35,7 +35,7 @@ x : A ∈ Γ    Γ ⊢ a : A    A ≈ B       ⊢ Γ    j < k
   Γ ⊢ eq A a b : 𝒰 k      Γ ⊢ refl : eq A a a        Γ ⊢ J d p : B{y ↦ b, q ↦ p}
 
 --------------------    ------------    + reflexivity,  symmetry,
-(λx. b) a ⇔ b{x ↦ a}    J d refl ⇔ d      transitivity, congruence
+(λx. b) a ≈ b{x ↦ a}    J d refl ≈ d      transitivity, congruence
 ```
 
 ## Logical Relation
