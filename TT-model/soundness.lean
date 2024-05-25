@@ -6,6 +6,7 @@ import «TT-model».semantics
 open Term
 
 set_option autoImplicit false
+set_option pp.fieldNotation false
 
 variable [lc : LevelClass]
 

@@ -3,6 +3,7 @@ import «TT-model».syntactics
 open Term
 
 set_option autoImplicit false
+set_option pp.fieldNotation false
 
 variable [LevelClass]
 
@@ -308,6 +309,16 @@ theorem convTrans {a b c} : a ⇔ b → b ⇔ c → a ⇔ c
   | ⟨_, rac, rbc⟩, ⟨_, rbd, rcd⟩ =>
   let ⟨e, rce, rde⟩ := confluence rbc rbd
   ⟨e, parsTrans rac rce, parsTrans rcd rde⟩
+
+  -- by exists e
+  --    constructor
+  --    apply parsTrans <;> assumption
+  --    apply parsTrans <;> assumption
+
+  -- ⟨e, by apply parsTrans
+  --        all_goals assumption,
+  --     by apply parsTrans
+  --        all_goals assumption⟩
 
 theorem convSubst {a b} σ : a ⇔ b → subst σ a ⇔ subst σ b
   | ⟨c, ra, rb⟩ => ⟨subst σ c, parsSubst σ ra, parsSubst σ rb⟩

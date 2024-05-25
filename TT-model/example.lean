@@ -2,6 +2,9 @@ import «TT-model».typing
 
 open Term
 
+set_option autoImplicit false
+set_option pp.fieldNotation false
+
 @[simp]
 def idType k := (pi (lvl (lof k)) (pi (𝒰 (var 0)) (pi (var 0) (var 1))))
 

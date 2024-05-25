@@ -1,6 +1,9 @@
 import Mathlib.Order.RelClasses
 import Mathlib.Order.Max
 
+set_option autoImplicit false
+set_option pp.fieldNotation false
+
 /-*----------------------------------------------------------
   Typeclass for levels and their required properties:
   * Wellfoundedness is needed to build the logical relation
@@ -37,5 +40,5 @@ instance : LevelClass where
   wo := Nat.lt.isWellOrder
   cf := instNoMaxOrderNat
 
-instance : OfNat L n where
+instance (n : Nat) : OfNat L n where
   ofNat := n
