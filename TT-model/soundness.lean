@@ -31,9 +31,9 @@ theorem soundness {Γ a A} (h : Γ ⊢ a ∶ A) : Γ ⊨ a ∶ A := by
       let ⟨_, _, rb, e⟩ := interps𝒰Inv h𝒰
       subst e; rw [substRenamed] at rb
       let ⟨_, ra', rb'⟩ := confluence ra rb
-      rw [parsLofInv ra'] at rb';
-      injection (parsLofInv rb') with e;
-      simp [e, hB]
+      rw [parsLofInv ra'] at rb'
+      injection (parsLofInv rb') with e
+      simp_rw [e, hB]
   case abs ihpi ihb =>
     let ⟨_, _, h𝒰, hpi⟩ := ihpi rfl σ hσ
     let ⟨_, _, _, e⟩ := interps𝒰Inv h𝒰
@@ -54,9 +54,7 @@ theorem soundness {Γ a A} (h : Γ ⊢ a ∶ A) : Γ ⊨ a ∶ A := by
     rw [interpsDet hA hA'] at ha
     let ⟨PB, hB⟩ := hB (subst σ _) ha
     subst e; rw [← substDist]
-    exists i, PB; constructor
-    . exact hB
-    . apply hb <;> assumption
+    exists i, PB; constructor <;> apply_rules
   case 𝒰 ih =>
     let ⟨_, P, hk, hj⟩ := ih rfl σ hσ
     let ⟨k, rk, e⟩ := interpsLvlInv hk
@@ -64,7 +62,7 @@ theorem soundness {Γ a A} (h : Γ ⊢ a ∶ A) : Γ ⊨ a ∶ A := by
     let ⟨j, rj, ltj⟩ := hj
     let ⟨ℓ, ltk⟩ := exists_gt k
     exists ℓ, (∃ P, ⟦ · ⟧ k ↘ P); constructor
-    . simp; exact interpsBwds (pars𝒰 rk) (interps𝒰 ltk)
+    . exact interpsBwds (pars𝒰 rk) (interps𝒰 ltk)
     . constructor; exact interpsBwds (pars𝒰 rj) (interps𝒰 ltj)
   case mty ih =>
     let ⟨_, _, hj, hi⟩ := ih rfl σ hσ
@@ -81,17 +79,15 @@ theorem soundness {Γ a A} (h : Γ ⊢ a ∶ A) : Γ ⊨ a ∶ A := by
   case lvl k _ iha =>
     let ⟨_, P, hlvl, ha⟩ := iha rfl σ hσ
     let ⟨ℓ, lt⟩ := exists_gt k
-    refine ⟨ℓ, (∃ P, ⟦ · ⟧ k ↘ P), ?_, ?_⟩
-    . apply interps𝒰 lt
-    . let ⟨_, _, e⟩ := interpsLvlInv hlvl
-      subst e
-      let ⟨k, r, _⟩ := ha
-      exists (∃ j, · ⇒⋆ lof j ∧ j < k)
-      exact interpsBwds (parsLvl r) interpsLvl
+    refine ⟨ℓ, (∃ P, ⟦ · ⟧ k ↘ P), interps𝒰 lt, ?_⟩
+    let ⟨_, _, e⟩ := interpsLvlInv hlvl
+    subst e
+    let ⟨k, r, _⟩ := ha
+    exists (∃ j, · ⇒⋆ lof j ∧ j < k)
+    exact interpsBwds (parsLvl r) interpsLvl
   case lof j k _ _ _ =>
-    refine ⟨j, (∃ j, · ⇒⋆ lof j ∧ j < k), ?_, ?_⟩
-    . exact interpsLvl
-    . exists j, Pars.refl _
+    refine ⟨j, (∃ j, · ⇒⋆ lof j ∧ j < k), interpsLvl, ?_⟩
+    exists j, Pars.refl _
   case trans j k _ ihk _ ihj =>
     let ⟨k, Pj, hk, hj⟩ := ihk rfl σ hσ
     let ⟨k, _, ePj⟩ := interpsLvlInv hk
@@ -105,7 +101,7 @@ theorem soundness {Γ a A} (h : Γ ⊢ a ∶ A) : Γ ⊨ a ∶ A := by
     rw [parsLofInv rj] at rj'
     injection (parsLofInv rj') with e; subst e
     refine ⟨_, (∃ j, · ⇒⋆ lof j ∧ j < k), hk, ?_⟩
-    . exists i, r; apply IsTrans.trans <;> assumption
+    exists i, r; apply IsTrans.trans <;> assumption
   case conv iha conv _ _ =>
     let ⟨i, P, hA, ha⟩ := iha rfl σ hσ
     exists i, P; constructor

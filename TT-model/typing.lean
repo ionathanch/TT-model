@@ -63,11 +63,10 @@ infix:40 (priority := 1001) "≈" => Eqv
     making conversion an appropriate implementation of definitional equality *-/
 
 theorem parEqv {a b} (r : a ⇒ b) : a ≈ b := by
-  induction r <;> try (constructor <;> assumption)
+  induction r
   case β ihb iha =>
-    apply Eqv.trans
-    exact (Eqv.app (Eqv.abs ihb) iha)
-    apply Eqv.β
+    exact Eqv.trans (Eqv.app (Eqv.abs ihb) iha) Eqv.β
+  all_goals constructor <;> assumption
 
 theorem parsEqv {a b} (r : a ⇒⋆ b) : a ≈ b := by
   induction r
@@ -75,24 +74,20 @@ theorem parsEqv {a b} (r : a ⇒⋆ b) : a ≈ b := by
   case trans r _ ih => exact (Eqv.trans (parEqv r) ih)
 
 theorem convEqv {a b} : a ⇔ b → a ≈ b
-  | ⟨_, rac, rbc⟩ => by
-    apply Eqv.trans
-    apply parsEqv rac
-    apply Eqv.sym
-    apply parsEqv rbc
+  | ⟨_, rac, rbc⟩ => Eqv.trans (parsEqv rac) (Eqv.sym (parsEqv rbc))
 
 theorem eqvConv {a b} (r : a ≈ b) : a ⇔ b := by
   induction r
-  case β => apply parConv; apply Par.β <;> apply parRefl
-  case 𝒰 => apply conv𝒰; assumption
-  case pi => apply convPi <;> assumption
-  case abs => apply convAbs; assumption
-  case app => apply convApp <;> assumption
-  case exf => apply convExf; assumption
-  case lvl => apply convLvl; assumption
+  case β => apply_rules [parConv, Par.β, parRefl]
+  case 𝒰 => apply_rules [conv𝒰]
+  case pi => apply_rules [convPi]
+  case abs => apply_rules [convAbs]
+  case app => apply_rules [convApp]
+  case exf => apply_rules [convExf]
+  case lvl => apply_rules [convLvl]
   case refl => apply convRefl
-  case sym => apply convSym; assumption
-  case trans => apply convTrans <;> assumption
+  case sym => apply_rules [convSym]
+  case trans => apply_rules [convTrans]
 
 /-*-------------------------------------------------
   Context well-formedness and term well-typedness
@@ -204,7 +199,7 @@ theorem wtfApp {Γ A B B' b a}
   (ha : Γ ⊢ a ∶ A)
   (eB : B' = subst (a +: var) B) :
   Γ ⊢ app b a ∶ B' := by
-  subst eB; apply Wtf.app <;> assumption
+  subst eB; constructor <;> assumption
 
 /-*---------------------------------------------
   Lean currently doesn't support induction on

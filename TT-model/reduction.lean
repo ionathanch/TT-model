@@ -58,16 +58,10 @@ theorem parRefl a : a ⇒ a := by
   induction a <;> constructor <;> assumption
 
 theorem parRename {a b} ξ (r : a ⇒ b) : rename ξ a ⇒ rename ξ b := by
-  revert ξ; induction r <;> intro ξ <;> try constructor
+  revert ξ; induction r
+  all_goals intro ξ; try constructor
   case β ihb iha => rw [← renameDist]; constructor; apply ihb; apply iha
-  case 𝒰 ih => apply ih
-  case pi ih _ => apply ih
-  case pi _ ih => apply ih
-  case abs ih => apply ih
-  case app ih _ => apply ih
-  case app _ ih => apply ih
-  case exf ih => apply ih
-  case lvl ih => apply ih
+  all_goals apply_assumption
 
 theorem parLift σ τ (h : ∀ x, σ x ⇒ τ x) : ∀ x, (⇑ σ) x ⇒ (⇑ τ) x := by
   intro n; cases n
@@ -75,20 +69,12 @@ theorem parLift σ τ (h : ∀ x, σ x ⇒ τ x) : ∀ x, (⇑ σ) x ⇒ (⇑ τ
   case succ n => apply parRename; apply h
 
 theorem parMorphing {a b} σ τ (h : ∀ x, σ x ⇒ τ x) (r : a ⇒ b) : subst σ a ⇒ subst τ b := by
-  revert σ τ h; induction r <;> intro σ τ h <;> try constructor
+  revert σ τ h; induction r
+  all_goals intro σ τ h; try constructor
   case β ihb iha =>
     rw [← substDist]; constructor
-    . apply ihb; apply parLift; assumption
-    . apply iha; assumption
-  case var => apply h
-  case 𝒰 ih => apply ih; assumption
-  case pi ih _ => apply ih; assumption
-  case pi _ ih => apply ih; apply parLift; assumption
-  case abs ih => apply ih; apply parLift; assumption
-  case app ih _ => apply ih; assumption
-  case app _ ih => apply ih; assumption
-  case exf ih => apply ih; assumption
-  case lvl ih => apply ih; assumption
+    all_goals apply_rules [parLift]
+  all_goals apply_rules [parLift]
 
 theorem parSubst {a b} σ (r : a ⇒ b) : subst σ a ⇒ subst σ b := by
   apply parMorphing (r := r); intros; apply parRefl
@@ -118,27 +104,20 @@ theorem parPars {a b} (r : a ⇒ b) : a ⇒⋆ b := by
 theorem parsTrans {a b c} (r₁ : a ⇒⋆ b) (r₂ : b ⇒⋆ c) : a ⇒⋆ c := by
   induction r₁
   case refl => assumption
-  case trans ih => constructor; assumption; apply ih; assumption
+  case trans ih => constructor <;> apply_rules
 
 theorem parsRename {a b} ξ (r : a ⇒⋆ b) : rename ξ a ⇒⋆ rename ξ b := by
-  induction r
-  case refl => constructor
-  case trans ih => constructor; apply parRename; assumption; apply ih
+  induction r <;> constructor
+  all_goals apply_rules [parRename]
 
 theorem parsSubst {a b} σ (r : a ⇒⋆ b) : subst σ a ⇒⋆ subst σ b := by
-  induction r
-  case refl => constructor
-  case trans ih => constructor; apply parSubst; assumption; apply ih
+  induction r <;> constructor
+  all_goals apply_rules [parSubst]
 
 theorem parsCong {a a' b b'} (ra : a ⇒⋆ a') (rb : b ⇒⋆ b') : subst (a +: var) b ⇒⋆ subst (a' +: var) b' := by
-  revert b b' rb; induction ra <;> intro b b' rb <;> induction rb
-  case refl.refl => constructor
-  case refl.trans =>
-    constructor; apply parCong; apply parRefl; assumption; assumption
-  case trans.refl ih _ =>
-    constructor; apply parCong; assumption; apply parRefl; apply ih; constructor
-  case trans.trans ih _ _ _ _ _ _ =>
-    constructor; apply parCong; assumption; assumption; apply ih; assumption
+  revert b b' rb; induction ra <;> intro b b' rb
+  case refl => apply_rules [parsSubst]
+  case trans ih => constructor <;> apply_rules [parCong, parRefl]
 
 /-*------------------------------------------
   Constructors for parallel multi-reduction
@@ -240,7 +219,8 @@ def taka : Term → Term
   | t => t
 
 theorem parTaka {a b} (r : a ⇒ b) : b ⇒ taka a := by
-  induction r <;> try simp; (constructor <;> assumption)
+  induction r
+  any_goals unfold taka; (constructor <;> assumption)
   case β ihb iha => apply parCong <;> assumption
   case app r _ ih _ =>
     unfold taka; split
@@ -309,16 +289,6 @@ theorem convTrans {a b c} : a ⇔ b → b ⇔ c → a ⇔ c
   | ⟨_, rac, rbc⟩, ⟨_, rbd, rcd⟩ =>
   let ⟨e, rce, rde⟩ := confluence rbc rbd
   ⟨e, parsTrans rac rce, parsTrans rcd rde⟩
-
-  -- by exists e
-  --    constructor
-  --    apply parsTrans <;> assumption
-  --    apply parsTrans <;> assumption
-
-  -- ⟨e, by apply parsTrans
-  --        all_goals assumption,
-  --     by apply parsTrans
-  --        all_goals assumption⟩
 
 theorem convSubst {a b} σ : a ⇔ b → subst σ a ⇔ subst σ b
   | ⟨c, ra, rb⟩ => ⟨subst σ c, parsSubst σ ra, parsSubst σ rb⟩

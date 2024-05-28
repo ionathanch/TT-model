@@ -63,15 +63,7 @@ def rename (ξ : Nat → Nat) : Term → Term
 theorem renameComp' ξ ζ ς (h : ∀ x, (ξ ∘ ζ) x = ς x) : ∀ s, (rename ξ ∘ rename ζ) s = rename ς s := by
   intro s; revert ξ ζ ς h; induction s
   all_goals intro ξ ζ ς h; simp; try constructor
-  case var s => simp [← h]
-  case 𝒰 ih => apply ih; assumption
-  case pi.left ih _ => apply ih; assumption
-  case pi.right _ ih => apply ih; apply liftComp; assumption
-  case abs ih => apply ih; apply liftComp; assumption
-  case app ih _ => apply ih; assumption
-  case app _ ih => apply ih; assumption
-  case exf ih => apply ih; assumption
-  case lvl ih => apply ih; assumption
+  all_goals apply_rules [liftComp]
 
 theorem renameComp ξ ζ s : (rename ξ ∘ rename ζ) s = rename (ξ ∘ ζ) s := by
   apply renameComp'; simp
@@ -136,57 +128,25 @@ def subst (σ : Nat → Term) : Term → Term
 theorem substExt σ τ (h : ∀ x, σ x = τ x) : ∀ s, subst σ s = subst τ s := by
   intro s; revert σ τ h; induction s
   all_goals intro σ τ h; simp; try constructor
-  case var => rw [h]
-  case 𝒰 ih => apply ih; assumption
-  case pi.left ih _ => apply ih; assumption
-  case pi.right _ ih => apply ih; apply upExt; assumption
-  case abs ih => apply ih; apply upExt; assumption
-  case app.left ih _ => apply ih; assumption
-  case app.right _ ih => apply ih; assumption
-  case exf ih => apply ih; assumption
-  case lvl ih => apply ih; assumption
+  all_goals apply_rules [upExt]
 
 -- Applying var "substitution" does nothing
 theorem substId' σ (h : ∀ x, σ x = var x) : ∀ s, subst σ s = s := by
   intro s; revert σ h; induction s
   all_goals intro σ h; simp; try constructor
-  case var => rw [h]
-  case 𝒰 ih => apply ih; assumption
-  case pi.left ih _ => apply ih; assumption
-  case pi.right _ ih => apply ih; apply upId; assumption
-  case abs ih => apply ih; apply upId; assumption
-  case app.left ih _ => apply ih; assumption
-  case app.right _ ih => apply ih; assumption
-  case exf ih => apply ih; assumption
-  case lvl ih => apply ih; assumption
+  all_goals apply_rules [upId]
 
 -- Substitution/renaming compositionality
 theorem substRename' ξ σ τ (h : ∀ x, (σ ∘ ξ) x = τ x) : ∀ s, subst σ (rename ξ s) = subst τ s := by
   intro s; revert ξ σ τ h; induction s
   all_goals intro ξ σ τ h; simp; try constructor
-  case var => simp [← h]
-  case 𝒰 ih => apply ih; assumption
-  case pi.left ih _ => apply ih; assumption
-  case pi.right _ ih => apply ih; apply upLift; assumption
-  case abs ih => apply ih; apply upLift; assumption
-  case app.left ih _ => apply ih; assumption
-  case app.right _ ih => apply ih; assumption
-  case exf ih => apply ih; assumption
-  case lvl ih => apply ih; assumption
+  all_goals apply_rules [upLift]
 
 -- Renaming/substitution compositionality
 theorem renameSubst' ξ σ τ (h : ∀ x, (rename ξ ∘ σ) x = τ x) : ∀ s, rename ξ (subst σ s) = subst τ s := by
   intro s; revert ξ σ τ h; induction s
   all_goals intro ξ σ τ h; simp; try constructor
-  case var => simp [← h]
-  case 𝒰 ih => apply ih; assumption
-  case pi.left ih _ => apply ih; assumption
-  case pi.right _ ih => apply ih; apply upRename; assumption
-  case abs ih => apply ih; apply upRename; assumption
-  case app.left ih _ => apply ih; assumption
-  case app.right _ ih => apply ih; assumption
-  case exf ih => apply ih; assumption
-  case lvl ih => apply ih; assumption
+  all_goals apply_rules [upRename]
 
 -- Lifting commutes with substitution
 theorem upSubst ρ σ τ (h : ∀ x, (subst ρ ∘ σ) x = τ x) : ∀ x, (subst (⇑ ρ) ∘ (⇑ σ)) x = (⇑ τ) x := by
@@ -203,15 +163,7 @@ theorem upSubst ρ σ τ (h : ∀ x, (subst ρ ∘ σ) x = τ x) : ∀ x, (subst
 theorem substComp' ρ σ τ (h : ∀ x, (subst ρ ∘ σ) x = τ x) : ∀ s, (subst ρ ∘ subst σ) s = subst τ s := by
   intro s; revert ρ σ τ h; induction s
   all_goals intro ξ σ τ h; simp; try constructor
-  case var => simp [← h]
-  case 𝒰 ih => apply ih; assumption
-  case pi.left ih _ => apply ih; assumption
-  case pi.right _ ih => apply ih; apply upSubst; assumption
-  case abs ih => apply ih; apply upSubst; assumption
-  case app.left ih _ => apply ih; assumption
-  case app.right _ ih => apply ih; assumption
-  case exf ih => apply ih; assumption
-  case lvl ih => apply ih; assumption
+  all_goals apply_rules [upSubst]
 
 /-*----------------------------------------------
   Substitution & renaming lemmas, extensionally
