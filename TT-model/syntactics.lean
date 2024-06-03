@@ -1,6 +1,6 @@
 import «TT-model».level
 
-open Nat
+open Nat hiding all
 
 set_option autoImplicit false
 set_option pp.fieldNotation false
@@ -19,14 +19,14 @@ infixr:50 "+:" => cons
 
 inductive Term : Type where
   | var : Nat → Term
-  | 𝒰 : Term → Term
+  | 𝒰 : lc.L → Term
+  | ℙ : Term
   | pi : Term → Term → Term
+  | all : Term → Term → Term
   | abs : Term → Term
   | app : Term → Term → Term
   | mty : Term
   | exf : Term → Term
-  | lvl : Term → Term
-  | lof : lc.L → Term
 open Term
 
 /-*------------------
@@ -50,14 +50,14 @@ theorem liftComp ξ ζ ς (h : ∀ x, (ξ ∘ ζ) x = ς x) :
 @[simp]
 def rename (ξ : Nat → Nat) : Term → Term
   | var s => var (ξ s)
-  | 𝒰 a => 𝒰 (rename ξ a)
+  | 𝒰 k => 𝒰 k
+  | ℙ => ℙ
   | pi a b => pi (rename ξ a) (rename (lift ξ) b)
+  | all a b => all (rename ξ a) (rename (lift ξ) b)
   | abs b => abs (rename (lift ξ) b)
   | app b a => app (rename ξ b) (rename ξ a)
   | mty => mty
   | exf b => exf (rename ξ b)
-  | lvl a => lvl (rename ξ a)
-  | lof k => lof k
 
 -- Renamings compose
 theorem renameComp' ξ ζ ς (h : ∀ x, (ξ ∘ ζ) x = ς x) : ∀ s, (rename ξ ∘ rename ζ) s = rename ς s := by
@@ -115,14 +115,14 @@ theorem upRename ξ σ τ (h : ∀ x, (rename ξ ∘ σ) x = τ x) : ∀ x, (ren
 @[simp]
 def subst (σ : Nat → Term) : Term → Term
   | var s => σ s
-  | 𝒰 a => 𝒰 (subst σ a)
+  | 𝒰 k => 𝒰 k
+  | ℙ => ℙ
   | pi a b => pi (subst σ a) (subst (⇑ σ) b)
+  | all a b => all (subst σ a) (subst (⇑ σ) b)
   | abs b => abs (subst (⇑ σ) b)
   | app b a => app (subst σ b) (subst σ a)
   | mty => mty
   | exf b => exf (subst σ b)
-  | lvl a => lvl (subst σ a)
-  | lof k => lof k
 
 -- Substitution extensionality
 theorem substExt σ τ (h : ∀ x, σ x = τ x) : ∀ s, subst σ s = subst τ s := by
@@ -223,16 +223,17 @@ theorem substDist σ a s : subst (subst σ a +: var) (subst (⇑ σ) s) = subst 
 inductive Ctxt : Type where
   | nil : Ctxt
   | cons : Ctxt → Term → Ctxt
+  | icons : Ctxt → Term → Ctxt
 notation:50 "⬝" => Ctxt.nil
 infixl:50 "∷" => Ctxt.cons
+infixl:50 "∷ᵢ" => Ctxt.icons
 
-inductive In : Nat → Term → Ctxt → Prop where
-  | here {Γ A} : In 0 (rename succ A) (Γ ∷ A)
-  | there {Γ x A B} : In x A Γ → In (succ x) (rename succ A) (Γ ∷ B)
-notation:40 Γ:41 "∋" x:41 "∶" A:41 => In x A Γ
+inductive sort | 𝒰 | ℙ
+open sort
 
-theorem inHere {Γ A A'} (e : A' = rename succ A) : (Γ ∷ A) ∋ 0 ∶ A' := by
-  subst e; apply In.here
-
-theorem inThere {Γ x A A' B} (h : Γ ∋ x ∶ A) (e : A' = rename succ A) : Γ ∷ B ∋ succ x ∶ A' := by
-  subst e; apply In.there; assumption
+inductive In : sort → Nat → Term → Ctxt → Prop where
+  | here {Γ A} : In 𝒰 0 (rename succ A) (Γ ∷ A)
+  | ihere {Γ A} : In ℙ 0 (rename succ A) (Γ ∷ᵢ A)
+  | there {Γ s x A B} : In s x A Γ → In s (succ x) (rename succ A) (Γ ∷ B)
+  | ithere {Γ s x A B} : In s x A Γ → In s (succ x) (rename succ A) (Γ ∷ᵢ B)
+notation:40 Γ:41 "∋" x:41 "∶" A:41 "∶" s:41 => In s x A Γ

@@ -17,6 +17,8 @@ class LevelClass where
   lt : LT L
   wo : IsWellOrder L lt.lt
   cf : NoMaxOrder L
+  «0» : L
+  zero : ∀ i, ¬ i < «0»
 open LevelClass
 
 attribute [instance] lt
@@ -39,6 +41,8 @@ instance : LevelClass where
   lt := instLTNat
   wo := Nat.lt.isWellOrder
   cf := instNoMaxOrderNat
+  «0» := Nat.zero
+  zero := Nat.not_lt_zero
 
 instance (n : Nat) : OfNat L n where
   ofNat := n
