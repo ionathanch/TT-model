@@ -101,7 +101,7 @@ theorem interpsLvl {i k} : ⟦ lvl (lof k) ⟧ i ↘ (λ a ↦ ∃ j, a ⇒⋆ l
 ------------------------------------------------*-/
 
 theorem interpFwd {i I a b P} (r : a ⇒ b) (h : ⟦ a ⟧ i , I ↘ P) : ⟦ b ⟧ i , I ↘ P := by
-  revert b; induction h <;> intro b r
+  induction h generalizing b
   case pi iha ihb =>
     cases r; constructor
     all_goals intros; apply_rules [parCong, parRefl]
@@ -119,12 +119,10 @@ theorem interpsBwd {i a b P} (r : a ⇒ b) (h : ⟦ b ⟧ i ↘ P) : ⟦ a ⟧ i
   unfold Interps at *; constructor <;> assumption
 
 theorem interpsFwds {i a b P} (r : a ⇒⋆ b) (h : ⟦ a ⟧ i ↘ P) : ⟦ b ⟧ i ↘ P := by
-  revert P; induction r
-  all_goals intros; apply_rules [interpsFwd]
+  induction r generalizing P <;> apply_rules [interpsFwd]
 
 theorem interpsBwds {i a b P} (r : a ⇒⋆ b) (h : ⟦ b ⟧ i ↘ P) : ⟦ a ⟧ i ↘ P := by
-  revert P; induction r
-  all_goals intros; apply_rules [interpsBwd]
+  induction r generalizing P <;> apply_rules [interpsBwd]
 
 theorem interpsConv {i a b P} (r : a ⇔ b) (h : ⟦ a ⟧ i ↘ P) : ⟦ b ⟧ i ↘ P :=
   let ⟨_, ra, rb⟩ := r
@@ -136,16 +134,16 @@ theorem interpsConv {i a b P} (r : a ⇔ b) (h : ⟦ a ⟧ i ↘ P) : ⟦ b ⟧ 
 ----------------------------------------------------*-/
 
 theorem interpsBwdsP {i a x y P} (r : x ⇒⋆ y) (h : ⟦ a ⟧ i ↘ P) : P y → P x := by
-  revert x y; unfold Interps at h; induction h
+  unfold Interps at h; induction h generalizing x y
   case pi ihb =>
-    intro _ _ r h x Pb Pax PfxPb
+    intro h x Pb Pax PfxPb
     exact ihb x Pb PfxPb (parsApp r (Pars.refl x)) (h x Pb Pax PfxPb)
-  case 𝒰 => exact λ r ⟨P, h⟩ ↦ ⟨P, interpsBwds r h⟩
+  case 𝒰 => exact λ ⟨P, h⟩ ↦ ⟨P, interpsBwds r h⟩
   case mty => simp
   case lvl =>
-    intro _ _ r₁ ⟨j, r₂, lt⟩
-    exact ⟨j, parsTrans r₁ r₂, lt⟩
-  case step ih => exact ih
+    intro ⟨j, r₂, lt⟩
+    exact ⟨j, parsTrans r r₂, lt⟩
+  case step ih => exact ih r
 
 /-*--------------------------------
   Interpretation is deterministic
@@ -153,7 +151,7 @@ theorem interpsBwdsP {i a x y P} (r : x ⇒⋆ y) (h : ⟦ a ⟧ i ↘ P) : P y 
 
 -- ⚠️ uses funext and propext ⚠️
 theorem interpDet' {i I a P Q} (hP : ⟦ a ⟧ i , I ↘ P) (hQ : ⟦ a ⟧ i , I ↘ Q) : P = Q := by
-  revert Q; induction hP <;> intro Q hQ
+  induction hP generalizing Q
   case pi Pa Pf _ hPf _ iha ihb =>
     let ⟨Pa', Pf', ha', hPf', hb', e⟩ := interpPiInv hQ
     subst e; apply funext; intro f
@@ -181,8 +179,7 @@ theorem interpsDet' {i a P Q} (hP : ⟦ a ⟧ i ↘ P) (hQ : ⟦ a ⟧ i ↘ Q) 
   unfold Interps at *; apply_rules [interpDet']
 
 theorem interpsCumul {i j a P} (lt : i < j) (h : ⟦ a ⟧ i ↘ P) : ⟦ a ⟧ j ↘ P := by
-  revert j; unfold Interps at h; induction h
-  all_goals intro j lt; unfold Interps
+  unfold Interps at h; induction h generalizing j <;> unfold Interps
   case pi iha ihb =>
     constructor
     . unfold Interps at iha; exact iha lt

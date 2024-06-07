@@ -61,8 +61,8 @@ def rename (ξ : Nat → Nat) : Term → Term
 
 -- Renamings compose
 theorem renameComp' ξ ζ ς (h : ∀ x, (ξ ∘ ζ) x = ς x) : ∀ s, (rename ξ ∘ rename ζ) s = rename ς s := by
-  intro s; revert ξ ζ ς h; induction s
-  all_goals intro ξ ζ ς h; simp; try constructor
+  intro s; induction s generalizing ξ ζ ς
+  all_goals simp; try constructor
   all_goals apply_rules [liftComp]
 
 theorem renameComp ξ ζ s : (rename ξ ∘ rename ζ) s = rename (ξ ∘ ζ) s := by
@@ -126,26 +126,26 @@ def subst (σ : Nat → Term) : Term → Term
 
 -- Substitution extensionality
 theorem substExt σ τ (h : ∀ x, σ x = τ x) : ∀ s, subst σ s = subst τ s := by
-  intro s; revert σ τ h; induction s
-  all_goals intro σ τ h; simp; try constructor
+  intro s; induction s generalizing σ τ
+  all_goals simp; try constructor
   all_goals apply_rules [upExt]
 
 -- Applying var "substitution" does nothing
 theorem substId' σ (h : ∀ x, σ x = var x) : ∀ s, subst σ s = s := by
-  intro s; revert σ h; induction s
-  all_goals intro σ h; simp; try constructor
+  intro s; induction s generalizing σ
+  all_goals simp; try constructor
   all_goals apply_rules [upId]
 
 -- Substitution/renaming compositionality
 theorem substRename' ξ σ τ (h : ∀ x, (σ ∘ ξ) x = τ x) : ∀ s, subst σ (rename ξ s) = subst τ s := by
-  intro s; revert ξ σ τ h; induction s
-  all_goals intro ξ σ τ h; simp; try constructor
+  intro s; induction s generalizing ξ σ τ
+  all_goals simp; try constructor
   all_goals apply_rules [upLift]
 
 -- Renaming/substitution compositionality
 theorem renameSubst' ξ σ τ (h : ∀ x, (rename ξ ∘ σ) x = τ x) : ∀ s, rename ξ (subst σ s) = subst τ s := by
-  intro s; revert ξ σ τ h; induction s
-  all_goals intro ξ σ τ h; simp; try constructor
+  intro s; induction s generalizing ξ σ τ
+  all_goals simp; try constructor
   all_goals apply_rules [upRename]
 
 -- Lifting commutes with substitution
@@ -161,8 +161,8 @@ theorem upSubst ρ σ τ (h : ∀ x, (subst ρ ∘ σ) x = τ x) : ∀ x, (subst
 
 -- Substitution compositionality
 theorem substComp' ρ σ τ (h : ∀ x, (subst ρ ∘ σ) x = τ x) : ∀ s, (subst ρ ∘ subst σ) s = subst τ s := by
-  intro s; revert ρ σ τ h; induction s
-  all_goals intro ξ σ τ h; simp; try constructor
+  intro s; induction s generalizing ρ σ τ
+  all_goals simp; try constructor
   all_goals apply_rules [upSubst]
 
 /-*----------------------------------------------

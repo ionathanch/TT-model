@@ -12,8 +12,8 @@ variable [lc : LevelClass]
 
 theorem soundness {Γ a A} (h : Γ ⊢ a ∶ A) : Γ ⊨ a ∶ A := by
   generalize e : @Sigma.mk I idx I.wt ⟨Γ, a, A⟩ = t at h
-  revert Γ a A e; induction h
-  all_goals intro Γ a A e; injection e with eI e; injection eI
+  induction h generalizing Γ a A
+  all_goals injection e with eI e; injection eI
   all_goals injection e with eCtxt eTerm eType;
             subst eCtxt; subst eTerm; subst eType
   all_goals intro σ hσ

@@ -58,8 +58,7 @@ theorem parRefl a : a ⇒ a := by
   induction a <;> constructor <;> assumption
 
 theorem parRename {a b} ξ (r : a ⇒ b) : rename ξ a ⇒ rename ξ b := by
-  revert ξ; induction r
-  all_goals intro ξ; try constructor
+  induction r generalizing ξ <;> try constructor
   case β ihb iha => rw [← renameDist]; constructor; apply ihb; apply iha
   all_goals apply_assumption
 
@@ -69,8 +68,7 @@ theorem parLift σ τ (h : ∀ x, σ x ⇒ τ x) : ∀ x, (⇑ σ) x ⇒ (⇑ τ
   case succ n => apply parRename; apply h
 
 theorem parMorphing {a b} σ τ (h : ∀ x, σ x ⇒ τ x) (r : a ⇒ b) : subst σ a ⇒ subst τ b := by
-  revert σ τ h; induction r
-  all_goals intro σ τ h; try constructor
+  induction r generalizing σ τ h <;> try constructor
   case β ihb iha =>
     rw [← substDist]; constructor
     all_goals apply_rules [parLift]
@@ -115,7 +113,7 @@ theorem parsSubst {a b} σ (r : a ⇒⋆ b) : subst σ a ⇒⋆ subst σ b := by
   all_goals apply_rules [parSubst]
 
 theorem parsCong {a a' b b'} (ra : a ⇒⋆ a') (rb : b ⇒⋆ b') : subst (a +: var) b ⇒⋆ subst (a' +: var) b' := by
-  revert b b' rb; induction ra <;> intro b b' rb
+  induction ra generalizing rb
   case refl => apply_rules [parsSubst]
   case trans ih => constructor <;> apply_rules [parCong, parRefl]
 
@@ -129,7 +127,7 @@ theorem pars𝒰 {a a'} (r : a ⇒⋆ a') : 𝒰 a ⇒⋆ 𝒰 a' := by
   case trans => constructor; constructor; assumption; assumption
 
 theorem parsPi {a a' b b'} (ra : a ⇒⋆ a') (rb : b ⇒⋆ b') : pi a b ⇒⋆ pi a' b' := by
-  revert b b' rb; induction ra <;> intro b b' rb <;> induction rb
+  induction ra generalizing b b' <;> induction rb
   case refl.refl => constructor
   case refl.trans ih =>
     constructor; constructor; apply parRefl; assumption; apply ih
@@ -144,7 +142,7 @@ theorem parsAbs {b b'} (r : b ⇒⋆ b') : abs b ⇒⋆ abs b' := by
   case trans => constructor; constructor; assumption; assumption
 
 theorem parsApp {a a' b b'} (rb : b ⇒⋆ b') (ra : a ⇒⋆ a') : app b a ⇒⋆ app b' a' := by
-  revert a a' ra; induction rb <;> intro a a' ra <;> induction ra
+  induction rb generalizing a a' ra <;> induction ra
   case refl => constructor
   case refl.trans =>
     constructor; constructor; apply parRefl; assumption; assumption
@@ -233,18 +231,18 @@ theorem diamond {a b c} (r₁ : a ⇒ b) (r₂ : a ⇒ c) : ∃ d, b ⇒ d ∧ c
 /-*--------------------
       a
      / \
-    b   d  by diamond
+    b   c  by diamond
   // \ /
-  c   e  by diacon
+  d   e  by diacon
   \\ //
     f
 --------------------*-/
 
 theorem diacon {a b c} (r₁ : a ⇒⋆ b) (r₂ : a ⇒ c) : ∃ d, b ⇒⋆ d ∧ c ⇒⋆ d := by
-  revert c; induction r₁ <;> intro d r
-  case refl a => exact ⟨d, parPars r, refl d⟩
-  case trans a b c r₁ _ ih =>
-    let ⟨e, r₃, r₄⟩ := diamond r₁ r
+  induction r₁ generalizing c
+  case refl => exact ⟨c, parPars r₂, refl c⟩
+  case trans a b d r₁ _ ih =>
+    let ⟨e, r₃, r₄⟩ := diamond r₁ r₂
     let ⟨f, r₅, r₆⟩ := ih r₃
     exact ⟨f, r₅, trans r₄ r₆⟩
 
@@ -259,10 +257,10 @@ theorem diacon {a b c} (r₁ : a ⇒⋆ b) (r₂ : a ⇒ c) : ∃ d, b ⇒⋆ d 
 ---------------------------*-/
 
 theorem confluence {a b c} (r₁ : a ⇒⋆ b) (r₂ : a ⇒⋆ c) : ∃ d, b ⇒⋆ d ∧ c ⇒⋆ d := by
-  revert b r₁; induction r₂ <;> intro c r
-  case refl b => exact ⟨c, refl c, r⟩
-  case trans a b c r₁ _ ih =>
-    let ⟨e, r₃, r₄⟩ := diacon r r₁
+  induction r₂ generalizing b
+  case refl => exact ⟨b, refl b, r₁⟩
+  case trans a c d r₂ _ ih =>
+    let ⟨e, r₃, r₄⟩ := diacon r₁ r₂
     let ⟨f, r₅, r₆⟩ := ih r₄
     exact ⟨f, parsTrans r₃ r₅, r₆⟩
 
