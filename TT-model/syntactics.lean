@@ -23,6 +23,7 @@ inductive Term : Type where
   | pi : Term → Term → Term
   | abs : Term → Term
   | app : Term → Term → Term
+  | letin : Term → Term → Term
   | mty : Term
   | exf : Term → Term
   | lvl : Term → Term
@@ -54,19 +55,39 @@ def rename (ξ : Nat → Nat) : Term → Term
   | pi a b => pi (rename ξ a) (rename (lift ξ) b)
   | abs b => abs (rename (lift ξ) b)
   | app b a => app (rename ξ b) (rename ξ a)
+  | letin a b => letin (rename ξ a) (rename (lift ξ) b)
   | mty => mty
   | exf b => exf (rename ξ b)
   | lvl a => lvl (rename ξ a)
   | lof k => lof k
 
--- Renamings compose
+-- Renaming compositionality
 theorem renameComp' ξ ζ ς (h : ∀ x, (ξ ∘ ζ) x = ς x) : ∀ s, (rename ξ ∘ rename ζ) s = rename ς s := by
   intro s; induction s generalizing ξ ζ ς
   all_goals simp; try constructor
   all_goals apply_rules [liftComp]
 
+-- Renaming compositionality, extensionally
 theorem renameComp ξ ζ s : (rename ξ ∘ rename ζ) s = rename (ξ ∘ ζ) s := by
   apply renameComp'; simp
+
+-- Lifting respects renaming extensionality
+theorem liftExt ξ ζ (h : ∀ x, ξ x = ζ x) : ∀ x, (lift ξ) x = (lift ζ) x := by
+  intro n; cases n <;> simp [h]
+
+-- Renaming extensionality
+theorem renameExt ξ ζ (h : ∀ x, ξ x = ζ x) : ∀ s, rename ξ s = rename ζ s := by
+  intro s; induction s generalizing ξ ζ
+  all_goals simp; try constructor
+  all_goals apply_rules [liftExt]
+
+-- Lift commutes with shifting beneath renaming
+theorem renameLiftShift ξ s : (rename (lift ξ) ∘ rename succ) s = (rename succ ∘ rename ξ) s := by
+  rw [renameComp (lift ξ) succ, renameComp succ ξ]
+  apply_rules [renameExt]
+
+theorem renameLiftShifted ξ s : rename (lift ξ) (rename succ s) = rename succ (rename ξ s) := by
+  apply renameLiftShift
 
 theorem renameLift ξ a s : (rename ξ ∘ (a +: var)) s = ((rename ξ a +: var) ∘ lift ξ) s := by
   cases s <;> rfl
@@ -103,10 +124,10 @@ theorem upRename ξ σ τ (h : ∀ x, (rename ξ ∘ σ) x = τ x) : ∀ x, (ren
   case succ n => calc
     (rename (lift ξ) ∘ rename succ) (σ n)
       = rename (lift ξ ∘ succ) (σ n)      := by rw [renameComp]
-    _ = (rename (succ ∘ ξ)) (σ n)         := by unfold Function.comp; rfl
+    _ = (rename (succ ∘ ξ)) (σ n)         := by simp [Function.comp]
     _ = (rename succ ∘ rename ξ) (σ n)    := by rw [renameComp]
     _ = (rename succ (rename ξ (σ n)))    := by rfl
-    _ = rename succ (τ n)                 := by rw [← h]; rfl
+    _ = rename succ (τ n)                 := by simp [← h]
 
 /-*-----------------------
   Applying substitutions
@@ -119,6 +140,7 @@ def subst (σ : Nat → Term) : Term → Term
   | pi a b => pi (subst σ a) (subst (⇑ σ) b)
   | abs b => abs (subst (⇑ σ) b)
   | app b a => app (subst σ b) (subst σ a)
+  | letin a b => letin (subst σ a) (subst (⇑ σ) b)
   | mty => mty
   | exf b => exf (subst σ b)
   | lvl a => lvl (subst σ a)
@@ -157,7 +179,7 @@ theorem upSubst ρ σ τ (h : ∀ x, (subst ρ ∘ σ) x = τ x) : ∀ x, (subst
     _ = subst (rename succ ∘ ρ) (σ n) := by rfl
     _ = (rename succ ∘ subst ρ) (σ n) := by rw [← renameSubst']; rfl; simp
     _ = rename succ (subst ρ (σ n))   := by rfl
-    _ = rename succ (τ n)             := by rw [← h]; rfl
+    _ = rename succ (τ n)             := by simp [← h]
 
 -- Substitution compositionality
 theorem substComp' ρ σ τ (h : ∀ x, (subst ρ ∘ σ) x = τ x) : ∀ s, (subst ρ ∘ subst σ) s = subst τ s := by
@@ -188,13 +210,21 @@ def substComp σ τ : ∀ s, (subst σ ∘ subst τ) s = subst (subst σ ∘ τ)
   Handy dandy derived renaming substitution lemmas
 -------------------------------------------------*-/
 
+-- Lifting commutes with shifting below substitution
+theorem substLiftShift σ s : (rename succ ∘ subst σ) s = (subst (⇑ σ) ∘ rename succ) s := by
+  rw [substRename, renameSubst]
+  apply_rules [substExt]
+
+theorem substLiftShifted σ s : rename succ (subst σ s) = subst (⇑ σ) (rename succ s) := by
+  apply substLiftShift
+
 theorem renameDist ξ a s : subst (rename ξ a +: var) (rename (lift ξ) s) = rename ξ (subst (a +: var) s) := by
   calc
     subst (rename ξ a +: var) (rename (lift ξ) s)
       = (subst (rename ξ a +: var) ∘ rename (lift ξ)) s := by rfl
     _ = subst ((rename ξ a +: var) ∘ lift ξ) s          := by rw [substRename]
     _ = subst (rename ξ ∘ (a +: var)) s                 := by apply substExt; intros; rw [renameLift]
-    _ = rename ξ (subst (a +: var) s)                   := by rw [← renameSubst]; rfl
+    _ = rename ξ (subst (a +: var) s)                   := by simp [← renameSubst]
 
 theorem substDrop a b : b = subst (a +: var) (rename succ b) := by
   calc
@@ -205,9 +235,9 @@ theorem substUnion σ a s : subst (a +: σ) s = subst (a +: var) (subst (⇑ σ)
   calc
     subst (a +: σ) s
       = subst (subst (a +: var) ∘ (var 0 +: (rename succ ∘ σ))) s :=
-        by apply substExt; intro n; cases n <;> simp; rw [← substDrop]
+        by apply substExt; intro n; cases n <;> simp [← substDrop]
     _ = subst (a +: var) (subst (⇑ σ) s) :=
-        by rw [← substComp]; rfl
+        by simp [← substComp]
 
 theorem substDist σ a s : subst (subst σ a +: var) (subst (⇑ σ) s) = subst σ (subst (a +: var) s) := by
   calc
@@ -223,16 +253,94 @@ theorem substDist σ a s : subst (subst σ a +: var) (subst (⇑ σ) s) = subst 
 inductive Ctxt : Type where
   | nil : Ctxt
   | cons : Ctxt → Term → Ctxt
+  | dcons : Ctxt → Term → Term → Ctxt
 notation:50 "⬝" => Ctxt.nil
 infixl:50 "∷" => Ctxt.cons
+notation:50 Γ:51 "∷ᵈ" a:51 "≔" A:51 => Ctxt.dcons Γ a A
 
 inductive In : Nat → Term → Ctxt → Prop where
-  | here {Γ A} : In 0 (rename succ A) (Γ ∷ A)
-  | there {Γ x A B} : In x A Γ → In (succ x) (rename succ A) (Γ ∷ B)
+  | ahere {Γ A} : In 0 (rename succ A) (Γ ∷ A)
+  | dhere {Γ a A} : In 0 (rename succ A) (Γ ∷ᵈ a ≔ A)
+  | athere {Γ x A B} : In x B Γ → In (succ x) (rename succ B) (Γ ∷ A)
+  | dthere {Γ x a A B} : In x B Γ → In (succ x) (rename succ B) (Γ ∷ᵈ a ≔ A)
 notation:40 Γ:41 "∋" x:41 "∶" A:41 => In x A Γ
 
-theorem inHere {Γ A A'} (e : A' = rename succ A) : (Γ ∷ A) ∋ 0 ∶ A' := by
-  subst e; apply In.here
+-- Handy membership helper constructors
+
+theorem inAHere {Γ A A'} (e : rename succ A = A') : (Γ ∷ A) ∋ 0 ∶ A' := by
+  subst e; constructor
+
+theorem inDHere {Γ a A A'} (e : rename succ A = A') : (Γ ∷ᵈ a ≔ A) ∋ 0 ∶ A' := by
+  subst e; constructor
 
 theorem inThere {Γ x A A' B} (h : Γ ∋ x ∶ A) (e : A' = rename succ A) : Γ ∷ B ∋ succ x ∶ A' := by
-  subst e; apply In.there; assumption
+  subst e; constructor; assumption
+
+/-*-----------------------------
+  Environments and membership
+  (contexts stripped of types)
+-----------------------------*-/
+
+inductive Env : Type where
+  | nil : Env
+  | cons : Env → Env
+  | dcons : Env → Term → Env
+notation:50 "⬝" => Env.nil
+postfix:50 "∷_" => Env.cons
+notation:50 Γ:51 "∷ᵈ" a:51 => Env.dcons Γ a
+
+def untype (Γ : Ctxt) : Env :=
+  match Γ with
+  | ⬝ => ⬝
+  | Γ ∷ _ => untype Γ ∷_
+  | Γ ∷ᵈ a ≔ _ => untype Γ ∷ᵈ a
+notation:30 "|" Γ:31 "|" => untype Γ
+
+inductive Is : Nat → Term → Env → Prop where
+  | here {Γ a} : Is 0 (rename succ a) (Γ ∷ᵈ a)
+  | athere {Γ x a} : Is x a Γ → Is (succ x) (rename succ a) (Γ ∷_)
+  | dthere {Γ x a b} : Is x a Γ → Is (succ x) (rename succ a) (Γ ∷ᵈ b)
+  notation:40 Γ:41 "∋" x:41 "≔" a:41 => Is x a Γ
+
+-- Handy membership helper constructors
+
+theorem isHere {Γ a a'} (e : a' = rename succ a) : (Γ ∷ᵈ a) ∋ 0 ≔ a' := by
+  subst e; constructor
+
+theorem isAThere {Γ x a a'} (h : Γ ∋ x ≔ a) (e : rename succ a = a') : Γ ∷_ ∋ succ x ≔ a' := by
+  subst e; constructor; assumption
+
+theorem isDThere {Γ x a a' b} (h : Γ ∋ x ≔ a) (e : rename succ a = a') : Γ ∷ᵈ b ∋ succ x ≔ a' := by
+  subst e; constructor; assumption
+
+/-*---------------------------------------
+  Well-defined renamings with respect to
+  source and target environments
+---------------------------------------*-/
+
+def Wdr ξ Γ Δ := ∀ {x a}, Γ ∋ x ≔ a → Δ ∋ ξ x ≔ rename ξ a
+notation:40 ξ:41 "⊢ᵣ" Γ:41 "⟹" Δ:41 => Wdr ξ Γ Δ
+
+theorem liftRenameAssn {ξ Γ Δ} (h : ξ ⊢ᵣ Γ ⟹ Δ) : lift ξ ⊢ᵣ Γ ∷_ ⟹ Δ ∷_ := by
+  intro _ _ xisa; cases xisa; rw [renameLiftShifted]; apply_rules [isAThere, renameLiftShift]
+
+theorem liftRenameDefn {ξ Γ Δ} a (h : ξ ⊢ᵣ Γ ⟹ Δ) : lift ξ ⊢ᵣ Γ ∷ᵈ a ⟹ Δ ∷ᵈ (rename ξ a) := by
+  intro _ _ xisa; cases xisa; all_goals rw [renameLiftShifted]; apply_rules [isHere, isDThere]
+
+def Wds (σ : Nat → Term) Γ Δ := ∀ {x a}, Γ ∋ x ≔ a →
+  (σ x = subst σ a) ∨
+  (∃ y, Δ ∋ y ≔ subst σ a ∧ σ x = var y)
+notation:40 σ:41 "⊢ₛ" Γ:41 "⟹" Δ:41 => Wds σ Γ Δ
+
+theorem liftSubst {σ : Nat → Term} {Γ Δ} (h : σ ⊢ₛ Γ ⟹ Δ) : ⇑ σ ⊢ₛ Γ ∷_ ⟹ Δ ∷_ := by
+  intro _ _ xisa; cases xisa with | athere xisa =>
+    cases (h xisa)
+    case inl e => simp [e, substLiftShifted]
+    case inr h =>
+      let ⟨_, yisa, e⟩ := h
+      exact Or.inr ⟨_, by apply_rules [isAThere, substLiftShifted], by simp [e]⟩
+
+theorem varSubst {Γ} : var ⊢ₛ Γ ⟹ Γ := by
+  cases Γ
+  all_goals intro _ _ xisa; rw [substId]; cases xisa
+  all_goals refine Or.inr ⟨_, by apply_rules [isHere, isAThere, isDThere], rfl⟩

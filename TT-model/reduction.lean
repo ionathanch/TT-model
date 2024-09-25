@@ -1,5 +1,6 @@
 import «TT-model».syntactics
 
+open Nat
 open Term
 
 set_option autoImplicit false
@@ -11,74 +12,182 @@ variable [LevelClass]
   Parallel reduction
 -------------------*-/
 
+inductive I : Type where
+  | pe : I
+  | pt : I
+open I
+
+def idx : I → Type
+  | pe => Unit
+  | pt => Term × Term
+
 section
 set_option hygiene false
-local infix:40 "⇒" => Par
+local notation:40 Γ:41 "⇒" Δ:41 => Par Γ Δ (Sigma.mk pe ())
+local notation:40 Γ:41 "⊢" a:41 "⇒" Δ:41 "⊢" b:41 => Par Γ Δ (Sigma.mk pt ⟨a, b⟩)
 
-inductive Par : Term → Term → Prop where
-  | β {b b' a a'} :
-    b ⇒ b' →
-    a ⇒ a' →
-    ------------------------------------
-    app (abs b) a ⇒ subst (a' +: var) b'
-  | var s : var s ⇒ var s
-  | 𝒰 {a a'} :
-    a ⇒ a' →
-    ------------
-    𝒰 a ⇒ 𝒰 a'
-  | pi {a a' b b'} :
-    a ⇒ a' →
-    b ⇒ b' →
+inductive Par : Env → Env → (Σ w, idx w) → Prop where
+  | nil : ⬝ ⇒ ⬝
+  | cons {Γ Δ} :
+    Γ ⇒ Δ →
+    -----------
+    Γ ∷_ ⇒ Δ ∷_
+  | dcons {Γ Δ a a'} :
+    Γ ⇒ Δ →
+    Γ ⊢ a ⇒ Δ ⊢ a' →
+    ----------------
+    Γ ∷ᵈ a ⇒ Δ ∷ᵈ a'
+  | β {Γ Δ b b' a a'} :
+    Γ ⇒ Δ →
+    Γ ∷_ ⊢ b ⇒ Δ ∷_ ⊢ b' →
+    Γ ⊢ a ⇒ Δ ⊢ a' →
+    --------------------------------------------
+    Γ ⊢ app (abs b) a ⇒ Δ ⊢ subst (a' +: var) b'
+  | ζ {Γ Δ a a' b b'} :
+    Γ ⇒ Δ →
+    Γ ⊢ a ⇒ Δ ⊢ a' →
+    Γ ∷_ ⊢ b ⇒ Δ ∷_ ⊢ b' →
+    ----------------------------------------
+    Γ ⊢ letin a b ⇒ Δ ⊢ subst (a' +: var) b'
+  | var {Γ Δ} s :
+    Γ ⇒ Δ →
+    ---------------------
+    Γ ⊢ var s ⇒ Δ ⊢ var s
+  | δ {Γ Δ x a} :
+    Γ ⇒ Δ →
+    Δ ∋ x ≔ a →
     -----------------
-    pi a b ⇒ pi a' b'
-  | abs {b b'} :
-    b ⇒ b' →
-    --------------
-    abs b ⇒ abs b'
-  | app {b b' a a'} :
-    b ⇒ b' →
-    a ⇒ a' →
+    Γ ⊢ var x ⇒ Δ ⊢ a
+  | 𝒰 {Γ Δ a a'} :
+    Γ ⇒ Δ →
+    Γ ⊢ a ⇒ Δ ⊢ a' →
     -------------------
-    app b a ⇒ app b' a'
-  | mty : mty ⇒ mty
-  | exf {b b'} :
-    b ⇒ b' →
-    --------------
-    exf b ⇒ exf b'
-  | lvl {a a'} :
-    a ⇒ a' →
-    --------------
-    lvl a ⇒ lvl a'
-  | lof k : lof k ⇒ lof k
+    Γ ⊢ 𝒰 a ⇒ Δ ⊢ 𝒰 a'
+  | pi {Γ Δ a a' b b'} :
+    Γ ⇒ Δ →
+    Γ ⊢ a ⇒ Δ ⊢ a' →
+    Γ ∷_ ⊢ b ⇒ Δ ∷_ ⊢ b' →
+    -------------------------
+    Γ ⊢ pi a b ⇒ Δ ⊢ pi a' b'
+  | abs {Γ Δ b b'} :
+    Γ ⇒ Δ →
+    Γ ∷_ ⊢ b ⇒ Δ ∷_ ⊢ b' →
+    ----------------------
+    Γ ⊢ abs b ⇒ Δ ⊢ abs b'
+  | app {Γ Δ b b' a a'} :
+    Γ ⇒ Δ →
+    Γ ⊢ b ⇒ Δ ⊢ b' →
+    Γ ⊢ a ⇒ Δ ⊢ a' →
+    ---------------------------
+    Γ ⊢ app b a ⇒ Δ ⊢ app b' a'
+  | letin {Γ Δ a a' b b'} :
+    Γ ⇒ Δ →
+    Γ ⊢ a ⇒ Δ ⊢ a' →
+    Γ ∷_ ⊢ b ⇒ Δ ∷_ ⊢ b' →
+    -------------------------------
+    Γ ⊢ letin a b ⇒ Δ ⊢ letin a' b'
+  | mty {Γ Δ} :
+    Γ ⇒ Δ →
+    -----------------
+    Γ ⊢ mty ⇒ Δ ⊢ mty
+  | exf {Γ Δ b b'} :
+    Γ ⇒ Δ →
+    Γ ⊢ b ⇒ Δ ⊢ b' →
+    ----------------------
+    Γ ⊢ exf b ⇒ Δ ⊢ exf b'
+  | lvl {Γ Δ a a'} :
+    Γ ⇒ Δ →
+    Γ ⊢ a ⇒ Δ ⊢ a' →
+    ----------------------
+    Γ ⊢ lvl a ⇒ Δ ⊢ lvl a'
+  | lof {Γ Δ} k :
+    Γ ⇒ Δ →
+    ---------------------
+    Γ ⊢ lof k ⇒ Δ ⊢ lof k
 end
 
-infix:40 "⇒" => Par
+notation:40 Γ:41 "⇒" Δ:41 => Par Γ Δ (Sigma.mk pe ())
+notation:40 Γ:41 "⊢" a:41 "⇒" Δ:41 "⊢" b:41 => Par Γ Δ (Sigma.mk pt ⟨a, b⟩)
 
-theorem parRefl a : a ⇒ a := by
-  induction a <;> constructor <;> assumption
+theorem parEnv {Γ Δ} (h : Γ ⇒ Δ) : Γ ∷_ ⇒ Δ ∷_ ∧ (∀ {a a'}, Γ ⊢ a ⇒ Δ ⊢ a' → Γ ∷ᵈ a ⇒ Δ ∷ᵈ a') := by
+  generalize e : @Sigma.mk I idx I.pe () = t at h
+  induction h
+  all_goals injection e with eI; injection eI
+  case nil => constructor; constructor; constructor; intro a a' r; constructor; constructor; assumption
+  case cons ih _ =>
+    let ⟨_, _⟩ := ih rfl
+    constructor; constructor; assumption
+    intro a a' r; constructor; assumption; assumption
+  case dcons ih _ _ =>
+    let ⟨_, _⟩ := ih rfl
+    constructor; constructor; constructor; assumption; assumption
+    intro a a' r; constructor; constructor; assumption; assumption; assumption
 
-theorem parRename {a b} ξ (r : a ⇒ b) : rename ξ a ⇒ rename ξ b := by
-  induction r generalizing ξ <;> try constructor
-  case β ihb iha => rw [← renameDist]; constructor; apply ihb; apply iha
-  all_goals apply_assumption
+theorem parCons {Γ Δ} (h : Γ ⇒ Δ) : Γ ∷_ ⇒ Δ ∷_ := And.left (parEnv h)
+theorem parDcons {Γ Δ a a'} (h : Γ ⇒ Δ) (ha : Γ ⊢ a ⇒ Δ ⊢ a') : Γ ∷ᵈ a ⇒ Δ ∷ᵈ a' := And.right (parEnv h) ha
 
-theorem parLift σ τ (h : ∀ x, σ x ⇒ τ x) : ∀ x, (⇑ σ) x ⇒ (⇑ τ) x := by
+theorem parConsTerm {Γ Δ a a'} (h : Γ ⇒ Δ) (ha : Γ ⊢ a ⇒ Δ ⊢ a') : Γ ∷_ ⊢ (rename succ a) ⇒ Δ ∷_ ⊢ (rename succ a') := by
+  generalize e : @Sigma.mk I idx I.pt ⟨a, a'⟩ = t at ha
+  induction ha generalizing a a'
+  all_goals injection e with eI ea; injection eI
+  all_goals injection ea with ea ea'; subst ea; subst ea'; simp only [rename] at *
+  case β => sorry
+  case ζ => sorry
+  case δ => sorry
+  all_goals constructor
+  all_goals try constructor
+  all_goals try assumption
+
+theorem parEnvRefl {Γ a} : Γ ⇒ Γ ∧ Γ ⊢ a ⇒ Γ ⊢ a := by
+  induction Γ generalizing a
+  case nil =>
+    induction a
+    all_goals try rename _ ∧ _ => ih1; let ⟨ihe1, iht1⟩ := ih1; clear ih1
+    all_goals try rename _ ∧ _ => ih2; let ⟨ihe2, iht2⟩ := ih2; clear ih2
+    all_goals constructor
+    all_goals constructor
+    all_goals try constructor
+    all_goals try assumption
+
+theorem parRefl {Γ} a : Γ ⊢ a ⇒ a := by
+  induction a generalizing Γ <;> constructor <;> apply_assumption
+
+theorem parRename {Γ Δ a b} ξ (h : ξ ⊢ᵣ Γ ⟹ Δ) (r : Γ ⊢ a ⇒ b) : Δ ⊢ rename ξ a ⇒ rename ξ b := by
+  induction r generalizing ξ Δ
+  all_goals try rw [← renameDist]
+  all_goals constructor
+  all_goals try apply_rules [liftRenameAssn, liftRenameDefn]
+
+theorem parLiftAssn {Γ} σ τ (h : ∀ x, Γ ⊢ σ x ⇒ τ x) : ∀ x, Γ ∷_ ⊢ (⇑ σ) x ⇒ (⇑ τ) x := by
   intro n; cases n
   case zero => constructor
-  case succ n => apply parRename; apply h
+  case succ n => apply_rules [parRename]; apply Is.athere
 
-theorem parMorphing {a b} σ τ (h : ∀ x, σ x ⇒ τ x) (r : a ⇒ b) : subst σ a ⇒ subst τ b := by
-  induction r generalizing σ τ h <;> try constructor
-  case β ihb iha =>
-    rw [← substDist]; constructor
-    all_goals apply_rules [parLift]
-  all_goals apply_rules [parLift]
+theorem parLiftDefn {Γ} σ τ (h : ∀ x, Γ ⊢ σ x ⇒ τ x) : ∀ x a, Γ ∷ᵈ a ⊢ (⇑ σ) x ⇒ (⇑ τ) x := by
+  intro n a; cases n
+  case zero => constructor
+  case succ n => apply_rules [parRename]; intros _ _ _; apply_rules [Is.dthere]
 
-theorem parSubst {a b} σ (r : a ⇒ b) : subst σ a ⇒ subst σ b := by
-  apply parMorphing (r := r); intros; apply parRefl
+theorem parMorphing {Γ Δ a b} σ τ (wτ : τ ⊢ₛ Γ ⟹ Δ) (h : ∀ x, Δ ⊢ σ x ⇒ τ x) (r : Γ ⊢ a ⇒ b) : Δ ⊢ subst σ a ⇒ subst τ b := by
+  induction r generalizing σ τ Δ
+  case δ xisa =>
+    cases (wτ xisa)
+    case inl e => rw [← e]; apply_assumption
+    case inr h => let ⟨_, _, e⟩ := h; simp; sorry --rw [← wτ] <;> apply_assumption
+  all_goals try rw [← substDist]
+  all_goals try constructor
+  all_goals try apply_rules [parLiftAssn, parLiftDefn, liftSubst]
 
-theorem parCong {a a' b b'} (ra : a ⇒ a') (rb : b ⇒ b') : subst (a +: var) b ⇒ subst (a' +: var) b' := by
-  apply parMorphing (r := rb); intro n; cases n <;> first | assumption | constructor
+theorem parSubst {Γ Δ a b} σ (wσ : σ ⊢ₛ Γ ⟹ Δ) (r : Γ ⊢ a ⇒ b) : Δ ⊢ subst σ a ⇒ subst σ b := by
+  apply_rules [parMorphing]; intro; apply parRefl
+
+theorem parCong {Γ a a' b b'} (ra : Γ ⊢ a ⇒ a') (rb : Γ ∷_ ⊢ b ⇒ b') : Γ ⊢ subst (a +: var) b ⇒ subst (a' +: var) b' := by
+  apply parMorphing (r := rb)
+  case h => intro n; cases n; assumption; constructor
+  intro n; cases n
+  case zero => intro _ zisa; cases zisa
+  case succ => intro _ sisa; cases sisa; simp; sorry
+  -- <;> first | assumption | constructor
 
 /-*----------------------------------------------------
   Reflexive, transitive closure of parallel reduction
