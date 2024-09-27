@@ -288,6 +288,9 @@ theorem convTrans {a b c} : a ⇔ b → b ⇔ c → a ⇔ c
   let ⟨e, rce, rde⟩ := confluence rbc rbd
   ⟨e, parsTrans rac rce, parsTrans rcd rde⟩
 
+theorem convRename {a b} ξ : a ⇔ b → rename ξ a ⇔ rename ξ b
+  | ⟨c, ra, rb⟩ => ⟨rename ξ c, parsRename ξ ra, parsRename ξ rb⟩
+
 theorem convSubst {a b} σ : a ⇔ b → subst σ a ⇔ subst σ b
   | ⟨c, ra, rb⟩ => ⟨subst σ c, parsSubst σ ra, parsSubst σ rb⟩
 

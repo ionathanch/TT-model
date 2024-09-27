@@ -10,7 +10,7 @@ set_option pp.fieldNotation false
 
 variable [lc : LevelClass]
 
-theorem soundness {Γ a A} (h : Γ ⊢ a ∶ A) : Γ ⊨ a ∶ A := by
+theorem soundness {Γ} {a A : Term} (h : Γ ⊢ a ∶ A) : Γ ⊨ a ∶ A := by
   generalize e : @Sigma.mk I idx I.wt ⟨Γ, a, A⟩ = t at h
   induction h generalizing Γ a A
   all_goals injection e with eI e; injection eI
@@ -29,7 +29,7 @@ theorem soundness {Γ a A} (h : Γ ⊢ a ∶ A) : Γ ⊨ a ∶ A := by
       intro x PAx; rw [← substUnion]
       let ⟨_, _, h𝒰, hB⟩ := ihB rfl (x +: σ) (semSubstCons hA PAx hσ)
       let ⟨_, _, rb, e⟩ := interps𝒰Inv h𝒰
-      subst e; rw [substRenamed] at rb
+      subst e; rw [substRename] at rb
       let ⟨_, ra', rb'⟩ := confluence ra rb
       rw [parsLofInv ra'] at rb'
       injection (parsLofInv rb') with e

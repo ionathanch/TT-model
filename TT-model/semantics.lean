@@ -253,5 +253,5 @@ theorem semSubstCons {Γ : Ctxt} {σ i a A P} :
   σ ⊨ Γ → a +: σ ⊨ Γ ∷ A := by
   intro hA ha hσ x B mem
   cases mem
-  case here => rw [substRenamed]; exists i, P
-  case there B mem => rw [substRenamed]; apply_rules [hσ]
+  case here => rw [substRename]; exists i, P
+  case there B mem => rw [substRename]; apply_rules [hσ]

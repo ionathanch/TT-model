@@ -37,11 +37,23 @@ open Term
 def lift (ξ : Nat → Nat) : Nat → Nat :=
   zero +: (succ ∘ ξ)
 
+-- Lifting respects renaming extensionality
+theorem liftExt ξ ζ (h : ∀ x, ξ x = ζ x) : ∀ x, lift ξ x = lift ζ x := by
+  intro x; cases x <;> simp [h]
+
+-- Lifting identity renaming does nothing
+theorem liftId ξ (h : ∀ x, ξ x = x) : ∀ x, lift ξ x = x := by
+  intro x; cases x <;> simp [h]
+
 -- Lifting composes
 theorem liftComp ξ ζ ς (h : ∀ x, (ξ ∘ ζ) x = ς x) :
   ∀ x, (lift ξ ∘ lift ζ) x = lift ς x := by
   intro x; cases x <;> simp
   case succ => apply h
+
+-- Lifting commutes with succ
+theorem liftSucc ξ : ∀ x, (lift ξ ∘ succ) x = (succ ∘ ξ) x := by
+  intro x; cases x <;> simp
 
 /-*-------------------
   Applying renamings
@@ -59,17 +71,29 @@ def rename (ξ : Nat → Nat) : Term → Term
   | lvl a => lvl (rename ξ a)
   | lof k => lof k
 
+-- Renaming extensionality
+theorem renameExt ξ ζ (h : ∀ x, ξ x = ζ x) : ∀ s, rename ξ s = rename ζ s := by
+  intro s; induction s generalizing ξ ζ
+  all_goals simp; try constructor
+  all_goals apply_rules [liftExt]
+
+-- Applying identity renaming does nothing
+theorem renameId s : rename id s = s := by
+  induction s
+  all_goals simp; try constructor
+  all_goals try assumption
+  all_goals rw [renameExt (0 +: succ) id]
+  all_goals apply_rules [liftId]
+
 -- Renamings compose
 theorem renameComp' ξ ζ ς (h : ∀ x, (ξ ∘ ζ) x = ς x) : ∀ s, (rename ξ ∘ rename ζ) s = rename ς s := by
   intro s; induction s generalizing ξ ζ ς
   all_goals simp; try constructor
   all_goals apply_rules [liftComp]
 
-theorem renameComp ξ ζ s : (rename ξ ∘ rename ζ) s = rename (ξ ∘ ζ) s := by
+-- Renamings compose (extensionally)
+theorem renameComp ξ ζ s : rename ξ (rename ζ s) = rename (ξ ∘ ζ) s := by
   apply renameComp'; simp
-
-theorem renameLift ξ a s : (rename ξ ∘ (a +: var)) s = ((rename ξ a +: var) ∘ lift ξ) s := by
-  cases s <;> rfl
 
 /-*----------------------
   Lifting substitutions
@@ -97,14 +121,18 @@ theorem upExt σ τ (h : ∀ x, σ x = τ x) : ∀ x, (⇑ σ) x = (⇑ τ) x :=
 theorem upLift ξ σ τ (h : ∀ x, (σ ∘ ξ) x = τ x) : ∀ x, (⇑ σ ∘ lift ξ) x = (⇑ τ) x := by
   intro n; cases n <;> simp [← h]
 
+-- Lifting commutes with succ
+theorem upSucc σ : ∀ x, (⇑ σ ∘ succ) x = (rename succ ∘ σ) x := by
+  intro n; cases n <;> simp
+
 -- Lifting commutes with renaming
 theorem upRename ξ σ τ (h : ∀ x, (rename ξ ∘ σ) x = τ x) : ∀ x, (rename (lift ξ) ∘ ⇑ σ) x = (⇑ τ) x := by
   intro n; cases n; simp
   case succ n => calc
     (rename (lift ξ) ∘ rename succ) (σ n)
-      = rename (lift ξ ∘ succ) (σ n)      := by rw [renameComp]
-    _ = (rename (succ ∘ ξ)) (σ n)         := by unfold Function.comp; rfl
-    _ = (rename succ ∘ rename ξ) (σ n)    := by rw [renameComp]
+      = rename (lift ξ ∘ succ) (σ n)      := by simp [renameComp]
+    _ = (rename (succ ∘ ξ)) (σ n)         := by rfl
+    _ = (rename succ ∘ rename ξ) (σ n)    := by simp [renameComp]
     _ = (rename succ (rename ξ (σ n)))    := by rfl
     _ = rename succ (τ n)                 := by rw [← h]; rfl
 
@@ -172,13 +200,10 @@ theorem substComp' ρ σ τ (h : ∀ x, (subst ρ ∘ σ) x = τ x) : ∀ s, (su
 def substId : ∀ s, subst var s = s :=
   substId' var (by simp)
 
-def substRename ξ σ : ∀ s, (subst σ ∘ (rename ξ)) s = subst (σ ∘ ξ) s :=
+def substRename ξ σ : ∀ s, subst σ (rename ξ s) = subst (σ ∘ ξ) s :=
   substRename' _ _ (σ ∘ ξ) (by simp)
 
-def substRenamed ξ σ : ∀ s, subst σ (rename ξ s) = subst (σ ∘ ξ) s :=
-  substRename' _ _ (σ ∘ ξ) (by simp)
-
-def renameSubst ξ σ : ∀ s, (rename ξ ∘ subst σ) s = subst (rename ξ ∘ σ) s :=
+def renameSubst ξ σ : ∀ s, rename ξ (subst σ s) = subst (rename ξ ∘ σ) s :=
   renameSubst' _ _ (rename ξ ∘ σ) (by simp)
 
 def substComp σ τ : ∀ s, (subst σ ∘ subst τ) s = subst (subst σ ∘ τ) s :=
@@ -188,18 +213,31 @@ def substComp σ τ : ∀ s, (subst σ ∘ subst τ) s = subst (subst σ ∘ τ)
   Handy dandy derived renaming substitution lemmas
 -------------------------------------------------*-/
 
+theorem renameLiftRename ξ a : rename succ (rename ξ a) = rename (lift ξ) (rename succ a) := by
+  calc
+    rename succ (rename ξ a)
+      = rename (succ ∘ ξ) a             := by rw [renameComp]
+    _ = rename (lift ξ ∘ succ) a        := by rw [renameExt]; exact liftSucc ξ
+    _ = rename (lift ξ) (rename succ a) := by rw [← renameComp]
+
+theorem renameUpSubst σ a : rename succ (subst σ a) = subst (⇑ σ) (rename succ a) := by
+  calc
+    rename succ (subst σ a)
+      = subst (rename succ ∘ σ) a   := by rw [renameSubst]
+    _ = subst (⇑ σ ∘ succ) a        := by rw [substExt]; exact upSucc σ
+    _ = subst (⇑ σ) (rename succ a) := by rw [substRename]
+
 theorem renameDist ξ a s : subst (rename ξ a +: var) (rename (lift ξ) s) = rename ξ (subst (a +: var) s) := by
   calc
     subst (rename ξ a +: var) (rename (lift ξ) s)
-      = (subst (rename ξ a +: var) ∘ rename (lift ξ)) s := by rfl
-    _ = subst ((rename ξ a +: var) ∘ lift ξ) s          := by rw [substRename]
-    _ = subst (rename ξ ∘ (a +: var)) s                 := by apply substExt; intros; rw [renameLift]
-    _ = rename ξ (subst (a +: var) s)                   := by rw [← renameSubst]; rfl
+    _ = subst ((rename ξ a +: var) ∘ lift ξ) s := by rw [substRename]
+    _ = subst (rename ξ ∘ (a +: var)) s        := by apply substExt; intro n; cases n <;> rfl
+    _ = rename ξ (subst (a +: var) s)          := by rw [← renameSubst]
 
 theorem substDrop a b : b = subst (a +: var) (rename succ b) := by
   calc
-    b = subst var b                          := by rw [substId]
-    _ = (subst (a +: var) ∘ (rename succ)) b := by rw [substRename]; rfl
+    b = subst var b                      := by rw [substId]
+    _ = subst (a +: var) (rename succ b) := by rw [substRename]; rfl
 
 theorem substUnion σ a s : subst (a +: σ) s = subst (a +: var) (subst (⇑ σ) s) := by
   calc

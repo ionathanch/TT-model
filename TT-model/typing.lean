@@ -194,12 +194,66 @@ end
 notation:40 "⊢" Γ:40 => Wtf (Sigma.mk wf Γ)
 notation:40 Γ:41 "⊢" a:41 "∶" A:41 => Wtf (Sigma.mk wt (T.mk Γ a A))
 
+/-*---------------------------------------
+  Better constructors + inversion lemmas
+---------------------------------------*-/
+
 theorem wtfApp {Γ A B B' b a}
   (hpi : Γ ⊢ b ∶ pi A B)
   (ha : Γ ⊢ a ∶ A)
   (eB : B' = subst (a +: var) B) :
   Γ ⊢ app b a ∶ B' := by
   subst eB; constructor <;> assumption
+
+theorem wtfPiInvA {Γ A B 𝒰'}
+  (h : Γ ⊢ pi A B ∶ 𝒰') :
+  ∃ j, Γ ⊢ A ∶ 𝒰 j := by
+  generalize e : @Sigma.mk I idx I.wt ⟨Γ, pi A B, 𝒰'⟩ = t at h
+  induction h generalizing Γ A B 𝒰'
+  all_goals injection e with eI e; injection eI
+  all_goals injection e with eCtxt eTerm eType; subst eCtxt; subst eType
+  all_goals try contradiction
+  all_goals first | injection eTerm | subst eTerm
+  case pi k _ _ _ _ eA eB => subst eA; subst eB; exists k
+  case trans ih => apply ih rfl
+  case conv ih => apply ih rfl
+  case sub ih => apply ih rfl
+
+theorem wtfPiInvB {Γ A B 𝒰'}
+  (h : Γ ⊢ pi A B ∶ 𝒰') :
+  ∃ j, Γ ∷ A ⊢ B ∶ 𝒰 j := by
+  generalize e : @Sigma.mk I idx I.wt ⟨Γ, pi A B, 𝒰'⟩ = t at h
+  induction h generalizing Γ A B 𝒰'
+  all_goals injection e with eI e; injection eI
+  all_goals injection e with eCtxt eTerm eType; subst eCtxt; subst eType
+  all_goals try contradiction
+  all_goals first | injection eTerm | subst eTerm
+  case pi k _ _ _ _ eA eB => subst eA; subst eB; exists rename succ k
+  case trans ih => apply ih rfl
+  case conv ih => apply ih rfl
+  case sub ih => apply ih rfl
+
+theorem wtfLvlInv {Γ a 𝒰'}
+  (h : Γ ⊢ lvl a ∶ 𝒰') :
+  ∃ b, Γ ⊢ a ∶ lvl b := by
+  generalize e : @Sigma.mk I idx I.wt ⟨Γ, lvl a, 𝒰'⟩ = t at h
+  induction h generalizing Γ a 𝒰'
+  all_goals injection e with eI e; injection eI
+  all_goals injection e with eCtxt eTerm eType; subst eCtxt; subst eType
+  all_goals try contradiction
+  all_goals first | injection eTerm | subst eTerm
+  case lvl b _ _ _ e => subst e; exists b
+  case trans ih => apply ih rfl
+  case conv ih => apply ih rfl
+  case sub ih => apply ih rfl
+
+theorem wtWf {Γ} {a A : Term} (h : Γ ⊢ a ∶ A) : ⊢ Γ := by
+  generalize e : @Sigma.mk I idx I.wt ⟨Γ, a, A⟩ = t at h
+  induction h generalizing Γ a A
+  all_goals injection e with eI e; injection eI
+  all_goals injection e with eCtxt eTerm eType;
+            subst eCtxt; subst eTerm; subst eType
+  all_goals apply_rules
 
 /-*---------------------------------------------
   Lean currently doesn't support induction on
