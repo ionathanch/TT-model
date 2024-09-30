@@ -355,8 +355,20 @@ theorem convMtyPi {a b} : ¬ mty ⇔ pi a b
 theorem convLvlPi {a b k} : ¬ lvl k ⇔ pi a b
   | ⟨_, rlvl, rpi⟩ =>
   let ⟨_, _, epi, _, _⟩ := parsPiInv rpi
-  have ⟨_, e, _⟩ := parsLvlInv rlvl
+  let ⟨_, elvl, _⟩ := parsLvlInv rlvl
   by subst epi; contradiction
+
+theorem convLvl𝒰 {j k} : ¬ lvl j ⇔ 𝒰 k
+  | ⟨_, rlvl, r𝒰⟩ =>
+    let ⟨_, e𝒰, _⟩ := pars𝒰Inv r𝒰
+    let ⟨_, elvl, _⟩ := parsLvlInv rlvl
+    by subst e𝒰; contradiction
+
+theorem convLvlMty {j} : ¬ lvl j ⇔ mty
+  | ⟨_, rlvl, rmty⟩ =>
+    let ⟨_, elvl, _⟩ := parsLvlInv rlvl
+    have emty := parsMtyInv rmty
+    by subst elvl; contradiction
 
 theorem conv𝒰Inv {a b} : 𝒰 a ⇔ 𝒰 b → a ⇔ b
   | ⟨_, ra, rb⟩ =>

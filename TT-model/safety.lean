@@ -173,7 +173,7 @@ theorem wtRegularity {Γ} {a A : Term} (h : Γ ⊢ a ∶ A) : ∃ k, Γ ⊢ A �
   case var wf _ mem => exact wtMem mem wf
   case 𝒰 j k _ ih =>
     let ⟨_, ihk⟩ := ih rfl
-    let ⟨l, hk⟩ := wtfLvlInv ihk
+    let ⟨l, _, hk, _⟩ := wtfLvlInv ihk
     exact ⟨l, Wtf.𝒰 hk⟩
   case pi ihA _ => exact ihA rfl
   case abs hPi _ _ _ => exact ⟨_, hPi⟩
@@ -193,7 +193,7 @@ theorem wtRegularity {Γ} {a A : Term} (h : Γ ⊢ a ∶ A) : ∃ k, Γ ⊢ A �
   case conv hA _ => exact ⟨_, hA⟩
   case sub ih _ _ =>
     let ⟨_, ihk⟩ := ih rfl
-    let ⟨l, hk⟩ := wtfLvlInv ihk
+    let ⟨l, _, hk, _⟩ := wtfLvlInv ihk
     exact ⟨l, Wtf.𝒰 hk⟩
 
 /-*-------------
@@ -252,3 +252,61 @@ inductive Value : Term → Prop where
   | mty : Value mty
   | lvl {k} : Value (lvl k)
   | lof {k} : Value (lof k)
+
+inductive CBN : Term → Term → Prop where
+  | β {b a} : CBN (app (abs b) a) (subst (a +: var) b)
+  | app {b b' a} : CBN b b' → CBN (app b a) (app b' a)
+  | exf {b b'} : CBN b b' → CBN (exf b) (exf b')
+
+infix:40 "⇒β" => CBN
+
+theorem CBNpar {a b} : a ⇒β b → a ⇒ b
+  | CBN.β => Par.β (parRefl _) (parRefl _)
+  | CBN.app rb => Par.app (CBNpar rb) (parRefl _)
+  | CBN.exf rb => Par.exf (CBNpar rb)
+
+theorem wtMty {b : Term} (v : Value b) (h : ⬝ ⊢ b ∶ mty) : False := by
+  generalize e : @Sigma.mk I idx I.wt ⟨⬝, b, mty⟩ = t at h
+  induction h generalizing b
+  all_goals injection e with eI e; injection eI
+  all_goals injection e with eCtxt eTerm eType;
+            subst eCtxt; subst eTerm
+  all_goals try first | contradiction | subst eType
+  case conv ih emty _ _ =>
+  cases v
+  case 𝒰 h =>
+    let ⟨_, e𝒰⟩ := wtf𝒰Inv h
+    cases conv𝒰Mty (eqvConv (Eqv.trans e𝒰 emty))
+  case pi h =>
+    let ⟨_, e𝒰⟩ := wtfPiInv𝒰 h
+    cases conv𝒰Mty (eqvConv (Eqv.trans e𝒰 emty))
+  case abs hb =>
+    let ⟨_, _, _, epi⟩ := wtfAbsInv hb
+    cases convMtyPi (eqvConv (Eqv.sym (Eqv.trans epi emty)))
+  case mty h =>
+    let ⟨_, e𝒰⟩ := wtfMtyInv h
+    cases conv𝒰Mty (eqvConv (Eqv.trans e𝒰 emty))
+  case lvl h =>
+    let ⟨_, _, _, e𝒰⟩ := wtfLvlInv h
+    cases conv𝒰Mty (eqvConv (Eqv.trans e𝒰 emty))
+  case lof h =>
+    let ⟨_, elvl⟩ := wtfLofInv h
+    cases convLvlMty (eqvConv (Eqv.trans elvl emty))
+
+theorem wtProgress {a A : Term} (h : ⬝ ⊢ a ∶ A) : Value a ∨ ∃ b, a ⇒β b := by
+  generalize e : @Sigma.mk I idx I.wt ⟨⬝, a, A⟩ = t at h
+  induction h generalizing a A
+  all_goals injection e with eI e; injection eI
+  all_goals injection e with eCtxt eTerm eType;
+            subst eCtxt; subst eTerm; subst eType
+  case var mem => cases mem
+  case 𝒰 | pi | abs | mty | lvl | lof => repeat constructor
+  case trans ih | conv ih _ _ _ | sub ih => exact ih rfl
+  case app ihb _ =>
+    cases ihb rfl
+    case inl v => sorry
+    case inr r => let ⟨_, r⟩ := r; exact Or.inr ⟨_, CBN.app r⟩
+  case exf hb ihb _ _ =>
+    cases ihb rfl
+    case inl v => cases wtMty v hb
+    case inr r => let ⟨_, r⟩ := r; exact Or.inr ⟨_, CBN.exf r⟩

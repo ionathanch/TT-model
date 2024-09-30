@@ -205,6 +205,22 @@ theorem wtfApp {Γ A B B' b a}
   Γ ⊢ app b a ∶ B' := by
   subst eB; constructor <;> assumption
 
+theorem wtf𝒰Inv {Γ j 𝒰'}
+  (h : Γ ⊢ 𝒰 j ∶ 𝒰') :
+  ∃ k, 𝒰 k ≈ 𝒰' := by
+  generalize e : @Sigma.mk I idx I.wt ⟨Γ, 𝒰 j, 𝒰'⟩ = t at h
+  induction h generalizing Γ j 𝒰'
+  all_goals injection e with eI e; injection eI
+  all_goals injection e with eCtxt eTerm eType; subst eCtxt; subst eType
+  all_goals first | contradiction | injection eTerm | subst eTerm
+  case 𝒰 | sub => exact ⟨_, Eqv.refl⟩
+  case trans ih =>
+    let ⟨_, e⟩ := ih rfl
+    cases convLvl𝒰 (convSym (eqvConv e))
+  case conv e₁ _ _ _ ih =>
+    let ⟨_, e₂⟩ := ih rfl
+    exact ⟨_, Eqv.trans e₂ e₁⟩
+
 theorem wtfPiInvA {Γ A B 𝒰'}
   (h : Γ ⊢ pi A B ∶ 𝒰') :
   ∃ j, Γ ⊢ A ∶ 𝒰 j := by
@@ -214,9 +230,7 @@ theorem wtfPiInvA {Γ A B 𝒰'}
   all_goals injection e with eCtxt eTerm eType; subst eCtxt; subst eType
   all_goals first | contradiction | injection eTerm | subst eTerm
   case pi k _ _ _ _ eA eB => subst eA; subst eB; exists k
-  case trans ih => apply ih rfl
-  case conv ih => apply ih rfl
-  case sub ih => apply ih rfl
+  case trans ih | conv ih | sub ih => apply ih rfl
 
 theorem wtfPiInvB {Γ A B 𝒰'}
   (h : Γ ⊢ pi A B ∶ 𝒰') :
@@ -227,9 +241,23 @@ theorem wtfPiInvB {Γ A B 𝒰'}
   all_goals injection e with eCtxt eTerm eType; subst eCtxt; subst eType
   all_goals first | contradiction | injection eTerm | subst eTerm
   case pi k _ _ _ _ eA eB => subst eA; subst eB; exists rename succ k
-  case trans ih => apply ih rfl
-  case conv ih => apply ih rfl
-  case sub ih => apply ih rfl
+  case trans ih | conv ih | sub ih => apply ih rfl
+
+theorem wtfPiInv𝒰 {Γ A B 𝒰'}
+  (h : Γ ⊢ pi A B ∶ 𝒰') :
+  ∃ j, 𝒰 j ≈ 𝒰' := by
+  generalize e : @Sigma.mk I idx I.wt ⟨Γ, pi A B, 𝒰'⟩ = t at h
+  induction h generalizing Γ A B 𝒰'
+  all_goals injection e with eI e; injection eI
+  all_goals injection e with eCtxt eTerm eType; subst eCtxt; subst eType
+  all_goals first | contradiction | injection eTerm | subst eTerm
+  case pi | sub => exact ⟨_, Eqv.refl⟩
+  case trans ih =>
+    let ⟨_, e⟩ := ih rfl
+    cases convLvl𝒰 (convSym (eqvConv e))
+  case conv e₁ _ _ _ ih =>
+    let ⟨_, e₂⟩ := ih rfl
+    exact ⟨_, Eqv.trans e₂ e₁⟩
 
 theorem wtfAbsInv {Γ b C}
   (h : Γ ⊢ abs b ∶ C) :
@@ -252,18 +280,57 @@ theorem wtfAbsInv {Γ b C}
     have := conv𝒰Pi (convSym (eqvConv e))
     contradiction
 
+theorem wtfMtyInv {Γ 𝒰'}
+  (h : Γ ⊢ mty ∶ 𝒰') :
+  ∃ k, 𝒰 k ≈ 𝒰' := by
+  generalize e : @Sigma.mk I idx I.wt ⟨Γ, mty, 𝒰'⟩ = t at h
+  induction h generalizing Γ 𝒰'
+  all_goals injection e with eI e; injection eI
+  all_goals injection e with eCtxt eTerm eType; subst eCtxt; subst eType
+  all_goals first | contradiction | injection eTerm | subst eTerm
+  case mty | sub => exact ⟨_, Eqv.refl⟩
+  case trans ih =>
+    let ⟨_, e⟩ := ih rfl
+    cases convLvl𝒰 (convSym (eqvConv e))
+  case conv e₁ _ _ _ ih =>
+    let ⟨_, e₂⟩ := ih rfl
+    exact ⟨_, Eqv.trans e₂ e₁⟩
+
 theorem wtfLvlInv {Γ a 𝒰'}
   (h : Γ ⊢ lvl a ∶ 𝒰') :
-  ∃ b, Γ ⊢ a ∶ lvl b := by
+  ∃ b k, Γ ⊢ a ∶ lvl b ∧ 𝒰 k ≈ 𝒰' := by
   generalize e : @Sigma.mk I idx I.wt ⟨Γ, lvl a, 𝒰'⟩ = t at h
   induction h generalizing Γ a 𝒰'
   all_goals injection e with eI e; injection eI
   all_goals injection e with eCtxt eTerm eType; subst eCtxt; subst eType
   all_goals first | contradiction | injection eTerm | subst eTerm
-  case lvl b _ _ _ e => subst e; exists b
-  case trans ih => apply ih rfl
-  case conv ih => apply ih rfl
-  case sub ih => apply ih rfl
+  case lvl ha _ e => subst e; exact ⟨_, _, ha, Eqv.refl⟩
+  case trans ih =>
+    let ⟨_, _, _, e⟩ := ih rfl
+    cases convLvl𝒰 (convSym (eqvConv e))
+  case conv e₁ _ _ _ ih =>
+    let ⟨b, _, ha, e₂⟩ := ih rfl
+    exact ⟨b, _, ha, Eqv.trans e₂ e₁⟩
+  case sub ih =>
+    let ⟨b, _, ha, _⟩ := ih rfl
+    exact ⟨b, _, ha, Eqv.refl⟩
+
+theorem wtfLofInv {Γ j 𝒰'}
+  (h : Γ ⊢ lof j ∶ 𝒰') :
+  ∃ k, lvl k ≈ 𝒰' := by
+  generalize e : @Sigma.mk I idx I.wt ⟨Γ, lof j, 𝒰'⟩ = t at h
+  induction h generalizing Γ j 𝒰'
+  all_goals injection e with eI e; injection eI
+  all_goals injection e with eCtxt eTerm eType; subst eCtxt; subst eType
+  all_goals first | contradiction | injection eTerm | subst eTerm
+  case lof e => subst e; exact ⟨_, Eqv.refl⟩
+  case trans => exact ⟨_, Eqv.refl⟩
+  case conv e₁ _ _ _ ih =>
+    let ⟨_, e₂⟩ := ih rfl
+    exact ⟨_, Eqv.trans e₂ e₁⟩
+  case sub ih =>
+    let ⟨_, e⟩ := ih rfl
+    cases convLvl𝒰 (eqvConv e)
 
 theorem wtWf {Γ} {a A : Term} (h : Γ ⊢ a ∶ A) : ⊢ Γ := by
   generalize e : @Sigma.mk I idx I.wt ⟨Γ, a, A⟩ = t at h
