@@ -212,8 +212,7 @@ theorem wtfPiInvA {Γ A B 𝒰'}
   induction h generalizing Γ A B 𝒰'
   all_goals injection e with eI e; injection eI
   all_goals injection e with eCtxt eTerm eType; subst eCtxt; subst eType
-  all_goals try contradiction
-  all_goals first | injection eTerm | subst eTerm
+  all_goals first | contradiction | injection eTerm | subst eTerm
   case pi k _ _ _ _ eA eB => subst eA; subst eB; exists k
   case trans ih => apply ih rfl
   case conv ih => apply ih rfl
@@ -226,12 +225,32 @@ theorem wtfPiInvB {Γ A B 𝒰'}
   induction h generalizing Γ A B 𝒰'
   all_goals injection e with eI e; injection eI
   all_goals injection e with eCtxt eTerm eType; subst eCtxt; subst eType
-  all_goals try contradiction
-  all_goals first | injection eTerm | subst eTerm
+  all_goals first | contradiction | injection eTerm | subst eTerm
   case pi k _ _ _ _ eA eB => subst eA; subst eB; exists rename succ k
   case trans ih => apply ih rfl
   case conv ih => apply ih rfl
   case sub ih => apply ih rfl
+
+theorem wtfAbsInv {Γ b C}
+  (h : Γ ⊢ abs b ∶ C) :
+  ∃ A B, Γ ∷ A ⊢ b ∶ B ∧ pi A B ≈ C := by
+  generalize e : @Sigma.mk I idx I.wt ⟨Γ, abs b, C⟩ = t at h
+  induction h generalizing Γ b C
+  all_goals injection e with eI e; injection eI
+  all_goals injection e with eCtxt eTerm eType; subst eCtxt; subst eType
+  all_goals first | contradiction | injection eTerm | subst eTerm
+  case abs hb _ _ e => subst e; exact ⟨_, _, hb, Eqv.refl⟩
+  case trans ih =>
+    let ⟨_, _, _, e⟩ := ih rfl
+    have := convLvlPi (convSym (eqvConv e))
+    contradiction
+  case conv DC _ _ _ ih =>
+    let ⟨A, B, hb, ABD⟩ := ih rfl
+    exact ⟨A, B, hb, Eqv.trans ABD DC⟩
+  case sub ih =>
+    let ⟨_, _, _, e⟩ := ih rfl
+    have := conv𝒰Pi (convSym (eqvConv e))
+    contradiction
 
 theorem wtfLvlInv {Γ a 𝒰'}
   (h : Γ ⊢ lvl a ∶ 𝒰') :
@@ -240,8 +259,7 @@ theorem wtfLvlInv {Γ a 𝒰'}
   induction h generalizing Γ a 𝒰'
   all_goals injection e with eI e; injection eI
   all_goals injection e with eCtxt eTerm eType; subst eCtxt; subst eType
-  all_goals try contradiction
-  all_goals first | injection eTerm | subst eTerm
+  all_goals first | contradiction | injection eTerm | subst eTerm
   case lvl b _ _ _ e => subst e; exists b
   case trans ih => apply ih rfl
   case conv ih => apply ih rfl

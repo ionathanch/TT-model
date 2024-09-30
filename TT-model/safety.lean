@@ -93,6 +93,7 @@ theorem wSubstCons {Γ} {a A : Term}
 
 /-*---------------------------------
   Morphing and substitution lemmas
+  (corollary: replacement)
 ---------------------------------*-/
 
 theorem wtMorph {σ : ℕ → Term} {Γ Δ} {a A : Term}
@@ -129,6 +130,23 @@ theorem wtSubst {Γ} {a A b B : Term}
   (hb : Γ ⊢ b ∶ B) (h : Γ ∷ B ⊢ a ∶ A) :
   Γ ⊢ subst (b +: var) a ∶ subst (b +: var) A := by
   apply wtMorph (wSubstCons hb) (wtWf hb) h
+
+theorem wtReplace {Γ} {A B c C k : Term}
+  (e : A ≈ B)
+  (hB : Γ ⊢ B ∶ 𝒰 k)
+  (h : Γ ∷ A ⊢ c ∶ C) :
+  Γ ∷ B ⊢ c ∶ C := by
+  cases wtWf h with | cons wfΓ hA =>
+  let wfΓB := Wtf.cons wfΓ hB
+  rw [← substId c, ← substId C]
+  refine wtMorph ?_ wfΓB h
+  intro x A mem; rw [substId]; cases mem
+  case here =>
+    exact Wtf.conv
+      (convEqv (convRename succ (convSym (eqvConv e))))
+      (Wtf.var wfΓB In.here)
+      (wtWeaken wfΓ hB hA)
+  case there mem => exact Wtf.var wfΓB (In.there mem)
 
 /-*-----------
   Regularity
@@ -177,3 +195,60 @@ theorem wtRegularity {Γ} {a A : Term} (h : Γ ⊢ a ∶ A) : ∃ k, Γ ⊢ A �
     let ⟨_, ihk⟩ := ih rfl
     let ⟨l, hk⟩ := wtfLvlInv ihk
     exact ⟨l, Wtf.𝒰 hk⟩
+
+/-*-------------
+  Preservation
+-------------*-/
+
+theorem wtPar {Γ} {a b A : Term} (r : a ⇒ b) (h : Γ ⊢ a ∶ A) : Γ ⊢ b ∶ A := by
+  generalize e : @Sigma.mk I idx I.wt ⟨Γ, a, A⟩ = t at h
+  induction h generalizing Γ a b A
+  all_goals injection e with eI e; injection eI
+  all_goals injection e with eCtxt eTerm eType;
+            subst eCtxt; subst eTerm; subst eType
+  case var => cases r; constructor <;> assumption
+  case 𝒰 ih => cases r with | 𝒰 r' => exact Wtf.𝒰 (ih r' rfl)
+  case pi ihA ihB =>
+    cases r with | pi ra rb =>
+    let ihA' := ihA ra rfl
+    exact Wtf.pi ihA' (wtReplace (parEqv ra) ihA' (ihB rb rfl))
+  case abs hPi _ _ ihb => cases r with | abs r' => exact Wtf.abs hPi (ihb r' rfl)
+  case app hb ha ihb iha =>
+    cases r
+    case β rb ra =>
+      let ⟨_, hA⟩ := wtRegularity ha
+      let ⟨_, hPi⟩ := wtRegularity hb
+      let ⟨_, hB⟩ := wtfPiInvB hPi
+      let ⟨A', B', hb', e⟩ := wtfAbsInv (ihb (Par.abs rb) rfl)
+      let ⟨eA, eB⟩ := convPiInv (eqvConv e)
+      exact Wtf.conv
+        (convEqv (convCong (convSym (parConv ra)) eB))
+        (wtSubst (iha ra rfl) (wtReplace (convEqv eA) hA hb'))
+        (wtSubst ha hB)
+    case app rb ra =>
+      let ⟨k, hBa⟩ := wtRegularity (Wtf.app hb ha)
+      exact Wtf.conv
+        (convEqv (convSym (parConv (parCong ra (parRefl _)))))
+        (Wtf.app (ihb rb rfl) (iha ra rfl)) hBa
+  case mty ih => cases r; exact Wtf.mty (ih (parRefl _) rfl)
+  case exf ihb hA _ => cases r with | exf r' => exact Wtf.exf hA (ihb r' rfl)
+  case lvl ih => cases r with | lvl r' => exact Wtf.lvl (ih r' rfl)
+  case lof => cases r; constructor <;> assumption
+  case trans hj _ _ ihi => exact Wtf.trans (ihi r rfl) hj
+  case conv iha eqv hB _ => exact Wtf.conv eqv (iha r rfl) hB
+  case sub hj _ _ ihA => exact Wtf.sub hj (ihA r rfl)
+
+theorem wtPars {Γ} {a b A : Term} (r : a ⇒⋆ b) (h : Γ ⊢ a ∶ A) : Γ ⊢ b ∶ A := by
+  induction r <;> apply_rules [wtPar]
+
+/-*---------
+  Progress
+---------*-/
+
+inductive Value : Term → Prop where
+  | 𝒰 {k} : Value (𝒰 k)
+  | pi {a b} : Value (pi a b)
+  | abs {b} : Value (abs b)
+  | mty : Value mty
+  | lvl {k} : Value (lvl k)
+  | lof {k} : Value (lof k)

@@ -194,6 +194,14 @@ theorem parsPiInv {a b c} (r : pi a b ⇒⋆ c) : ∃ a' b', c = pi a' b' ∧ a 
     let ⟨a', b', e, ra₂, rb₂⟩ := ih rfl
     exact ⟨a', b', e, trans ra₁ ra₂, trans rb₁ rb₂⟩
 
+theorem parsLvlInv {i b} (r : lvl i ⇒⋆ b) : ∃ j, b = lvl j ∧ i ⇒⋆ j := by
+  generalize e : lvl i = a at r
+  induction r generalizing i <;> subst e
+  case refl => exists i; repeat constructor
+  case trans ih r => cases r with | lvl rij =>
+    let ⟨k, e, rjk⟩ := ih rfl
+    exact ⟨k, e, trans rij rjk⟩
+
 theorem parsLofInv {j b} (r : lof j ⇒⋆ b) : b = lof j := by
   generalize e : lof j = a at r
   induction r
@@ -342,6 +350,12 @@ theorem convMtyPi {a b} : ¬ mty ⇔ pi a b
   | ⟨_, rmty, rpi⟩ =>
   let ⟨_, _, epi, _, _⟩ := parsPiInv rpi
   have emty := parsMtyInv rmty
+  by subst epi; contradiction
+
+theorem convLvlPi {a b k} : ¬ lvl k ⇔ pi a b
+  | ⟨_, rlvl, rpi⟩ =>
+  let ⟨_, _, epi, _, _⟩ := parsPiInv rpi
+  have ⟨_, e, _⟩ := parsLvlInv rlvl
   by subst epi; contradiction
 
 theorem conv𝒰Inv {a b} : 𝒰 a ⇔ 𝒰 b → a ⇔ b
