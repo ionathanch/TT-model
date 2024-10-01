@@ -245,7 +245,9 @@ theorem wtPars {Γ} {a b A : Term} (r : a ⇒⋆ b) (h : Γ ⊢ a ∶ A) : Γ �
   Progress
 ---------*-/
 
-inductive Value : Term → Prop where
+-- This needs to be in Type, not Prop
+-- for the large elim in valueType
+inductive Value : Term → Type where
   | 𝒰 {k} : Value (𝒰 k)
   | pi {a b} : Value (pi a b)
   | abs {b} : Value (abs b)
@@ -253,17 +255,58 @@ inductive Value : Term → Prop where
   | lvl {k} : Value (lvl k)
   | lof {k} : Value (lof k)
 
+section
+set_option hygiene false
+local infix:40 "⇒β" => CBN
+local infix:40 "⇒β⋆" => CBNs
+
 inductive CBN : Term → Term → Prop where
-  | β {b a} : CBN (app (abs b) a) (subst (a +: var) b)
-  | app {b b' a} : CBN b b' → CBN (app b a) (app b' a)
-  | exf {b b'} : CBN b b' → CBN (exf b) (exf b')
+  | β {b a} : app (abs b) a ⇒β subst (a +: var) b
+  | app {b b' a} : b ⇒β  b' → app b a ⇒β app b' a
+  | exf {b b'} : b ⇒β b' → exf b ⇒β exf b'
+
+inductive CBNs : Term → Term → Prop where
+  | refl a : a ⇒β⋆ a
+  | trans {a b c} : a ⇒β b → b ⇒β⋆ c → a ⇒β⋆ c
+end
 
 infix:40 "⇒β" => CBN
+infix:40 "⇒β⋆" => CBNs
 
 theorem CBNpar {a b} : a ⇒β b → a ⇒ b
   | CBN.β => Par.β (parRefl _) (parRefl _)
   | CBN.app rb => Par.app (CBNpar rb) (parRefl _)
   | CBN.exf rb => Par.exf (CBNpar rb)
+
+@[simp] -- Shape of types of canonical values
+def valueType {a} (A : Term) : Value a → Prop
+  | Value.𝒰 | Value.pi | Value.mty | Value.lvl => ∃ k, 𝒰 k ≈ A
+  | Value.abs => ∃ B C, pi B C ≈ A
+  | Value.lof => ∃ k, lvl k ≈ A
+
+-- The types of canonical values have the given shape
+theorem wtValue {a A B : Term} (h : ⬝ ⊢ a ∶ A) (e : A ≈ B) : (v : Value a) → valueType B v
+  | Value.𝒰 => let ⟨_, e𝒰⟩ := wtf𝒰Inv h; ⟨_, Eqv.trans e𝒰 e⟩
+  | Value.pi => let ⟨_, e𝒰⟩ := wtfPiInv𝒰 h; ⟨_, Eqv.trans e𝒰 e⟩
+  | Value.abs => let ⟨_, _, _, epi⟩ := wtfAbsInv h; ⟨_, _, Eqv.trans epi e⟩
+  | Value.mty => let ⟨_, e𝒰⟩ := wtfMtyInv h; ⟨_, Eqv.trans e𝒰 e⟩
+  | Value.lvl => let ⟨_, _, _, e𝒰⟩ := wtfLvlInv h; ⟨_, Eqv.trans e𝒰 e⟩
+  | Value.lof => let ⟨_, elvl⟩ := wtfLofInv h; ⟨_, Eqv.trans elvl e⟩
+
+theorem wtAbs {b A B : Term} (v : Value b) (h : ⬝ ⊢ b ∶ pi A B) : ∃ b', b = abs b' := by
+  generalize e : @Sigma.mk I idx I.wt ⟨⬝, b, pi A B⟩ = t at h
+  induction h generalizing b A B
+  all_goals injection e with eI e; injection eI
+  all_goals injection e with eCtxt eTerm eType;
+            subst eCtxt; subst eTerm
+  all_goals try first | contradiction | subst eType | injection eType
+  case abs eA eB => subst eA eB; exact ⟨_, rfl⟩
+  case conv h _ epi _ _ =>
+    let ee := wtValue h epi v
+    cases v <;> let ⟨_, e⟩ := ee
+    case 𝒰 | pi | mty | lvl => cases conv𝒰Pi (eqvConv e)
+    case abs => exact ⟨_, rfl⟩
+    case lof => cases convLvlPi (eqvConv e)
 
 theorem wtMty {b : Term} (v : Value b) (h : ⬝ ⊢ b ∶ mty) : False := by
   generalize e : @Sigma.mk I idx I.wt ⟨⬝, b, mty⟩ = t at h
@@ -272,28 +315,14 @@ theorem wtMty {b : Term} (v : Value b) (h : ⬝ ⊢ b ∶ mty) : False := by
   all_goals injection e with eCtxt eTerm eType;
             subst eCtxt; subst eTerm
   all_goals try first | contradiction | subst eType
-  case conv ih emty _ _ =>
-  cases v
-  case 𝒰 h =>
-    let ⟨_, e𝒰⟩ := wtf𝒰Inv h
-    cases conv𝒰Mty (eqvConv (Eqv.trans e𝒰 emty))
-  case pi h =>
-    let ⟨_, e𝒰⟩ := wtfPiInv𝒰 h
-    cases conv𝒰Mty (eqvConv (Eqv.trans e𝒰 emty))
-  case abs hb =>
-    let ⟨_, _, _, epi⟩ := wtfAbsInv hb
-    cases convMtyPi (eqvConv (Eqv.sym (Eqv.trans epi emty)))
-  case mty h =>
-    let ⟨_, e𝒰⟩ := wtfMtyInv h
-    cases conv𝒰Mty (eqvConv (Eqv.trans e𝒰 emty))
-  case lvl h =>
-    let ⟨_, _, _, e𝒰⟩ := wtfLvlInv h
-    cases conv𝒰Mty (eqvConv (Eqv.trans e𝒰 emty))
-  case lof h =>
-    let ⟨_, elvl⟩ := wtfLofInv h
-    cases convLvlMty (eqvConv (Eqv.trans elvl emty))
+  case conv h _ emty _ _ =>
+    let ee := wtValue h emty v
+    cases v <;> let ⟨_, e⟩ := ee
+    case 𝒰 | pi | mty | lvl => cases conv𝒰Mty (eqvConv e)
+    case abs => let ⟨_, e⟩ := e; cases convMtyPi (eqvConv (Eqv.sym e))
+    case lof => cases convLvlMty (eqvConv e)
 
-theorem wtProgress {a A : Term} (h : ⬝ ⊢ a ∶ A) : Value a ∨ ∃ b, a ⇒β b := by
+theorem wtProgress {a A : Term} (h : ⬝ ⊢ a ∶ A) : Nonempty (Value a) ∨ ∃ b, a ⇒β b := by
   generalize e : @Sigma.mk I idx I.wt ⟨⬝, a, A⟩ = t at h
   induction h generalizing a A
   all_goals injection e with eI e; injection eI
@@ -302,11 +331,24 @@ theorem wtProgress {a A : Term} (h : ⬝ ⊢ a ∶ A) : Value a ∨ ∃ b, a ⇒
   case var mem => cases mem
   case 𝒰 | pi | abs | mty | lvl | lof => repeat constructor
   case trans ih | conv ih _ _ _ | sub ih => exact ih rfl
-  case app ihb _ =>
+  case app hb _ ihb _ =>
     cases ihb rfl
-    case inl v => sorry
+    case inl v =>
+      cases v with | intro v =>
+      let ⟨_, e⟩ := wtAbs v hb; subst e
+      exact Or.inr ⟨_, CBN.β⟩
     case inr r => let ⟨_, r⟩ := r; exact Or.inr ⟨_, CBN.app r⟩
   case exf hb ihb _ _ =>
     cases ihb rfl
-    case inl v => cases wtMty v hb
+    case inl v => cases v with | intro v => cases wtMty v hb
     case inr r => let ⟨_, r⟩ := r; exact Or.inr ⟨_, CBN.exf r⟩
+
+/-*-------
+  Safety
+-------*-/
+
+theorem wtSafety {a b A : Term} (h : ⬝ ⊢ a ∶ A) (r : a ⇒β⋆ b) :
+  Nonempty (Value b) ∨ ∃ c, b ⇒β c := by
+  induction r
+  case refl => exact wtProgress h
+  case trans r _ ih => exact ih (wtPar (CBNpar r) h)
