@@ -238,9 +238,6 @@ theorem wtPar {Γ} {a b A : Term} (r : a ⇒ b) (h : Γ ⊢ a ∶ A) : Γ ⊢ b 
   case conv iha eqv hB _ => exact Wtf.conv eqv (iha r rfl) hB
   case sub hj _ _ ihA => exact Wtf.sub hj (ihA r rfl)
 
-theorem wtPars {Γ} {a b A : Term} (r : a ⇒⋆ b) (h : Γ ⊢ a ∶ A) : Γ ⊢ b ∶ A := by
-  induction r <;> apply_rules [wtPar]
-
 /-*---------
   Progress
 ---------*-/
