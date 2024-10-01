@@ -282,7 +282,7 @@ def valueType {a} (A : Term) : Value a → Prop
   | Value.lof => ∃ k, lvl k ≈ A
 
 -- The types of canonical values have the given shape
-theorem wtValue {a A B : Term} (h : ⬝ ⊢ a ∶ A) (e : A ≈ B) : (v : Value a) → valueType B v
+theorem wtValue {Γ} {a A B : Term} (h : Γ ⊢ a ∶ A) (e : A ≈ B) : (v : Value a) → valueType B v
   | Value.𝒰 => let ⟨_, e𝒰⟩ := wtf𝒰Inv h; ⟨_, Eqv.trans e𝒰 e⟩
   | Value.pi => let ⟨_, e𝒰⟩ := wtfPiInv𝒰 h; ⟨_, Eqv.trans e𝒰 e⟩
   | Value.abs => let ⟨_, _, _, epi⟩ := wtfAbsInv h; ⟨_, _, Eqv.trans epi e⟩
@@ -290,9 +290,9 @@ theorem wtValue {a A B : Term} (h : ⬝ ⊢ a ∶ A) (e : A ≈ B) : (v : Value 
   | Value.lvl => let ⟨_, _, _, e𝒰⟩ := wtfLvlInv h; ⟨_, Eqv.trans e𝒰 e⟩
   | Value.lof => let ⟨_, elvl⟩ := wtfLofInv h; ⟨_, Eqv.trans elvl e⟩
 
-theorem wtAbs {b A B : Term} (v : Value b) (h : ⬝ ⊢ b ∶ pi A B) : ∃ b', b = abs b' := by
-  generalize e : @Sigma.mk I idx I.wt ⟨⬝, b, pi A B⟩ = t at h
-  induction h generalizing b A B
+theorem wtAbs {Γ} {b A B : Term} (v : Value b) (h : Γ ⊢ b ∶ pi A B) : ∃ b', b = abs b' := by
+  generalize e : @Sigma.mk I idx I.wt ⟨Γ, b, pi A B⟩ = t at h
+  induction h
   all_goals injection e with eI e; injection eI
   all_goals injection e with eCtxt eTerm eType;
             subst eCtxt; subst eTerm
@@ -305,9 +305,9 @@ theorem wtAbs {b A B : Term} (v : Value b) (h : ⬝ ⊢ b ∶ pi A B) : ∃ b', 
     case abs => exact ⟨_, rfl⟩
     case lof => cases convLvlPi (eqvConv e)
 
-theorem wtMty {b : Term} (v : Value b) (h : ⬝ ⊢ b ∶ mty) : False := by
-  generalize e : @Sigma.mk I idx I.wt ⟨⬝, b, mty⟩ = t at h
-  induction h generalizing b
+theorem wtMty {Γ} {b : Term} (v : Value b) (h : Γ ⊢ b ∶ mty) : False := by
+  generalize e : @Sigma.mk I idx I.wt ⟨Γ, b, mty⟩ = t at h
+  induction h
   all_goals injection e with eI e; injection eI
   all_goals injection e with eCtxt eTerm eType;
             subst eCtxt; subst eTerm
