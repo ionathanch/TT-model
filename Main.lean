@@ -5,3 +5,6 @@ import «TT-model».typing
 import «TT-model».semantics
 import «TT-model».soundness
 import «TT-model».example
+
+def main : IO Unit :=
+  pure ()

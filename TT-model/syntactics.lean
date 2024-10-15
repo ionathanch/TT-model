@@ -38,20 +38,24 @@ def lift (ξ : Nat → Nat) : Nat → Nat :=
   zero +: (succ ∘ ξ)
 
 -- Lifting respects renaming extensionality
+omit lc in
 theorem liftExt ξ ζ (h : ∀ x, ξ x = ζ x) : ∀ x, lift ξ x = lift ζ x := by
   intro x; cases x <;> simp [h]
 
 -- Lifting identity renaming does nothing
+omit lc in
 theorem liftId ξ (h : ∀ x, ξ x = x) : ∀ x, lift ξ x = x := by
   intro x; cases x <;> simp [h]
 
 -- Lifting composes
+omit lc in
 theorem liftComp ξ ζ ς (h : ∀ x, (ξ ∘ ζ) x = ς x) :
   ∀ x, (lift ξ ∘ lift ζ) x = lift ς x := by
   intro x; cases x <;> simp
   case succ => apply h
 
 -- Lifting commutes with succ
+omit lc in
 theorem liftSucc ξ : ∀ x, (lift ξ ∘ succ) x = (succ ∘ ξ) x := by
   intro x; cases x <;> simp
 

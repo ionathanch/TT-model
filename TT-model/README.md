@@ -6,7 +6,7 @@ proof written in Rocq.
 This mechanization is closer in style than the one in Agda,
 since the logical relation takes advantage of Lean's impredicative Prop
 in place of induction–recursion.
-It has been checked with Lean 4.8.0-rc1 and requires Mathlib for some typeclasses.
+It has been checked with Lean 4.13.0-rc3 and requires Mathlib for some typeclasses.
 The development can be checked and built using `lake build`.
 
 ## Type Theory
