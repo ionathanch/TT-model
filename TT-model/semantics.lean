@@ -40,7 +40,7 @@ theorem interpPiInv {i I a b P} (h : ⟦ pi a b ⟧ i , I ↘ P) :
     (∀ x Pb, Pf x Pb → Interp i I (subst (x +: var) b) Pb) ∧
     P = (λ f ↦ ∀ x Pb, Pa x → Pf x Pb → Pb (app f x)) := by
   generalize e : pi a b = c at h
-  induction h generalizing a b <;> try contradiction
+  induction h generalizing a b
   case pi Pa Pf ha hPf hb _ _ =>
     injection e with ea eb; subst ea; subst eb
     exact ⟨Pa, Pf, ha, hPf, hb, rfl⟩
@@ -50,30 +50,34 @@ theorem interpPiInv {i I a b P} (h : ⟦ pi a b ⟧ i , I ↘ P) :
     refine ⟨Pa, Pf, ?_, hPf, ?_, e⟩
     . constructor <;> assumption
     . intro x Pb PfxPb; constructor <;> apply_rules [parCong, parRefl]
+  all_goals contradiction
 
 theorem interp𝒰Inv {i I a P} (h : ⟦ 𝒰 a ⟧ i , I ↘ P) : ∃ j lt, a ⇒⋆ lof j ∧ P = I j lt := by
   generalize e : 𝒰 a = b at h
-  induction h generalizing a <;> try contradiction
+  induction h generalizing a
   case 𝒰 j lt => injection e with e; subst e; exists j, lt, Pars.refl _
   case step r _ ih =>
     subst e; let (Par.𝒰 r₁) := r
     let ⟨j, lt, r₂, e⟩ := ih rfl
     exact ⟨j, lt, Pars.trans r₁ r₂, e⟩
+  all_goals contradiction
 
 theorem interpMtyInv {i I P} (h : ⟦ mty ⟧ i , I ↘ P) : P = (λ _ ↦ False) := by
   generalize e : mty = a at h
-  induction h <;> try contradiction
+  induction h
   case mty => rfl
   case step r _ ih => subst e; cases r; simp [ih]
+  all_goals contradiction
 
 theorem interpLvlInv {i I a P} (h : ⟦ lvl a ⟧ i , I ↘ P) : ∃ k, a ⇒⋆ lof k ∧ P = (λ a ↦ ∃ j, a ⇒⋆ lof j ∧ j < k) := by
   generalize e : lvl a = b at h
-  induction h generalizing a <;> try contradiction
+  induction h generalizing a
   case lvl k => injection e with e; subst e; exists k, Pars.refl _
   case step r _ ih =>
     subst e; let (Par.lvl r₁) := r
     let ⟨k, r₂, e⟩ := ih rfl
     exact ⟨k, Pars.trans r₁ r₂, e⟩
+  all_goals contradiction
 
 /-*--------------------
   Better constructors
