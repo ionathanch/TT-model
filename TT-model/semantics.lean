@@ -37,7 +37,7 @@ theorem interpPiInv {i I a b P} (h : ⟦ pi a b ⟧ i , I ↘ P) :
   ∃ (Pa : Term → Prop) (Pf : Term → (Term → Prop) → Prop),
     (⟦ a ⟧ i , I ↘ Pa) ∧
     (∀ x, Pa x → ∃ Pb, Pf x Pb) ∧
-    (∀ x Pb, Pf x Pb → Interp i I (subst (x +: var) b) Pb) ∧
+    (∀ x Pb, Pf x Pb → ⟦ subst (x +: var) b ⟧ i, I ↘ Pb) ∧
     P = (λ f ↦ ∀ x Pb, Pa x → Pf x Pb → Pb (app f x)) := by
   generalize e : pi a b = c at h
   induction h generalizing a b
