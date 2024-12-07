@@ -1,3 +1,4 @@
+import «TT-model».tactics
 import «TT-model».syntactics
 
 open Term
@@ -79,6 +80,50 @@ theorem parSubst {a b} σ (r : a ⇒ b) : subst σ a ⇒ subst σ b := by
 
 theorem parCong {a a' b b'} (ra : a ⇒ a') (rb : b ⇒ b') : subst (a +: var) b ⇒ subst (a' +: var) b' := by
   apply parMorphing (r := rb); intro n; cases n <;> first | assumption | constructor
+
+/-*-------------
+  Antirenaming
+-------------*-/
+
+theorem antirenaming {ξ a b'} (r : rename ξ a ⇒ b') : ∃ b, b' = rename ξ b ∧ a ⇒ b := by
+  generalize e : rename ξ a = a' at r
+  induction r generalizing ξ a
+  all_goals cases a <;> inj_subst; specialize_rfls
+  case β ihb b _ e _ iha =>
+    cases b <;> inj_subst; specialize_rfls
+    let ⟨a, ea, ra⟩ := iha
+    let ⟨b, eb, rb⟩ := ihb
+    subst ea; subst eb
+    exact ⟨subst (a +: var) b, renameDist ξ a b, Par.β rb ra⟩
+  case var => exact ⟨var _, rfl, parRefl _⟩
+  case 𝒰 ih =>
+    let ⟨a, e, r⟩ := ih
+    subst e
+    exact ⟨𝒰 a, rfl, Par.𝒰 r⟩
+  case pi ihb iha =>
+    let ⟨a, ea, ra⟩ := iha
+    let ⟨b, eb, rb⟩ := ihb
+    subst ea; subst eb
+    exact ⟨pi a b, rfl, Par.pi ra rb⟩
+  case abs ihb =>
+    let ⟨b, e, r⟩ := ihb
+    subst e
+    exact ⟨abs b, rfl, Par.abs r⟩
+  case app iha ihb =>
+    let ⟨a, ea, ra⟩ := iha
+    let ⟨b, eb, rb⟩ := ihb
+    subst ea; subst eb
+    exact ⟨app b a, rfl, Par.app rb ra⟩
+  case mty => exact ⟨mty, rfl, Par.mty⟩
+  case exf ih =>
+    let ⟨b, e, r⟩ := ih
+    subst e
+    exact ⟨exf b, rfl, Par.exf r⟩
+  case lvl ih =>
+    let ⟨a, e, r⟩ := ih
+    subst e
+    exact ⟨lvl a, rfl, Par.lvl r⟩
+  case lof => exact ⟨lof _, rfl, parRefl _⟩
 
 /-*----------------------------------------------------
   Reflexive, transitive closure of parallel reduction
