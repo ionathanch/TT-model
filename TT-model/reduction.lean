@@ -206,7 +206,7 @@ theorem parsLvl {a a'} (r : a ⇒⋆ a') : lvl a ⇒⋆ lvl a' := by
   case refl => constructor
   case trans => constructor; constructor; assumption; assumption
 
-theorem parsβ σ b a : app (abs (subst (⇑ σ) b)) a ⇒⋆ subst (a +: σ) b := by
+theorem parsβ {b a} σ : app (abs (subst (⇑ σ) b)) a ⇒⋆ subst (a +: σ) b := by
   constructor
   . constructor; apply parRefl; apply parRefl
   . rw [← substUnion]; constructor

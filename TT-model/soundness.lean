@@ -45,8 +45,7 @@ theorem soundness {Γ} {a A : Term} (h : Γ ⊢ a ∶ A) : Γ ⊨ a ∶ A := by
     . subst e; intro x Pb PAx hB; rw [← substUnion] at hB
       let ⟨_, _, hB', hb⟩ := ihb rfl (x +: σ) (semSubstCons hA PAx hσ)
       rw [interpsDet hB hB']
-      apply interpsBwdsP _ hB' hb
-      apply parsβ
+      exact interpsBwdsP (parsβ σ) hB' hb
   case app ihb iha =>
     let ⟨i, _, hpi, hb⟩ := ihb rfl σ hσ
     let ⟨_, PA, hA, ha⟩ := iha rfl σ hσ
