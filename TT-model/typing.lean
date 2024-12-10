@@ -1,3 +1,4 @@
+import «TT-model».tactics
 import «TT-model».syntactics
 import «TT-model».reduction
 
@@ -194,6 +195,161 @@ end
 notation:40 "⊢" Γ:40 => Wtf (Sigma.mk wf Γ)
 notation:40 Γ:41 "⊢" a:41 "∶" A:41 => Wtf (Sigma.mk wt (T.mk Γ a A))
 
+/-*------------------------------
+  Explicit induction principles
+------------------------------*-/
+
+theorem wtfInd {w} (wtf : Wtf w) (P : ∀ {w}, Wtf w → Prop)
+  (nil : P Wtf.nil)
+  (cons : ∀ {Γ A k}
+    (wf : ⊢ Γ)
+    (h : Γ ⊢ A ∶ 𝒰 k),
+    P wf → P h → P (Wtf.cons wf h))
+  (var : ∀ {Γ x A}
+    (wf : ⊢ Γ)
+    (mem : Γ ∋ x ∶ A),
+    P wf → P (Wtf.var wf mem))
+  (𝒰 : ∀ {Γ j k}
+    (h : Γ ⊢ j ∶ lvl k),
+    P h → P (Wtf.𝒰 h))
+  (pi : ∀ {Γ A B k}
+    (hA : Γ ⊢ A ∶ Term.𝒰 k)
+    (hB : Γ ∷ A ⊢ B ∶ Term.𝒰 (rename succ k)),
+    P hA → P hB → P (Wtf.pi hA hB))
+  (abs : ∀ {Γ A B b k}
+    (hpi : Γ ⊢ Term.pi A B ∶ Term.𝒰 k)
+    (hb : Γ ∷ A ⊢ b ∶ B),
+    P hpi → P hb → P (Wtf.abs hpi hb))
+  (app : ∀ {Γ A B b a}
+    (hb : Γ ⊢ b ∶ Term.pi A B)
+    (ha : Γ ⊢ a ∶ A),
+    P hb → P ha → P (Wtf.app hb ha))
+  (mty : ∀ {Γ j k}
+    (h : Γ ⊢ j ∶ lvl k),
+    P h → P (Wtf.mty h))
+  (exf : ∀ {Γ A b k}
+    (hA : Γ ⊢ A ∶ Term.𝒰 k)
+    (hb : Γ ⊢ b ∶ Term.mty),
+    P hA → P hb → P (Wtf.exf hA hb))
+  (lvl : ∀ {Γ a b k}
+    (h : Γ ⊢ a ∶ lvl b),
+    P h → P (Wtf.lvl (k := k) h))
+  (lof : ∀ {Γ j k}
+    (wf : ⊢ Γ)
+    (lt : j < k),
+    P wf → P (Wtf.lof wf lt))
+  (trans : ∀ {Γ i j k}
+    (hi : Γ ⊢ i ∶ Term.lvl j)
+    (hj : Γ ⊢ j ∶ Term.lvl k),
+    P hi → P hj → P (Wtf.trans hi hj))
+  (conv : ∀ {Γ A B a k}
+    (e : A ≈ B)
+    (ha : Γ ⊢ a ∶ A)
+    (hB : Γ ⊢ B ∶ Term.𝒰 k),
+    P ha → P hB → P (Wtf.conv e ha hB))
+  (sub : ∀ {Γ j k A}
+    (hj : Γ ⊢ j ∶ Term.lvl k)
+    (hA : Γ ⊢ A ∶ Term.𝒰 j),
+    P hj → P hA → P (Wtf.sub hj hA))
+  : P wtf := by
+  induction wtf
+  case nil => exact nil
+  case cons wf h iwf ih => exact cons wf h iwf ih
+  case var wf mem ih => exact var wf mem ih
+  case 𝒰 h ih => exact 𝒰 h ih
+  case pi hA hB ihA ihB => exact pi hA hB ihA ihB
+  case abs hpi hb ihpi ihb => exact abs hpi hb ihpi ihb
+  case app hb ha ihb iha => exact app hb ha ihb iha
+  case mty h ih => exact mty h ih
+  case exf hA hb ihA ihb => exact exf hA hb ihA ihb
+  case lvl h ih => exact lvl h ih
+  case lof wf lt ih => exact lof wf lt ih
+  case trans hi hj ihi ihj => exact trans hi hj ihi ihj
+  case conv e ha hB iha ihB => exact conv e ha hB iha ihB
+  case sub hj hA ihj ihA => exact sub hj hA ihj ihA
+
+theorem wtInd {Γ a A} (wt : Γ ⊢ a ∶ A) (P : ∀ {Γ a A}, Γ ⊢ a ∶ A → Prop)
+  (var : ∀ {Γ x A}
+    (wf : ⊢ Γ)
+    (mem : Γ ∋ x ∶ A),
+    P (Wtf.var wf mem))
+  (𝒰 : ∀ {Γ j k}
+    (h : Γ ⊢ j ∶ lvl k),
+    P h → P (Wtf.𝒰 h))
+  (pi : ∀ {Γ A B k}
+    (hA : Γ ⊢ A ∶ Term.𝒰 k)
+    (hB : Γ ∷ A ⊢ B ∶ Term.𝒰 (rename succ k)),
+    P hA → P hB → P (Wtf.pi hA hB))
+  (abs : ∀ {Γ A B b k}
+    (hpi : Γ ⊢ Term.pi A B ∶ Term.𝒰 k)
+    (hb : Γ ∷ A ⊢ b ∶ B),
+    P hpi → P hb → P (Wtf.abs hpi hb))
+  (app : ∀ {Γ A B b a}
+    (hb : Γ ⊢ b ∶ Term.pi A B)
+    (ha : Γ ⊢ a ∶ A),
+    P hb → P ha → P (Wtf.app hb ha))
+  (mty : ∀ {Γ j k}
+    (h : Γ ⊢ j ∶ lvl k),
+    P h → P (Wtf.mty h))
+  (exf : ∀ {Γ A b k}
+    (hA : Γ ⊢ A ∶ Term.𝒰 k)
+    (hb : Γ ⊢ b ∶ Term.mty),
+    P hA → P hb → P (Wtf.exf hA hb))
+  (lvl : ∀ {Γ a b k}
+    (h : Γ ⊢ a ∶ lvl b),
+    P h → P (Wtf.lvl (k := k) h))
+  (lof : ∀ {Γ j k}
+    (wf : ⊢ Γ)
+    (lt : j < k),
+    P (Wtf.lof wf lt))
+  (trans : ∀ {Γ i j k}
+    (hi : Γ ⊢ i ∶ Term.lvl j)
+    (hj : Γ ⊢ j ∶ Term.lvl k),
+    P hi → P hj → P (Wtf.trans hi hj))
+  (conv : ∀ {Γ A B a k}
+    (e : A ≈ B)
+    (ha : Γ ⊢ a ∶ A)
+    (hB : Γ ⊢ B ∶ Term.𝒰 k),
+    P ha → P hB → P (Wtf.conv e ha hB))
+  (sub : ∀ {Γ j k A}
+    (hj : Γ ⊢ j ∶ Term.lvl k)
+    (hA : Γ ⊢ A ∶ Term.𝒰 j),
+    P hj → P hA → P (Wtf.sub hj hA))
+  : P wt := by
+  -- generalize e : @Sigma.mk I idx I.wt ⟨Γ, a, A⟩ = t at wt
+  apply wtfInd wt (λ {w} _ ↦
+    match w with
+    | Sigma.mk I.wf _ => True
+    | Sigma.mk I.wt (T.mk Γ a A) => ∀ {wt : Γ ⊢ a ∶ A}, P wt)
+  all_goals intros; simp at *
+  case var wf mem _ => exact var wf mem
+  case 𝒰 h ih => exact 𝒰 h ih
+  case pi hA hB ihA ihB => exact pi hA hB ihA ihB
+  case abs hpi hb ihpi ihb => exact abs hpi hb ihpi ihb
+  case app hb ha ihb iha => exact app hb ha ihb iha
+  case mty h ih => exact mty h ih
+  case exf hA hb ihA ihb => exact exf hA hb ihA ihb
+  case lvl h ih => exact lvl h ih
+  case lof wf lt _ => exact lof wf lt
+  case trans hi hj ihi ihj => exact trans hi hj ihi ihj
+  case conv e ha hB iha ihB => exact conv e ha hB iha ihB
+  case sub hj hA ihj ihA => exact sub hj hA ihj ihA
+
+theorem wfInd {Γ} (wf : ⊢ Γ) (P : ∀ {Γ}, ⊢ Γ → Prop)
+  (nil : P Wtf.nil)
+  (cons : ∀ {Γ A k}
+    (wf : ⊢ Γ)
+    (h : Γ ⊢ A ∶ 𝒰 k),
+    P wf → P (Wtf.cons wf h))
+  : P wf := by
+  apply wtfInd wf (λ {w} _ ↦
+    match w with
+    | Sigma.mk I.wf Γ => ∀ {wf : ⊢ Γ}, P wf
+    | Sigma.mk I.wt _ => True)
+  all_goals intros; simp at *
+  case nil => exact nil
+  case cons wf h iwf _ => exact cons wf h iwf
+
 /-*---------------------------------------
   Better constructors + inversion lemmas
 ---------------------------------------*-/
@@ -208,195 +364,110 @@ theorem wtfApp {Γ A B B' b a}
 theorem wtf𝒰Inv {Γ j 𝒰'}
   (h : Γ ⊢ 𝒰 j ∶ 𝒰') :
   ∃ k, 𝒰 k ≈ 𝒰' := by
-  generalize e : @Sigma.mk I idx I.wt ⟨Γ, 𝒰 j, 𝒰'⟩ = t at h
-  induction h generalizing Γ j 𝒰'
-  all_goals injection e with eI e; injection eI
-  all_goals injection e with eCtxt eTerm eType; subst eCtxt; subst eType
-  all_goals first | contradiction | injection eTerm | subst eTerm
+  generalize e : 𝒰 j = t at h
+  induction h using wtInd
+  all_goals inj_subst <;> specialize_rfls
   case 𝒰 | sub => exact ⟨_, Eqv.refl⟩
   case trans ih =>
-    let ⟨_, e⟩ := ih rfl
+    let ⟨_, e⟩ := ih
     cases convLvl𝒰 (convSym (eqvConv e))
   case conv e₁ _ _ _ ih =>
-    let ⟨_, e₂⟩ := ih rfl
+    let ⟨_, e₂⟩ := ih
     exact ⟨_, Eqv.trans e₂ e₁⟩
 
 theorem wtfPiInvA {Γ A B 𝒰'}
   (h : Γ ⊢ pi A B ∶ 𝒰') :
   ∃ j, Γ ⊢ A ∶ 𝒰 j := by
-  generalize e : @Sigma.mk I idx I.wt ⟨Γ, pi A B, 𝒰'⟩ = t at h
-  induction h generalizing Γ A B 𝒰'
-  all_goals injection e with eI e; injection eI
-  all_goals injection e with eCtxt eTerm eType; subst eCtxt; subst eType
-  all_goals first | contradiction | injection eTerm | subst eTerm
-  case pi k _ _ _ _ eA eB => subst eA; subst eB; exists k
-  case trans ih | conv ih | sub ih => apply ih rfl
+  generalize e : pi A B = t at h
+  induction h using wtInd
+  all_goals inj_subst <;> specialize_rfls
+  case pi k _ _ _ _ => exists k
+  all_goals assumption
 
 theorem wtfPiInvB {Γ A B 𝒰'}
   (h : Γ ⊢ pi A B ∶ 𝒰') :
   ∃ j, Γ ∷ A ⊢ B ∶ 𝒰 j := by
-  generalize e : @Sigma.mk I idx I.wt ⟨Γ, pi A B, 𝒰'⟩ = t at h
-  induction h generalizing Γ A B 𝒰'
-  all_goals injection e with eI e; injection eI
-  all_goals injection e with eCtxt eTerm eType; subst eCtxt; subst eType
-  all_goals first | contradiction | injection eTerm | subst eTerm
-  case pi k _ _ _ _ eA eB => subst eA; subst eB; exists rename succ k
-  case trans ih | conv ih | sub ih => apply ih rfl
+  generalize e : pi A B = t at h
+  induction h using wtInd
+  all_goals inj_subst <;> specialize_rfls
+  case pi k _ _ _ _ => exists rename succ k
+  all_goals assumption
 
 theorem wtfPiInv𝒰 {Γ A B 𝒰'}
   (h : Γ ⊢ pi A B ∶ 𝒰') :
   ∃ j, 𝒰 j ≈ 𝒰' := by
-  generalize e : @Sigma.mk I idx I.wt ⟨Γ, pi A B, 𝒰'⟩ = t at h
-  induction h generalizing Γ A B 𝒰'
-  all_goals injection e with eI e; injection eI
-  all_goals injection e with eCtxt eTerm eType; subst eCtxt; subst eType
-  all_goals first | contradiction | injection eTerm | subst eTerm
+  generalize e : pi A B = t at h
+  induction h using wtInd
+  all_goals inj_subst <;> specialize_rfls
   case pi | sub => exact ⟨_, Eqv.refl⟩
   case trans ih =>
-    let ⟨_, e⟩ := ih rfl
+    let ⟨_, e⟩ := ih
     cases convLvl𝒰 (convSym (eqvConv e))
   case conv e₁ _ _ _ ih =>
-    let ⟨_, e₂⟩ := ih rfl
+    let ⟨_, e₂⟩ := ih
     exact ⟨_, Eqv.trans e₂ e₁⟩
 
 theorem wtfAbsInv {Γ b C}
   (h : Γ ⊢ abs b ∶ C) :
   ∃ A B, Γ ∷ A ⊢ b ∶ B ∧ pi A B ≈ C := by
-  generalize e : @Sigma.mk I idx I.wt ⟨Γ, abs b, C⟩ = t at h
-  induction h generalizing Γ b C
-  all_goals injection e with eI e; injection eI
-  all_goals injection e with eCtxt eTerm eType; subst eCtxt; subst eType
-  all_goals first | contradiction | injection eTerm | subst eTerm
-  case abs hb _ _ e => subst e; exact ⟨_, _, hb, Eqv.refl⟩
+  generalize e : abs b = t at h
+  induction h using wtInd
+  all_goals inj_subst <;> specialize_rfls
+  case abs hb _ => exact ⟨_, _, hb, Eqv.refl⟩
   case trans ih =>
-    let ⟨_, _, _, e⟩ := ih rfl
-    have := convLvlPi (convSym (eqvConv e))
-    contradiction
+    let ⟨_, _, _, e⟩ := ih
+    cases convLvlPi (convSym (eqvConv e))
   case conv DC _ _ _ ih =>
-    let ⟨A, B, hb, ABD⟩ := ih rfl
+    let ⟨A, B, hb, ABD⟩ := ih
     exact ⟨A, B, hb, Eqv.trans ABD DC⟩
   case sub ih =>
-    let ⟨_, _, _, e⟩ := ih rfl
-    have := conv𝒰Pi (convSym (eqvConv e))
-    contradiction
+    let ⟨_, _, _, e⟩ := ih
+    cases conv𝒰Pi (convSym (eqvConv e))
 
 theorem wtfMtyInv {Γ 𝒰'}
   (h : Γ ⊢ mty ∶ 𝒰') :
   ∃ k, 𝒰 k ≈ 𝒰' := by
-  generalize e : @Sigma.mk I idx I.wt ⟨Γ, mty, 𝒰'⟩ = t at h
-  induction h generalizing Γ 𝒰'
-  all_goals injection e with eI e; injection eI
-  all_goals injection e with eCtxt eTerm eType; subst eCtxt; subst eType
-  all_goals first | contradiction | injection eTerm | subst eTerm
+  generalize e : mty = t at h
+  induction h using wtInd
+  all_goals inj_subst <;> specialize_rfls
   case mty | sub => exact ⟨_, Eqv.refl⟩
   case trans ih =>
-    let ⟨_, e⟩ := ih rfl
+    let ⟨_, e⟩ := ih
     cases convLvl𝒰 (convSym (eqvConv e))
   case conv e₁ _ _ _ ih =>
-    let ⟨_, e₂⟩ := ih rfl
+    let ⟨_, e₂⟩ := ih
     exact ⟨_, Eqv.trans e₂ e₁⟩
 
 theorem wtfLvlInv {Γ a 𝒰'}
   (h : Γ ⊢ lvl a ∶ 𝒰') :
   ∃ b k, Γ ⊢ a ∶ lvl b ∧ 𝒰 k ≈ 𝒰' := by
-  generalize e : @Sigma.mk I idx I.wt ⟨Γ, lvl a, 𝒰'⟩ = t at h
-  induction h generalizing Γ a 𝒰'
-  all_goals injection e with eI e; injection eI
-  all_goals injection e with eCtxt eTerm eType; subst eCtxt; subst eType
-  all_goals first | contradiction | injection eTerm | subst eTerm
-  case lvl ha _ e => subst e; exact ⟨_, _, ha, Eqv.refl⟩
+  generalize e : lvl a = t at h
+  induction h using wtInd
+  all_goals inj_subst <;> specialize_rfls
+  case lvl ha _ => exact ⟨_, _, ha, Eqv.refl⟩
   case trans ih =>
-    let ⟨_, _, _, e⟩ := ih rfl
+    let ⟨_, _, _, e⟩ := ih
     cases convLvl𝒰 (convSym (eqvConv e))
   case conv e₁ _ _ _ ih =>
-    let ⟨b, _, ha, e₂⟩ := ih rfl
+    let ⟨b, _, ha, e₂⟩ := ih
     exact ⟨b, _, ha, Eqv.trans e₂ e₁⟩
   case sub ih =>
-    let ⟨b, _, ha, _⟩ := ih rfl
+    let ⟨b, _, ha, _⟩ := ih
     exact ⟨b, _, ha, Eqv.refl⟩
 
 theorem wtfLofInv {Γ j 𝒰'}
   (h : Γ ⊢ lof j ∶ 𝒰') :
   ∃ k, lvl k ≈ 𝒰' := by
-  generalize e : @Sigma.mk I idx I.wt ⟨Γ, lof j, 𝒰'⟩ = t at h
-  induction h generalizing Γ j 𝒰'
-  all_goals injection e with eI e; injection eI
-  all_goals injection e with eCtxt eTerm eType; subst eCtxt; subst eType
-  all_goals first | contradiction | injection eTerm | subst eTerm
-  case lof e => subst e; exact ⟨_, Eqv.refl⟩
-  case trans => exact ⟨_, Eqv.refl⟩
+  generalize e : lof j = t at h
+  induction h using wtInd
+  all_goals inj_subst <;> specialize_rfls
+  case lof | trans => exact ⟨_, Eqv.refl⟩
   case conv e₁ _ _ _ ih =>
-    let ⟨_, e₂⟩ := ih rfl
+    let ⟨_, e₂⟩ := ih
     exact ⟨_, Eqv.trans e₂ e₁⟩
   case sub ih =>
-    let ⟨_, e⟩ := ih rfl
+    let ⟨_, e⟩ := ih
     cases convLvl𝒰 (eqvConv e)
 
 theorem wtWf {Γ} {a A : Term} (h : Γ ⊢ a ∶ A) : ⊢ Γ := by
-  generalize e : @Sigma.mk I idx I.wt ⟨Γ, a, A⟩ = t at h
-  induction h generalizing Γ a A
-  all_goals injection e with eI e; injection eI
-  all_goals injection e with eCtxt eTerm eType;
-            subst eCtxt; subst eTerm; subst eType
-  all_goals apply_rules
-
-/-*---------------------------------------------
-  Lean currently doesn't support induction on
-  mutual inductives, nor structural recursion
-  on inductive predicates in Prop.
-  Put the below back when it does.
-
-mutual
-inductive Wf : Ctxt → Prop where
-  | nil : Wf nil
-  | cons {Γ A k} :
-    Wf Γ →
-    Wt Γ A (𝒰 k) →
-    ---------------
-    Wf (Γ ∷ A)
-
-inductive Wt : Ctxt → Term → Term → Prop where
-  | var {Γ x A} :
-    Wf Γ →
-    In x A Γ →
-    --------------
-    Wt Γ (var x) A
-  | 𝒰 {Γ j k} :
-    Wf Γ →
-    j < k →
-    Wt Γ (𝒰 j) (𝒰 k)
-  | pi {Γ A B k} :
-    Wt Γ A (𝒰 k) →
-    Wt (Γ ∷ A) B (𝒰 k) →
-    ---------------------
-    Wt Γ (pi A B) (𝒰 k)
-  | abs {Γ A B b k} :
-    Wt Γ (pi A B) (𝒰 k) →
-    Wt (Γ ∷ A) b B →
-    ----------------------
-    Wt Γ (abs b) (pi A B)
-  | app {Γ A B b a} :
-    Wt Γ b (pi A B) →
-    Wt Γ a A →
-    -----------------------------------
-    Wt Γ (app b a) (subst (a +: var) B)
-  | mty {Γ k} :
-    Wf Γ →
-    ---------------
-    Wt Γ mty (𝒰 k)
-  | exf {Γ A b k} :
-    Wt Γ A (𝒰 k) →
-    Wt Γ b mty →
-    --------------
-    Wt Γ (exf b) A
-  | conv {Γ A B a k} :
-    A ≈ B →
-    Wt Γ a A →
-    Wt Γ B (𝒰 k) →
-    ------------------
-    Wt Γ a B
-end
-
-prefix:95 "⊢" => Wf
-notation:40 Γ "⊢" a "∶" A => Wt Γ a A
----------------------------------------------*-/
+  induction h using wtInd <;> assumption
