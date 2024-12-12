@@ -27,12 +27,14 @@ data U' k U< where
        ∀ a → el' k U< a C →
        ∀ b → el' k U< b C →
        U' k U< (eq c a b)
+  𝔹̂ : U' k U< 𝔹
   ⇒̂  : ∀ a b → a ⇒ b → U' k U< b → U' k U< a
 
 el' k U< T (Û j j<k) = U< j<k T
 el' k U< _ ⊥̂  = ⊥
 el' k U< f (Π̂ _ A _ B) = ∀ x → (a : el' k U< x A) → el' k U< ($ᵈ f x) (B x a)
 el' k U< p (êq _ _ a _ b _) = p ⇒⋆ refl × a ⇔ b
+el' k U< b 𝔹̂ = b ⇒⋆ true ⊎ b ⇒⋆ false
 el' k U< x (⇒̂  a b a⇒b A) = el' k U< x A
 
 -- U' k and el' k are parametrized by U< j, where j < k;
@@ -88,6 +90,7 @@ cumU accj acck j<k (êq c C a A b B) =
   let qa = cumEl accj acck j<k C
       qb = cumEl accj acck j<k C
   in êq c (cumU accj acck j<k C) a (coe qa A) b (coe qb B)
+cumU _ _ _ 𝔹̂ = 𝔹̂
 cumU accj acck j<k (⇒̂  a b a⇒b B) = ⇒̂  a b a⇒b (cumU accj acck j<k B)
 
 cumEl (acc< f) (acc< g) j<k (Û i i<j) = accU≡ (f i<j) (g (trans< i<j j<k))
@@ -101,6 +104,7 @@ cumEl accj@(acc< _) acck@(acc< _) j<k {t = t} (Π̂ a A b B) =
           q = cumEl accj acck j<k (B x a)
       in trans q (cong (λ a → el' _ _ _ (B' a)) (sym (coe-β p a)))))
 cumEl accj@(acc< _) acck@(acc< _) j<k (êq _ _ _ _ _ _) = refl
+cumEl (acc< _) (acc< _) _ 𝔹̂ = refl
 cumEl accj@(acc< _) acck@(acc< _) j<k (⇒̂  a b a⇒b B) = cumEl accj acck j<k B
 
 {-------------------------------------------------------
@@ -131,6 +135,7 @@ el≡' acc (êq c₁ C₁ a₁ A₁ b₁ B₁) (êq c₂ C₂ a₂ A₂ b₂ B
   let _ , a₁⇔a₂ , b₁⇔b₂ = ⇔-eq-inv eq⇔eq in
   (λ {(p⇒⋆refl , a₁⇔b₁) → p⇒⋆refl , ⇔-trans (⇔-sym a₁⇔a₂) (⇔-trans a₁⇔b₁ b₁⇔b₂)}) ,
   (λ {(p⇒⋆refl , a₂⇔b₂) → p⇒⋆refl , ⇔-trans (⇔-trans a₁⇔a₂ a₂⇔b₂) (⇔-sym b₁⇔b₂)})
+el≡' acc 𝔹̂ 𝔹̂ _ = id , id
 el≡' acc (⇒̂  a₁ a₂ a₁⇒a₂ u₁) u₂ a₁⇔a₃ =
   el≡' acc u₁ u₂ (⇔-trans (⇔-sym (⇒-⇔ a₁⇒a₂)) a₁⇔a₃)
 el≡' acc u₁ (⇒̂  a₂ a₃ a₂⇒a₃ u₂) a₁⇔a₂ =
@@ -147,6 +152,14 @@ el≡' _ ⊥̂ (êq _ _ _ _ _ _) mty⇔eq with () ← ⇎-mtyeq mty⇔eq
 el≡' _ (êq _ _ _ _ _ _) ⊥̂ eq⇔mty with () ← ⇎-mtyeq (⇔-sym eq⇔mty)
 el≡' _ (Π̂ _ _ _ _) (êq _ _ _ _ _ _) Π⇔eq with () ← ⇎-Πeq Π⇔eq
 el≡' _ (êq _ _ _ _ _ _) (Π̂ _ _ _ _) eq⇔Π with () ← ⇎-Πeq (⇔-sym eq⇔Π)
+el≡' _ (Û _ _) 𝔹̂ 𝒰⇔𝔹 with () ← ⇎-𝒰𝔹 𝒰⇔𝔹
+el≡' _ 𝔹̂ (Û _ _) 𝔹⇔𝒰 with () ← ⇎-𝒰𝔹 (⇔-sym 𝔹⇔𝒰)
+el≡' _ ⊥̂ 𝔹̂ 𝔹⇔eq with () ← ⇎-mty𝔹 𝔹⇔eq
+el≡' _ 𝔹̂ ⊥̂ eq⇔𝔹 with () ← ⇎-mty𝔹 (⇔-sym eq⇔𝔹)
+el≡' _ (Π̂ _ _ _ _) 𝔹̂ Π⇔𝔹 with () ← ⇎-Π𝔹 Π⇔𝔹
+el≡' _ 𝔹̂ (Π̂ _ _ _ _) 𝔹⇔Π with () ← ⇎-Π𝔹 (⇔-sym 𝔹⇔Π)
+el≡' _ (êq _ _ _ _ _ _) 𝔹̂ eq⇔𝔹 with () ← ⇎-eq𝔹 eq⇔𝔹
+el≡' _ 𝔹̂ (êq _ _ _ _ _ _) 𝔹⇔eq with () ← ⇎-eq𝔹 (⇔-sym 𝔹⇔eq)
 
 -- Cumulativity and the existence of suprema
 -- gives us irrelevance across different levels
@@ -190,8 +203,10 @@ el→ acck₁ acck₂ u₁ u₂ = el≡ acck₁ acck₂ u₁ u₂ ⇔-refl
 ⇒-el : ∀ {k} (acc : Acc k) {a b A} (u : U k acc A) → a ⇒ b → el k acc b u → el k acc a u
 ⇒-el (acc< f) (Û j j<k) a⇒b = ⇒⋆-U (f j<k) (⇒-⇒⋆ a⇒b)
 ⇒-el acc (Π̂ _ A _ B) a⇒b elB x elA = ⇒-el acc (B x elA) (⇒-$ᵈ a⇒b (⇒-refl x)) (elB x elA)
-⇒-el acc (⇒̂  A B A⇒B u) a⇒b = ⇒-el acc u a⇒b
 ⇒-el acc {p} {q} (êq _ C a A b B) p⇒q (q⇒⋆refl , abc) = ⇒⋆-trans p⇒q q⇒⋆refl , abc
+⇒-el acc 𝔹̂ a⇒b (inj₁ b⇒⋆true) = inj₁ (⇒⋆-trans a⇒b b⇒⋆true)
+⇒-el acc 𝔹̂ a⇒b (inj₂ b⇒⋆false) = inj₂ (⇒⋆-trans a⇒b b⇒⋆false)
+⇒-el acc (⇒̂  A B A⇒B u) a⇒b = ⇒-el acc u a⇒b
 
 ⇒⋆-el : ∀ {k} (acc : Acc k) {a b A} (u : U k acc A) → a ⇒⋆ b → el k acc b u → el k acc a u
 ⇒⋆-el acc u (⇒⋆-refl a) elU = elU
@@ -219,6 +234,7 @@ SRU acc (⇒-eq {a' = a'} {b' = b'} A⇒A' a⇒a' b⇒b') (êq _ C _ elA _ elB)
   let elA' = ⇔-el acc C (SRU acc A⇒A' C) (⇒-⇔ A⇒A') (SRel acc a⇒a' C elA)
       elB' = ⇔-el acc C (SRU acc A⇒A' C) (⇒-⇔ A⇒A') (SRel acc b⇒b' C elB)
   in êq _ (SRU acc A⇒A' C) a' elA' b' elB'
+SRU acc ⇒-𝔹 𝔹̂ = 𝔹̂
 
 SRel acc a⇒b (⇒̂  _ _ _ C) = SRel acc a⇒b C
 SRel (acc< f) a⇒b (Û _ j<k) = SRU (f j<k) a⇒b
@@ -228,6 +244,14 @@ SRel acc p⇒q (êq c C a A b B) (p⇒⋆refl , a⇔b) =
   let _ , refl⇒⋆r , q⇒⋆r = diacon p⇒⋆refl p⇒q
       r≡refl = ⇒⋆-refl-inv refl⇒⋆r
   in transp (_ ⇒⋆_) r≡refl q⇒⋆r , a⇔b
+SRel acc a⇒b 𝔹̂ (inj₁ a⇒⋆true) =
+  let _ , true⇒⋆c , b⇒⋆c = diacon a⇒⋆true a⇒b
+      c≡true = ⇒⋆-true-inv true⇒⋆c
+  in inj₁ (transp (_ ⇒⋆_) c≡true b⇒⋆c)
+SRel acc a⇒b 𝔹̂ (inj₂ a⇒⋆false) =
+  let _ , false⇒⋆c , b⇒⋆c = diacon a⇒⋆false a⇒b
+      c≡false = ⇒⋆-false-inv false⇒⋆c
+  in inj₂ (transp (_ ⇒⋆_) c≡false b⇒⋆c)
 
 SRU⋆ : ∀ {k a b} acc → a ⇒⋆ b → U k acc a → U k acc b
 SRU⋆ acc (⇒⋆-refl a) u = SRU acc (⇒-refl a) u
@@ -287,6 +311,12 @@ inveq-el acc (êq _ _ _ _ _ _) _ = id
 inveq-el acc (⇒̂  (eq c a b) (eq c' a' b') (⇒-eq c⇒c' a⇒a' b⇒b') u) p elp =
   let p⇒⋆refl , a'⇔b' = inveq-el acc u p elp
   in p⇒⋆refl , ⇔-trans (⇔-trans (⇒-⇔ a⇒a') a'⇔b') (⇔-sym (⇒-⇔ b⇒b'))
+
+-- Inversion on semantic booleans
+inv𝔹-el : ∀ {b : Term} {k : Level} (acc : Acc k) (u : U k acc 𝔹) →
+          el k acc b u → b ⇒⋆ true ⊎ b ⇒⋆ false
+inv𝔹-el acc 𝔹̂ = id
+inv𝔹-el acc (⇒̂ 𝔹 𝔹 ⇒-𝔹 u) elb = inv𝔹-el acc u elb
 
 {--------------------------------------
   Semantic well-formedness:

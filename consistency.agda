@@ -96,9 +96,14 @@ open syntactics Nat
 open reduction Nat
 open typing Nat _<_ trans<
 open semantics Nat _<_ trans< sup
-open soundness Nat _<_ trans< sup succ
+open soundness Nat _<_ trans< (zero , wfNat zero) sup succ
 
 consistency : ∀ {b} → ∙ ⊢ b ⦂ mty → ⊥
 consistency tb
   with k , acck , b , elb ← soundness {σ = var} ∙̂  tt tb
   with () ← empty acck b elb
+
+canonicity : ∀ {b} → ∙ ⊢ b ⦂ 𝔹 → b ⇒⋆ true ⊎ b ⇒⋆ false
+canonicity {b} tb
+  with k , acck , ub , elb ← soundness {σ = var} ∙̂  tt tb
+  rewrite substId b = inv𝔹-el acck ub elb

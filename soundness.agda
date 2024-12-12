@@ -12,6 +12,7 @@ module soundness
   (_<_ : Level → Level → Set)
   (trans< : ∀ {i j k} → i < j → j < k → i < k)
   (open accessibility Level _<_)
+  (zero : ∃[ k ] Acc k)
   (sup : ∀ i j → ∃[ k ] i < k × j < k × Acc k)
   (succ : ∀ j → ∃[ k ] j < k × Acc k) where
 open syntactics Level
@@ -106,6 +107,41 @@ soundness {σ} v emV (⊢J {a = a} {b = b} {p = p} {d = d} {B = B} tp tB td) =
       Jdp⇒⋆d : subst σ (J d p) ⇒⋆ subst σ d
       Jdp⇒⋆d = ⇒⋆-trans' (⇒⋆-J (⇒⋆-refl (subst σ d)) p⇒⋆refl) (⇒⋆-ι (subst σ d))
   in kd , acckd , ud' , ⇒⋆-el acckd ud' Jdp⇒⋆d eld'
+soundness {σ} v emV (⊢𝔹 {k} ⊢Γ) =
+  let ℓ , k<ℓ , accℓ@(acc< _) = succ k
+  in ℓ , accℓ , Û k k<ℓ , 𝔹̂
+soundness {σ} v emV (⊢true ⊢Γ) =
+  let k , acck = zero
+  in k , acck , 𝔹̂ , inj₁ (⇒⋆-refl true)
+soundness {σ} v emV (⊢false ⊢Γ) =
+  let k , acck = zero
+  in k , acck , 𝔹̂ , inj₂ (⇒⋆-refl false)
+soundness {σ} v emV (⊢if {A} {b} {a} {c} tA tb ta tc) =
+  let kb , acckb , ub , elb = soundness v emV tb
+      ka , accka , ua , ela = soundness v emV ta
+      kc , acckc , uc , elc = soundness v emV tc
+      b⇒⋆tf = inv𝔹-el acckb ub elb
+  in [ (λ b⇒⋆true →
+        let Atrue⇔Ab : subst σ (subst (true +: var) A) ⇔ subst σ (subst (b +: var) A)
+            Atrue⇔Ab = transp₂ (_⇔_) (substDist σ true A) (substDist σ b A)
+                               (⇔-cong (⇔-sym (⇒⋆-⇔ b⇒⋆true)) (⇔-refl {subst (↑ σ) A}))
+            ua' = ⇔-U accka Atrue⇔Ab ua
+            ela' = ⇔-el accka ua ua' Atrue⇔Ab ela
+            ift⇒⋆a : subst σ (if b a c) ⇒⋆ subst σ a
+            ift⇒⋆a = (⇒⋆-trans' (⇒⋆-if b⇒⋆true (⇒⋆-refl (subst σ a)) (⇒⋆-refl (subst σ c)))
+                                (⇒-⇒⋆ (⇒-ift (⇒-refl (subst σ a)))))
+        in ka , accka , ua' , ⇒⋆-el accka ua' ift⇒⋆a ela') ,
+       (λ b⇒⋆false →
+        let Afalse⇔Ab : subst σ (subst (false +: var) A) ⇔ subst σ (subst (b +: var) A)
+            Afalse⇔Ab = transp₂ (_⇔_) (substDist σ false A) (substDist σ b A)
+                               (⇔-cong (⇔-sym (⇒⋆-⇔ b⇒⋆false)) (⇔-refl {subst (↑ σ) A}))
+            uc' = ⇔-U acckc Afalse⇔Ab uc
+            elc' = ⇔-el acckc uc uc' Afalse⇔Ab elc
+            iff⇒⋆c : subst σ (if b a c) ⇒⋆ subst σ c
+            iff⇒⋆c = (⇒⋆-trans' (⇒⋆-if b⇒⋆false (⇒⋆-refl (subst σ a)) (⇒⋆-refl (subst σ c)))
+                                (⇒-⇒⋆ (⇒-iff (⇒-refl (subst σ c)))))
+        in kc , acckc , uc' , ⇒⋆-el acckc uc' iff⇒⋆c elc') ]′
+     b⇒⋆tf
 soundness {σ} v emV (⊢≈ A≈B ta _) =
   let k , acck , uA , elA = soundness v emV ta
       Aσ⇔Bσ = ⇔-subst σ (≈-⇔ A≈B)

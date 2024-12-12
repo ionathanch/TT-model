@@ -9,48 +9,65 @@ open syntactics Level
 ---------------------}
 
 data _⇒_ : Term → Term → Set where
-  ⇒-β   : ∀ {b b' a a'} →
-          b ⇒ b' →
-          a ⇒ a' →
-          ----------------------------------
-          $ᵈ (λᵈ b) a ⇒ subst (a' +: var) b'
-  ⇒-ι   : ∀ {d d'} →
-          d ⇒ d' →
-          -------------
-          J d refl ⇒ d'
-  ⇒-var : ∀ s → var s ⇒ var s
-  ⇒-𝒰   : ∀ k → 𝒰 k ⇒ 𝒰 k
-  ⇒-Π   : ∀ {a a' b b'} →
-          a ⇒ a' →
-          b ⇒ b' →
-          -------------------
-          Π a b ⇒ Π a' b'
-  ⇒-λᵈ  : ∀ {b b'} →
-          b ⇒ b' →
-          ------------
-          λᵈ b ⇒ λᵈ b'
-  ⇒-$ᵈ  : ∀ {b b' a a'} →
-          b ⇒ b' →
-          a ⇒ a' →
-          -----------------
-          $ᵈ b a ⇒ $ᵈ b' a'
-  ⇒-mty : mty ⇒ mty
-  ⇒-abs : ∀ {b b'} →
-          b ⇒ b' →
-          --------------
-          abs b ⇒ abs b'
-  ⇒-eq  : ∀ {A A' a a' b b'} →
-          A ⇒ A' →
-          a ⇒ a' →
-          b ⇒ b' →
-          ----------------------
-          eq A a b ⇒ eq A' a' b'
-  ⇒-rfl : refl ⇒ refl
-  ⇒-J   : ∀ {d d' p p'} →
-          d ⇒ d' →
-          p ⇒ p' →
-          ---------------
-          J d p ⇒ J d' p'
+  ⇒-β     : ∀ {b b' a a'} →
+            b ⇒ b' →
+            a ⇒ a' →
+            ----------------------------------
+            $ᵈ (λᵈ b) a ⇒ subst (a' +: var) b'
+  ⇒-ι     : ∀ {d d'} →
+            d ⇒ d' →
+            -------------
+            J d refl ⇒ d'
+  ⇒-ift   : ∀ {a a' c} →
+            a ⇒ a' →
+            ----------------
+            if true a c ⇒ a'
+  ⇒-iff   : ∀ {a c c'} →
+            c ⇒ c' →
+            -----------------
+            if false a c ⇒ c'
+  ⇒-var   : ∀ s → var s ⇒ var s
+  ⇒-𝒰     : ∀ k → 𝒰 k ⇒ 𝒰 k
+  ⇒-Π     : ∀ {a a' b b'} →
+            a ⇒ a' →
+            b ⇒ b' →
+            -------------------
+            Π a b ⇒ Π a' b'
+  ⇒-λᵈ    : ∀ {b b'} →
+            b ⇒ b' →
+            ------------
+            λᵈ b ⇒ λᵈ b'
+  ⇒-$ᵈ    : ∀ {b b' a a'} →
+            b ⇒ b' →
+            a ⇒ a' →
+            -----------------
+            $ᵈ b a ⇒ $ᵈ b' a'
+  ⇒-mty   : mty ⇒ mty
+  ⇒-abs   : ∀ {b b'} →
+            b ⇒ b' →
+            --------------
+            abs b ⇒ abs b'
+  ⇒-eq    : ∀ {A A' a a' b b'} →
+            A ⇒ A' →
+            a ⇒ a' →
+            b ⇒ b' →
+            ----------------------
+            eq A a b ⇒ eq A' a' b'
+  ⇒-rfl   : refl ⇒ refl
+  ⇒-J     : ∀ {d d' p p'} →
+            d ⇒ d' →
+            p ⇒ p' →
+            ---------------
+            J d p ⇒ J d' p'
+  ⇒-𝔹     : 𝔹 ⇒ 𝔹
+  ⇒-true  : true ⇒ true
+  ⇒-false : false ⇒ false
+  ⇒-if    : ∀ {b b' a a' c c'} →
+            b ⇒ b' →
+            a ⇒ a' →
+            c ⇒ c' →
+            ----------------------
+            if b a c ⇒ if b' a' c'
 
 ⇒-refl : ∀ a → a ⇒ a
 ⇒-refl (var s) = ⇒-var s
@@ -63,6 +80,10 @@ data _⇒_ : Term → Term → Set where
 ⇒-refl (eq A a b) = ⇒-eq (⇒-refl A) (⇒-refl a) (⇒-refl b)
 ⇒-refl refl = ⇒-rfl
 ⇒-refl (J d p) = ⇒-J (⇒-refl d) (⇒-refl p)
+⇒-refl 𝔹 = ⇒-𝔹
+⇒-refl true = ⇒-true
+⇒-refl false = ⇒-false
+⇒-refl (if b a c) = ⇒-if (⇒-refl b) (⇒-refl a) (⇒-refl c)
 
 ⇒-rename : ∀ {a b} ξ → a ⇒ b → rename ξ a ⇒ rename ξ b
 ⇒-rename ξ (⇒-β {b} {b'} {a} {a'} b⇒b' a⇒a') =
@@ -70,6 +91,8 @@ data _⇒_ : Term → Term → Set where
   h : $ᵈ (λᵈ (rename (lift ξ) b)) (rename ξ a) ⇒ subst (rename ξ a' +: var) (rename (lift ξ) b')
   h = ⇒-β (⇒-rename (lift ξ) b⇒b') (⇒-rename ξ a⇒a')
 ⇒-rename ξ (⇒-ι d⇒d') = ⇒-ι (⇒-rename ξ d⇒d')
+⇒-rename ξ (⇒-ift a⇒a') = ⇒-ift (⇒-rename ξ a⇒a')
+⇒-rename ξ (⇒-iff c⇒c') = ⇒-iff (⇒-rename ξ c⇒c')
 ⇒-rename ξ (⇒-var s) = ⇒-var (ξ s)
 ⇒-rename ξ (⇒-𝒰 k) = ⇒-𝒰 k
 ⇒-rename ξ (⇒-Π a⇒a' b⇒b') = ⇒-Π (⇒-rename ξ a⇒a') (⇒-rename (lift ξ) b⇒b')
@@ -80,6 +103,10 @@ data _⇒_ : Term → Term → Set where
 ⇒-rename ξ (⇒-eq A⇒A' a⇒a' b⇒b') = ⇒-eq (⇒-rename ξ A⇒A') (⇒-rename ξ a⇒a') (⇒-rename ξ b⇒b')
 ⇒-rename ξ ⇒-rfl = ⇒-rfl
 ⇒-rename ξ (⇒-J d⇒d' p⇒p') = ⇒-J (⇒-rename ξ d⇒d') (⇒-rename ξ p⇒p')
+⇒-rename ξ ⇒-𝔹 = ⇒-𝔹
+⇒-rename ξ ⇒-true = ⇒-true
+⇒-rename ξ ⇒-false = ⇒-false
+⇒-rename ξ (⇒-if b⇒b' a⇒a' c⇒c') = ⇒-if (⇒-rename ξ b⇒b') (⇒-rename ξ a⇒a') (⇒-rename ξ c⇒c')
 
 ⇒-lift : ∀ {σ τ} → (∀ x → σ x ⇒ τ x) → ∀ x → (↑ σ) x ⇒ (↑ τ) x
 ⇒-lift r zero = ⇒-var 0
@@ -91,6 +118,8 @@ data _⇒_ : Term → Term → Set where
   h : $ᵈ (λᵈ (subst (↑ σ) b)) (subst σ a) ⇒ subst (subst τ a' +: var) (subst (↑ τ) b')
   h = ⇒-β (⇒-morphing (↑ σ) (↑ τ) (⇒-lift r) b⇒b') (⇒-morphing σ τ r a⇒a')
 ⇒-morphing σ τ r (⇒-ι d⇒d') = ⇒-ι (⇒-morphing σ τ r d⇒d')
+⇒-morphing σ τ r (⇒-ift a⇒a') = ⇒-ift (⇒-morphing σ τ r a⇒a')
+⇒-morphing σ τ r (⇒-iff c⇒c') = ⇒-iff (⇒-morphing σ τ r c⇒c')
 ⇒-morphing σ τ r (⇒-var s) = r s
 ⇒-morphing σ τ r (⇒-𝒰 k) = ⇒-𝒰 k
 ⇒-morphing σ τ r (⇒-Π a⇒a' b⇒b') = ⇒-Π (⇒-morphing σ τ r a⇒a') (⇒-morphing (↑ σ) (↑ τ) (⇒-lift r) b⇒b')
@@ -101,6 +130,10 @@ data _⇒_ : Term → Term → Set where
 ⇒-morphing σ τ r (⇒-eq A⇒A' a⇒a' b⇒b') = ⇒-eq (⇒-morphing σ τ r A⇒A') (⇒-morphing σ τ r a⇒a') (⇒-morphing σ τ r b⇒b')
 ⇒-morphing σ τ r ⇒-rfl = ⇒-rfl
 ⇒-morphing σ τ r (⇒-J d⇒d' p⇒p') = ⇒-J (⇒-morphing σ τ r d⇒d') (⇒-morphing σ τ r p⇒p')
+⇒-morphing σ τ r ⇒-𝔹 = ⇒-𝔹
+⇒-morphing σ τ r ⇒-true = ⇒-true
+⇒-morphing σ τ r ⇒-false = ⇒-false
+⇒-morphing σ τ r (⇒-if b⇒b' a⇒a' c⇒c') = ⇒-if (⇒-morphing σ τ r b⇒b') (⇒-morphing σ τ r a⇒a') (⇒-morphing σ τ r c⇒c')
 
 ⇒-subst : ∀ {a b} σ → a ⇒ b → subst σ a ⇒ subst σ b
 ⇒-subst σ r = ⇒-morphing σ σ (λ x → ⇒-refl (σ x)) r
@@ -185,6 +218,16 @@ data _⇒⋆_ : Term → Term → Set where
 ⇒⋆-J (⇒⋆-trans d⇒d' d'⇒⋆d'') (⇒⋆-refl p) = ⇒⋆-trans (⇒-J d⇒d' (⇒-refl p)) (⇒⋆-J d'⇒⋆d'' (⇒⋆-refl p))
 ⇒⋆-J (⇒⋆-trans d⇒d' d'⇒⋆d'') (⇒⋆-trans p⇒p' p'⇒⋆p'') = ⇒⋆-trans (⇒-J d⇒d' p⇒p') (⇒⋆-J d'⇒⋆d'' p'⇒⋆p'')
 
+⇒⋆-if : ∀ {b b' a a' c c'} → b ⇒⋆ b' → a ⇒⋆ a' → c ⇒⋆ c' → if b a c ⇒⋆ if b' a' c'
+⇒⋆-if (⇒⋆-refl b) (⇒⋆-refl a) (⇒⋆-refl c) = ⇒⋆-refl (if b a c)
+⇒⋆-if (⇒⋆-refl b) (⇒⋆-refl a) (⇒⋆-trans c⇒c' c'⇒⋆c'') = ⇒⋆-trans (⇒-if (⇒-refl b) (⇒-refl a) c⇒c') (⇒⋆-if (⇒⋆-refl b) (⇒⋆-refl a) c'⇒⋆c'')
+⇒⋆-if (⇒⋆-refl b) (⇒⋆-trans a⇒a' a'⇒⋆a'') (⇒⋆-refl c) = ⇒⋆-trans (⇒-if (⇒-refl b) a⇒a' (⇒-refl c)) (⇒⋆-if (⇒⋆-refl b) a'⇒⋆a'' (⇒⋆-refl c))
+⇒⋆-if (⇒⋆-trans b⇒b' b'⇒⋆b'') (⇒⋆-refl a) (⇒⋆-refl c) = ⇒⋆-trans (⇒-if b⇒b' (⇒-refl a) (⇒-refl c)) (⇒⋆-if b'⇒⋆b'' (⇒⋆-refl a) (⇒⋆-refl c))
+⇒⋆-if (⇒⋆-refl b) (⇒⋆-trans a⇒a' a'⇒⋆a'') (⇒⋆-trans c⇒c' c'⇒⋆c'') = ⇒⋆-trans (⇒-if (⇒-refl b) a⇒a' c⇒c') (⇒⋆-if (⇒⋆-refl b) a'⇒⋆a'' c'⇒⋆c'')
+⇒⋆-if (⇒⋆-trans b⇒b' b'⇒⋆b'') (⇒⋆-refl a) (⇒⋆-trans c⇒c' c'⇒⋆c'') = ⇒⋆-trans (⇒-if b⇒b' (⇒-refl a) c⇒c') (⇒⋆-if b'⇒⋆b'' (⇒⋆-refl a) c'⇒⋆c'')
+⇒⋆-if (⇒⋆-trans b⇒b' b'⇒⋆b'') (⇒⋆-trans a⇒a' a'⇒⋆a'') (⇒⋆-refl c) = ⇒⋆-trans (⇒-if b⇒b' a⇒a' (⇒-refl c)) (⇒⋆-if b'⇒⋆b'' a'⇒⋆a'' (⇒⋆-refl c))
+⇒⋆-if (⇒⋆-trans b⇒b' b'⇒⋆b'') (⇒⋆-trans a⇒a' a'⇒⋆a'') (⇒⋆-trans c⇒c' c'⇒⋆c'') = ⇒⋆-trans (⇒-if b⇒b' a⇒a' c⇒c') (⇒⋆-if b'⇒⋆b'' a'⇒⋆a'' c'⇒⋆c'')
+
 ⇒⋆-𝒰-inv : ∀ {k b} → 𝒰 k ⇒⋆ b → b ≡ 𝒰 k
 ⇒⋆-𝒰-inv (⇒⋆-refl (𝒰 k)) = refl
 ⇒⋆-𝒰-inv (⇒⋆-trans (⇒-𝒰 k) 𝒰⇒⋆b) = ⇒⋆-𝒰-inv 𝒰⇒⋆b
@@ -208,6 +251,18 @@ data _⇒⋆_ : Term → Term → Set where
 ⇒⋆-refl-inv : ∀ {p} → refl ⇒⋆ p → p ≡ refl
 ⇒⋆-refl-inv (⇒⋆-refl refl) = refl
 ⇒⋆-refl-inv (⇒⋆-trans ⇒-rfl refl⇒⋆p) = ⇒⋆-refl-inv refl⇒⋆p
+
+⇒⋆-𝔹-inv : ∀ {B} → 𝔹 ⇒⋆ B → B ≡ 𝔹
+⇒⋆-𝔹-inv (⇒⋆-refl 𝔹) = refl
+⇒⋆-𝔹-inv (⇒⋆-trans ⇒-𝔹 𝔹⇒⋆B) = ⇒⋆-𝔹-inv 𝔹⇒⋆B
+
+⇒⋆-true-inv : ∀ {b} → true ⇒⋆ b → b ≡ true
+⇒⋆-true-inv (⇒⋆-refl true) = refl
+⇒⋆-true-inv (⇒⋆-trans ⇒-true true⇒⋆b) = ⇒⋆-true-inv true⇒⋆b
+
+⇒⋆-false-inv : ∀ {b} → false ⇒⋆ b → b ≡ false
+⇒⋆-false-inv (⇒⋆-refl false) = refl
+⇒⋆-false-inv (⇒⋆-trans ⇒-false false⇒⋆b) = ⇒⋆-false-inv false⇒⋆b
 
 ⇒⋆-β : ∀ σ b a → ($ᵈ (λᵈ (subst (↑ σ) b)) a) ⇒⋆ (subst (a +: σ) b)
 ⇒⋆-β σ b a = ⇒⋆-trans (⇒-β (⇒-refl _) (⇒-refl _))
@@ -242,6 +297,20 @@ diamond (⇒-J d⇒d₁ ⇒-rfl) (⇒-ι d⇒d₂) =
 diamond (⇒-ι d⇒d₁) (⇒-ι d⇒d₂) =
   let d' , d₁⇒d' , d₂⇒d' = diamond d⇒d₁ d⇒d₂
   in d' , d₁⇒d' , d₂⇒d'
+diamond (⇒-ift a⇒a₁) (⇒-if ⇒-true a⇒a₂ c⇒c₂) =
+  let a' , a₁⇒a' , a₂⇒a' = diamond a⇒a₁ a⇒a₂
+  in a' , a₁⇒a' , ⇒-ift a₂⇒a'
+diamond (⇒-iff c⇒c₁) (⇒-if ⇒-false a⇒a₂ c⇒c₂) =
+  let c' , c₁⇒c' , c₂⇒c' = diamond c⇒c₁ c⇒c₂
+  in c' , c₁⇒c' , ⇒-iff c₂⇒c'
+diamond (⇒-if ⇒-true a⇒a₁ c⇒c₁) (⇒-ift a⇒a₂) =
+  let a' , a₁⇒a' , a₂⇒a' = diamond a⇒a₁ a⇒a₂
+  in a' , ⇒-ift a₁⇒a' , a₂⇒a'
+diamond (⇒-if ⇒-false a⇒a₁ c⇒c₁) (⇒-iff c⇒c₂) =
+  let c' , c₁⇒c' , c₂⇒c' = diamond c⇒c₁ c⇒c₂
+  in c' , ⇒-iff c₁⇒c' , c₂⇒c'
+diamond (⇒-ift a⇒a₁) (⇒-ift a⇒a₂) = diamond a⇒a₁ a⇒a₂
+diamond (⇒-iff c⇒c₁) (⇒-iff c⇒c₂) = diamond c⇒c₁ c⇒c₂
 diamond (⇒-var s) (⇒-var s) = var s , ⇒-var s , ⇒-var s
 diamond (⇒-𝒰 k) (⇒-𝒰 k) = (𝒰 k) , ⇒-𝒰 k , ⇒-𝒰 k
 diamond (⇒-Π a⇒a₁ b⇒b₁) (⇒-Π a⇒a₂ b⇒b₂) =
@@ -269,6 +338,14 @@ diamond (⇒-J d⇒d₁ p⇒p₁) (⇒-J d⇒d₂ p⇒p₂) =
   let d' , d₁⇒d' , d₂⇒d' = diamond d⇒d₁ d⇒d₂
       p' , p₁⇒p' , p₂⇒p' = diamond p⇒p₁ p⇒p₂
   in J d' p' , ⇒-J d₁⇒d' p₁⇒p' , ⇒-J d₂⇒d' p₂⇒p'
+diamond ⇒-𝔹 ⇒-𝔹 = 𝔹 , ⇒-𝔹 , ⇒-𝔹
+diamond ⇒-true ⇒-true = true , ⇒-true , ⇒-true
+diamond ⇒-false ⇒-false = false , ⇒-false , ⇒-false
+diamond (⇒-if b⇒b₁ a⇒a₁ c⇒c₁) (⇒-if b⇒b₂ a⇒a₂ c⇒c₂) =
+  let b' , b₁⇒b' , b₂⇒b' = diamond b⇒b₁ b⇒b₂
+      a' , a₁⇒a' , a₂⇒a' = diamond a⇒a₁ a⇒a₂
+      c' , c₁⇒c' , c₂⇒c' = diamond c⇒c₁ c⇒c₂
+  in if b' a' c' , ⇒-if b₁⇒b' a₁⇒a' c₁⇒c' , ⇒-if b₂⇒b' a₂⇒a' c₂⇒c'
 
 {---------------------------------
     a
@@ -357,6 +434,9 @@ a ⇔ b = ∃[ c ] a ⇒⋆ c × b ⇒⋆ c
 ⇔-J : ∀ {dₗ dᵣ pₗ pᵣ} → dₗ ⇔ dᵣ → pₗ ⇔ pᵣ → J dₗ pₗ ⇔ J dᵣ pᵣ
 ⇔-J (d , dₗ⇒⋆d , dᵣ⇒⋆d) (p , pₗ⇒⋆p , pᵣ⇒⋆p) = J d p , ⇒⋆-J dₗ⇒⋆d pₗ⇒⋆p , ⇒⋆-J dᵣ⇒⋆d pᵣ⇒⋆p
 
+⇔-if : ∀ {bₗ bᵣ aₗ aᵣ cₗ cᵣ} → bₗ ⇔ bᵣ → aₗ ⇔ aᵣ → cₗ ⇔ cᵣ → if bₗ aₗ cₗ ⇔ if bᵣ aᵣ cᵣ
+⇔-if (b , bₗ⇒⋆b , bᵣ⇒⋆b) (a , aₗ⇒⋆a , aᵣ⇒⋆a) (c , cₗ⇒⋆c , cᵣ⇒⋆c) = if b a c , ⇒⋆-if bₗ⇒⋆b aₗ⇒⋆a cₗ⇒⋆c , ⇒⋆-if bᵣ⇒⋆b aᵣ⇒⋆a cᵣ⇒⋆c
+
 ⇎-𝒰mty : ∀ {k} → 𝒰 k ⇔ mty → ⊥
 ⇎-𝒰mty (_ , 𝒰⇒⋆b , mty⇒⋆b) with ⇒⋆-𝒰-inv 𝒰⇒⋆b | ⇒⋆-mty-inv mty⇒⋆b
 ... | refl | ()
@@ -380,6 +460,22 @@ a ⇔ b = ∃[ c ] a ⇒⋆ c × b ⇒⋆ c
 ⇎-Πeq : ∀ {a b C d e} → Π a b ⇔ eq C d e → ⊥
 ⇎-Πeq (_ , Π⇒⋆b , eq⇒⋆b) with ⇒⋆-Π-inv Π⇒⋆b | ⇒⋆-eq-inv eq⇒⋆b
 ... | _ , _ , refl , _ | ()
+
+⇎-𝒰𝔹 : ∀ {k} → 𝒰 k ⇔ 𝔹 → ⊥
+⇎-𝒰𝔹 (_ , 𝒰⇒⋆b , 𝔹⇒⋆b) with ⇒⋆-𝒰-inv 𝒰⇒⋆b | ⇒⋆-𝔹-inv 𝔹⇒⋆b
+... | refl | ()
+
+⇎-mty𝔹 : mty ⇔ 𝔹 → ⊥
+⇎-mty𝔹 (_ , mty⇒⋆b , 𝔹⇒⋆b) with ⇒⋆-mty-inv mty⇒⋆b | ⇒⋆-𝔹-inv 𝔹⇒⋆b
+... | refl | ()
+
+⇎-Π𝔹 : ∀ {a b} → Π a b ⇔ 𝔹 → ⊥
+⇎-Π𝔹 (_ , Π⇒⋆b , 𝔹⇒⋆b) with ⇒⋆-Π-inv Π⇒⋆b | ⇒⋆-𝔹-inv 𝔹⇒⋆b
+... | _ , _ , refl , _ | ()
+
+⇎-eq𝔹 : ∀ {A a b} → eq A a b ⇔ 𝔹 → ⊥
+⇎-eq𝔹 (_ , eq⇒⋆b , 𝔹⇒⋆b) with ⇒⋆-eq-inv eq⇒⋆b | ⇒⋆-𝔹-inv 𝔹⇒⋆b
+... | _ , _ , _ , refl , _ | ()
 
 ⇔-𝒰-inv : ∀ {jₗ jᵣ} → 𝒰 jₗ ⇔ 𝒰 jᵣ → jₗ ≡ jᵣ
 ⇔-𝒰-inv (_ , 𝒰ₗ⇒⋆c , 𝒰ᵣ⇒⋆c)

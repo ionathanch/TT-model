@@ -111,19 +111,19 @@ only to be instantiated at the very end by the naturals.
 ```
 $ cloc --include-lang=Agda --exclude-content=model --by-file .
 
-github.com/AlDanial/cloc v 1.98  T=0.02 s (506.7 files/s, 92854.9 lines/s)
+github.com/AlDanial/cloc v 2.02  T=4.86 s (1.6 files/s, 351.8 lines/s)
 ----------------------------------------------------------------------------------
 File                                blank        comment           code
 ----------------------------------------------------------------------------------
-./reduction.agda                       62             14            328
-./syntactics.agda                      49             22            239
-./semantics.agda                       49             24            234
-./typing.agda                          13             26            135
-./soundness.agda                        4              0            110
-./consistency.agda                     25              4             75
+./reduction.agda                       71             17            412
+./syntactics.agda                      50             22            277
+./semantics.agda                       50             25            262
+./typing.agda                          13             33            165
+./soundness.agda                        4              0            145
+./consistency.agda                     26              4             79
 ./accessibility.agda                    9              0             26
-./common.agda                           3              0             15
+./common.agda                           3              0             16
 ----------------------------------------------------------------------------------
-SUM:                                  214             90           1162
+SUM:                                  226            101           1382
 ----------------------------------------------------------------------------------
 ```
