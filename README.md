@@ -9,10 +9,9 @@ The top-level file can be checked by `agda consistency.agda`.
 ## Type Theory
 
 The object theory is a type theory with universes à la Russell,
-dependent functions, an empty type, equality types,
-and untyped conversion.
+dependent functions, an empty type, booleans, equality types, and untyped conversion.
 The below is an overview of the typing and conversion rules with variable names,
-although the mechanization uses de Bruijn indexing.
+although the mechanization uses de Bruijn indexing and simultaneous substitution.
 
 ```
                 Γ ⊢ B : 𝒰 k
@@ -34,8 +33,18 @@ x : A ∈ Γ    Γ ⊢ a : A    A ≈ B       ⊢ Γ    j < k
 ----------------------    --------------------    ----------------------------------
   Γ ⊢ eq A a b : 𝒰 k      Γ ⊢ refl : eq A a a        Γ ⊢ J d p : B{y ↦ b, q ↦ p}
 
---------------------    ------------    + reflexivity,  symmetry,
-(λx. b) a ≈ b{x ↦ a}    J d refl ≈ d      transitivity, congruence
+                                                   Γ, x : 𝔹 ⊢ A : 𝒰 k
+                                                   Γ ⊢ b : 𝔹
+                                                   Γ ⊢ a : A{x ↦ true}
+    ⊢ Γ             ⊢ Γ              ⊢ Γ           Γ ⊢ c : A{x ↦ false}
+------------    ------------    -------------    -----------------------
+Γ ⊢ 𝔹 : 𝒰 k    Γ ⊢ true : 𝔹    Γ ⊢ false : 𝔹    Γ ⊢ if b a c : A{x ↦ b}
+
+--------------------    ------------    ---------------    ----------------
+(λx. b) a ≈ b{x ↦ a}    J d refl ≈ d    if true a c ≃ a    if false a c ≃ c
+
++ reflexivity,  symmetry,
+  transitivity, congruence
 ```
 
 ## Logical Relation
@@ -55,9 +64,9 @@ There is also an inductive–recursive interpretation of contexts as predicates 
 but its conceptual meaning is given below informally.
 
 ```
-j < k               A ⇒ B    ⟦B⟧ₖ
-------    -----    --------------
-⟦𝒰 j⟧ₖ    ⟦⊥⟧ₖ          ⟦A⟧ₖ
+j < k                        A ⇒ B    ⟦B⟧ₖ
+------    -----    -----    --------------
+⟦𝒰 j⟧ₖ    ⟦⊥⟧ₖ     ⟦𝔹⟧ₖ     ⟦A⟧ₖ
 
  ⟦A⟧ₖ    ∀a ∈ ⟦A⟧ₖ. ⟦B{x ↦ a}⟧ₖ
 -------------------------------
@@ -71,6 +80,7 @@ A ∈ ⟦𝒰 j⟧ₖ       = ⟦A⟧ⱼ
 b ∉ ⟦⊥⟧ₖ
 f ∈ ⟦Πx : A. B⟧ₖ = ∀a ∈ ⟦A⟧ₖ. f a ∈ ⟦B{x ↦ a}⟧ₖ
 p ∈ ⟦eq A a b⟧ₖ  = p ⇒⋆ refl ∧ a ⇔ b
+b ∈ ⟦𝔹⟧ₖ         = b ⇒⋆ true ∨ b ⇒⋆ false
 x ∈ ⟦A⟧ₖ         = x ∈ ⟦B⟧ₖ    (where A ⇒ B)
 
 σ ∈ ⟦Γ⟧ = x : A ∈ Γ → σ(x) ∈ ⟦A{σ}⟧ₖ
