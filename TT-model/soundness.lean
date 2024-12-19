@@ -111,7 +111,30 @@ theorem soundness {Γ} {a A : Term} (h : Γ ⊢ a ∶ A) : Γ ⊨ a ∶ A := by
       interpsBwds (pars𝒰 rk) (interps𝒰 ltk),
       ⟨_, interpsCumul ltj' hA⟩⟩
 
+/-*-----------------------------------------
+  Canonicity corollaries for closed terms:
+  * Empty type is uninhabited
+  * Universes contain types
+  * Level terms are internalized levels
+-----------------------------------------*-/
+
 theorem consistency {b} : ¬ ⬝ ⊢ b ∶ mty := by
   intro h
   let ⟨_, _, hmty, hb⟩ := soundness h var (semSubstNil _)
   simp [interpsMtyInv hmty] at hb
+
+theorem canon𝒰 {T j} (h : ⬝ ⊢ T ∶ 𝒰 j) :
+  (∃ A B, T ⇒⋆ pi A B) ∨
+  (∃ i, T ⇒⋆ 𝒰 i) ∨
+  (T ⇒⋆ mty) ∨
+  (∃ k, T ⇒⋆ lvl (lof k)) := by
+  let ⟨_, _, h𝒰, hT⟩ := soundness h var (semSubstNil _)
+  let ⟨_, _, _, e⟩ := interps𝒰Inv h𝒰; subst e
+  let ⟨_, hT⟩ := hT; rw [substId] at hT
+  exact interpsStepInv hT
+
+theorem canonLvl {a k} (h : ⬝ ⊢ a ∶ lvl k) : ∃ j, a ⇒⋆ lof j := by
+  let ⟨_, _, hlvl, ha⟩ := soundness h var (semSubstNil _)
+  let ⟨_, _, e⟩ := interpsLvlInv hlvl; subst e
+  let ⟨_, r, _⟩ := ha; rw [substId] at *
+  exact ⟨_, r⟩

@@ -52,7 +52,8 @@ theorem interpPiInv {i I a b P} (h : ⟦ pi a b ⟧ i , I ↘ P) :
     . intro x Pb PfxPb; constructor <;> apply_rules [parCong, parRefl]
   all_goals contradiction
 
-theorem interp𝒰Inv {i I a P} (h : ⟦ 𝒰 a ⟧ i , I ↘ P) : ∃ j lt, a ⇒⋆ lof j ∧ P = I j lt := by
+theorem interp𝒰Inv {i I a P} (h : ⟦ 𝒰 a ⟧ i , I ↘ P) :
+  ∃ j lt, a ⇒⋆ lof j ∧ P = I j lt := by
   generalize e : 𝒰 a = b at h
   induction h generalizing a
   case 𝒰 j lt => injection e with e; subst e; exists j, lt, Pars.refl _
@@ -69,7 +70,8 @@ theorem interpMtyInv {i I P} (h : ⟦ mty ⟧ i , I ↘ P) : P = (λ _ ↦ False
   case step r _ ih => subst e; cases r; simp [ih]
   all_goals contradiction
 
-theorem interpLvlInv {i I a P} (h : ⟦ lvl a ⟧ i , I ↘ P) : ∃ k, a ⇒⋆ lof k ∧ P = (λ a ↦ ∃ j, a ⇒⋆ lof j ∧ j < k) := by
+theorem interpLvlInv {i I a P} (h : ⟦ lvl a ⟧ i , I ↘ P) :
+  ∃ k, a ⇒⋆ lof k ∧ P = (λ a ↦ ∃ j, a ⇒⋆ lof j ∧ j < k) := by
   generalize e : lvl a = b at h
   induction h generalizing a
   case lvl k => injection e with e; subst e; exists k, Pars.refl _
@@ -78,6 +80,23 @@ theorem interpLvlInv {i I a P} (h : ⟦ lvl a ⟧ i , I ↘ P) : ∃ k, a ⇒⋆
     let ⟨k, r₂, e⟩ := ih rfl
     exact ⟨k, Pars.trans r₁ r₂, e⟩
   all_goals contradiction
+
+theorem interpStepInv {i I T P} (h : ⟦ T ⟧ i , I ↘ P) :
+  (∃ A B, T ⇒⋆ pi A B) ∨
+  (∃ i, T ⇒⋆ 𝒰 i) ∨
+  (T ⇒⋆ mty) ∨
+  (∃ k, T ⇒⋆ lvl (lof k)) := by
+  induction h
+  case pi => left; exact ⟨_, _, Pars.refl _⟩
+  case 𝒰 => right; left; exact ⟨_, Pars.refl _⟩
+  case mty => right; right; left; exact Pars.refl _
+  case lvl => right; right; right; exact ⟨_, Pars.refl _⟩
+  case step r₁ _ h =>
+    rcases h with ⟨A, B, r₂⟩ | ⟨i, r₂⟩ | r₂ | ⟨k, r₂⟩
+    . left; exact ⟨A, B, Pars.trans r₁ r₂⟩
+    . right; left; exact ⟨i, Pars.trans r₁ r₂⟩
+    . right; right; left; exact Pars.trans r₁ r₂
+    . right; right; right; exact ⟨k, Pars.trans r₁ r₂⟩
 
 /-*--------------------
   Better constructors
@@ -236,8 +255,16 @@ theorem interps𝒰Inv {i a P} (h : ⟦ 𝒰 a ⟧ i ↘ P) :
 theorem interpsMtyInv {i P} (h : ⟦ mty ⟧ i ↘ P) : P = (λ _ ↦ False) := by
   unfold Interps at h; exact interpMtyInv h
 
-theorem interpsLvlInv {i a P} (h : ⟦ lvl a ⟧ i ↘ P) : ∃ k, a ⇒⋆ lof k ∧ P = (λ a ↦ ∃ j, a ⇒⋆ lof j ∧ j < k) := by
+theorem interpsLvlInv {i a P} (h : ⟦ lvl a ⟧ i ↘ P) :
+  ∃ k, a ⇒⋆ lof k ∧ P = (λ a ↦ ∃ j, a ⇒⋆ lof j ∧ j < k) := by
   unfold Interps at h; exact interpLvlInv h
+
+theorem interpsStepInv {I T P} (h : ⟦ T ⟧ I ↘ P) :
+  (∃ A B, T ⇒⋆ pi A B) ∨
+  (∃ i, T ⇒⋆ 𝒰 i) ∨
+  (T ⇒⋆ mty) ∨
+  (∃ k, T ⇒⋆ lvl (lof k)) := by
+  unfold Interps at h; exact interpStepInv h
 
 /-*----------------
   Semantic typing
