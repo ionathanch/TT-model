@@ -88,9 +88,9 @@ theorem parCong {a a' b b'} (ra : a ⇒ a') (rb : b ⇒ b') : subst (a +: var) b
 theorem antirenaming {ξ a b'} (r : rename ξ a ⇒ b') : ∃ b, b' = rename ξ b ∧ a ⇒ b := by
   generalize e : rename ξ a = a' at r
   induction r generalizing ξ a
-  all_goals cases a <;> inj_subst; specialize_rfls
+  all_goals cases a <;> injections; subst_eqs; specialize_rfls
   case β ihb b _ e _ iha =>
-    cases b <;> inj_subst; specialize_rfls
+    cases b <;> injections; subst_eqs; specialize_rfls
     let ⟨a, ea, ra⟩ := iha
     let ⟨b, eb, rb⟩ := ihb
     subst ea; subst eb
@@ -100,7 +100,7 @@ theorem antirenaming {ξ a b'} (r : rename ξ a ⇒ b') : ∃ b, b' = rename ξ 
     let ⟨a, e, r⟩ := ih
     subst e
     exact ⟨𝒰 a, rfl, Par.𝒰 r⟩
-  case pi ihb iha =>
+  case pi iha ihb =>
     let ⟨a, ea, ra⟩ := iha
     let ⟨b, eb, rb⟩ := ihb
     subst ea; subst eb
@@ -109,7 +109,7 @@ theorem antirenaming {ξ a b'} (r : rename ξ a ⇒ b') : ∃ b, b' = rename ξ 
     let ⟨b, e, r⟩ := ihb
     subst e
     exact ⟨abs b, rfl, Par.abs r⟩
-  case app iha ihb =>
+  case app ihb iha =>
     let ⟨a, ea, ra⟩ := iha
     let ⟨b, eb, rb⟩ := ihb
     subst ea; subst eb

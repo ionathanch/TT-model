@@ -366,7 +366,7 @@ theorem wtf𝒰Inv {Γ j 𝒰'}
   ∃ k, 𝒰 k ≈ 𝒰' := by
   generalize e : 𝒰 j = t at h
   induction h using wtInd
-  all_goals inj_subst <;> specialize_rfls
+  all_goals injections <;> subst_eqs <;> specialize_rfls
   case 𝒰 | sub => exact ⟨_, Eqv.refl⟩
   case trans ih =>
     let ⟨_, e⟩ := ih
@@ -380,7 +380,7 @@ theorem wtfPiInvA {Γ A B 𝒰'}
   ∃ j, Γ ⊢ A ∶ 𝒰 j := by
   generalize e : pi A B = t at h
   induction h using wtInd
-  all_goals inj_subst <;> specialize_rfls
+  all_goals injections <;> subst_eqs <;> specialize_rfls
   case pi k _ _ _ _ => exists k
   all_goals assumption
 
@@ -389,7 +389,7 @@ theorem wtfPiInvB {Γ A B 𝒰'}
   ∃ j, Γ ∷ A ⊢ B ∶ 𝒰 j := by
   generalize e : pi A B = t at h
   induction h using wtInd
-  all_goals inj_subst <;> specialize_rfls
+  all_goals injections <;> subst_eqs <;> specialize_rfls
   case pi k _ _ _ _ => exists rename succ k
   all_goals assumption
 
@@ -398,7 +398,7 @@ theorem wtfPiInv𝒰 {Γ A B 𝒰'}
   ∃ j, 𝒰 j ≈ 𝒰' := by
   generalize e : pi A B = t at h
   induction h using wtInd
-  all_goals inj_subst <;> specialize_rfls
+  all_goals injections <;> subst_eqs <;> specialize_rfls
   case pi | sub => exact ⟨_, Eqv.refl⟩
   case trans ih =>
     let ⟨_, e⟩ := ih
@@ -412,7 +412,7 @@ theorem wtfAbsInv {Γ b C}
   ∃ A B, Γ ∷ A ⊢ b ∶ B ∧ pi A B ≈ C := by
   generalize e : abs b = t at h
   induction h using wtInd
-  all_goals inj_subst <;> specialize_rfls
+  all_goals injections <;> subst_eqs <;> specialize_rfls
   case abs hb _ => exact ⟨_, _, hb, Eqv.refl⟩
   case trans ih =>
     let ⟨_, _, _, e⟩ := ih
@@ -429,7 +429,7 @@ theorem wtfMtyInv {Γ 𝒰'}
   ∃ k, 𝒰 k ≈ 𝒰' := by
   generalize e : mty = t at h
   induction h using wtInd
-  all_goals inj_subst <;> specialize_rfls
+  all_goals injections <;> subst_eqs <;> specialize_rfls
   case mty | sub => exact ⟨_, Eqv.refl⟩
   case trans ih =>
     let ⟨_, e⟩ := ih
@@ -443,7 +443,7 @@ theorem wtfLvlInv {Γ a 𝒰'}
   ∃ b k, Γ ⊢ a ∶ lvl b ∧ 𝒰 k ≈ 𝒰' := by
   generalize e : lvl a = t at h
   induction h using wtInd
-  all_goals inj_subst <;> specialize_rfls
+  all_goals injections <;> subst_eqs <;> specialize_rfls
   case lvl ha _ => exact ⟨_, _, ha, Eqv.refl⟩
   case trans ih =>
     let ⟨_, _, _, e⟩ := ih
@@ -460,7 +460,7 @@ theorem wtfLofInv {Γ j 𝒰'}
   ∃ k, lvl k ≈ 𝒰' := by
   generalize e : lof j = t at h
   induction h using wtInd
-  all_goals inj_subst <;> specialize_rfls
+  all_goals injections <;> subst_eqs <;> specialize_rfls
   case lof | trans => exact ⟨_, Eqv.refl⟩
   case conv e₁ _ _ _ ih =>
     let ⟨_, e₂⟩ := ih
