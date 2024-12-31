@@ -130,3 +130,70 @@ As such, the naturals are an appropriate instance of levels, as would be ordinal
   Consistency is proven as a corollary.
 * `example.lean`: Partially-complete typing derivations for some example judgements
   involving terms with universe polymorphism.
+
+# Extensions
+
+This type theory is missing a number of common operations on levels.
+Some of these would require the corresponding operation from the meta-level elements.
+For instance, we could add a successor operator `↑ ·`, or a supremum operator `· ⊔ ·`,
+which are the same operators that Agda has.
+
+```
+                            k₁ : Level< ℓ₁
+   k : Level< ℓ             k₂ : Level< ℓ₂
+------------------    --------------------------
+↑ k : Level< (↑ ℓ)    k₁ ⊔ k₂ : Level< (ℓ₁ ⊔ ℓ₂)
+```
+
+These operators reduce on canonical levels (i.e. the internalizations)
+to the appropriate meta-level operations, written below as additional conversion rules.
+To support the supremum operator, the meta-level order must be trichotomous to compute a maximum.
+
+```
+-----------------------    ---------------------------------
+↑ (lvl i) ≃ lvl (i + 1)    (lvl i) ⊔ (lvl j) ≃ lvl max(i, j)
+```
+
+They also need to satisfy additional conversion rules to behave properly; the below list is taken from
+[Agda](https://agda.readthedocs.io/en/latest/language/universe-levels.html#intrinsic-level-properties).
+
+* Idempotence:   `k ⊔ k ≃ k`
+* Associativity: `(k₁ ⊔ k₂) ⊔ k₃ ≃ k₁ ⊔ (k₂ ⊔ k₃)`
+* Commutativity: `k₁ ⊔ k₂ ≃ k₂ ⊔ k₁`
+* Distributivity: `↑ (k₁ ⊔ k₂) ≃ (↑ k₁) ⊔ (↑ k₂)`
+* Subsumption:    `k ⊔ (↑ k) ≃ ↑ k`
+
+More unconventionally, it's possible to add well-founded induction internally to the type theory,
+since the meta-level elements are already well founded.
+
+```
+Γ, z : Level< k ⊢ B : 𝒰 ℓ
+Γ ⊢ f : Πx : Level< k. (Πy : Level< x. B{z ↦ y}) → B{z ↦ x}
+-----------------------------------------------------------
+Γ ⊢ wf f : Πz : Level< k. B
+
+---------------
+wf f k ≃ f k wf
+```
+
+Aside from level operations, it should also be possible to add a typecase operator,
+since canonicity of close terms of type `𝒰 k` say they must be `Π`, `𝒰`, `⊥`, or `Level<`.
+For open terms, there would need to be a case for neutral types;
+the semantics therefore likely need to be extended to handle neutral terms.
+
+```
+Γ ⊢ T : 𝒰 k
+Γ ⊢ C : 𝒰 k → 𝒰 ℓ
+Γ, x : 𝒰 k, y : x → 𝒰 k ⊢ a : C (Πz : x. y z)
+Γ, x : Level< k ⊢ b : C (𝒰 x)
+Γ ⊢ c : C ⊥
+Γ, x : Level< ℓ ⊢ d : C (Level< x)                [where does ℓ come from??]
+Γ ⊢ e : C T
+----------------------------------------------
+Γ ⊢ case T of
+    | Π x y ⇒ a
+    | 𝒰 x ⇒ b     : C T
+    | ⊥ ⇒ c
+    | Level< x ⇒ d
+    | _ ⇒ e
+```
