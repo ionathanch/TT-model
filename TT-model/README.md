@@ -163,7 +163,8 @@ They also need to satisfy additional conversion rules to behave properly; the be
 * Distributivity: `↑ (k₁ ⊔ k₂) ≃ (↑ k₁) ⊔ (↑ k₂)`
 * Subsumption:    `k ⊔ (↑ k) ≃ ↑ k`
 
-More unconventionally, it's possible to add well-founded induction internally to the type theory,
+More unconventionally, it's possible to add well-founded induction
+on universe levels internally to the type theory,
 since the meta-level elements are already well founded.
 
 ```
@@ -177,23 +178,24 @@ wf f k ≃ f k wf
 ```
 
 Aside from level operations, it should also be possible to add a typecase operator,
-since canonicity of close terms of type `𝒰 k` say they must be `Π`, `𝒰`, `⊥`, or `Level<`.
-For open terms, there would need to be a case for neutral types;
-the semantics therefore likely need to be extended to handle neutral terms.
+since canonicity of closed terms of type `𝒰 k` say they must be `Π`, `𝒰`, `⊥`, or `Level<`.
 
 ```
 Γ ⊢ T : 𝒰 k
-Γ ⊢ C : 𝒰 k → 𝒰 ℓ
+Γ ⊢ C : 𝒰 k → 𝒰 ℓ′
 Γ, x : 𝒰 k, y : x → 𝒰 k ⊢ a : C (Πz : x. y z)
 Γ, x : Level< k ⊢ b : C (𝒰 x)
 Γ ⊢ c : C ⊥
 Γ, x : Level< ℓ ⊢ d : C (Level< x)                [where does ℓ come from??]
-Γ ⊢ e : C T
 ----------------------------------------------
 Γ ⊢ case T of
     | Π x y ⇒ a
-    | 𝒰 x ⇒ b     : C T
+    | 𝒰 x ⇒ b      : C T
     | ⊥ ⇒ c
     | Level< x ⇒ d
-    | _ ⇒ e
+
+case (Πz : A. B) of | Π x y ⇒ a    | ... ≃ a[x ↦ A, y ↦ λz. B]
+case (𝒰 k)      of | 𝒰 x ⇒ b      | ... ≃ b[x ↦ k]
+case ⊥           of | ⊥ ⇒ c        | ... ≃ c
+case (Level< k)  of | Level< x ⇒ d | ... ≃ d[x ↦ k]    [does k : Level< ℓ hold??]
 ```
