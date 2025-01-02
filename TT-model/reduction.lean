@@ -162,6 +162,15 @@ theorem parsCong {a a' b b'} (ra : a ⇒⋆ a') (rb : b ⇒⋆ b') : subst (a +:
   case refl => apply_rules [parsSubst]
   case trans ih => constructor <;> apply_rules [parCong, parRefl]
 
+theorem parsAntirenaming {ξ a b'} (r : rename ξ a ⇒⋆ b') : ∃ b, b' = rename ξ b ∧ a ⇒⋆ b := by
+  generalize e : rename ξ a = a' at r
+  induction r generalizing ξ a <;> subst e
+  case refl => exact ⟨a, rfl, Pars.refl a⟩
+  case trans ih ra =>
+    let ⟨b, eb, rb⟩ := antirenaming ra; subst eb
+    let ⟨c, ec, rc⟩ := ih rfl
+    exact ⟨c, ec, Pars.trans rb rc⟩
+
 /-*------------------------------------------
   Constructors for parallel multi-reduction
 ------------------------------------------*-/

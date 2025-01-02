@@ -129,6 +129,10 @@ theorem upLift ξ σ τ (h : ∀ x, (σ ∘ ξ) x = τ x) : ∀ x, (⇑ σ ∘ l
 theorem upSucc σ : ∀ x, (⇑ σ ∘ succ) x = (rename succ ∘ σ) x := by
   intro n; cases n <;> simp
 
+-- Lifting commutes with injection of renamings into substitutions
+theorem upVar ξ : ∀ x, (var ∘ lift ξ) x = (⇑ (var ∘ ξ)) x := by
+  intro n; cases n <;> simp
+
 -- Lifting commutes with renaming
 theorem upRename ξ σ τ (h : ∀ x, (rename ξ ∘ σ) x = τ x) : ∀ x, (rename (lift ξ) ∘ ⇑ σ) x = (⇑ τ) x := by
   intro n; cases n; simp
@@ -213,6 +217,12 @@ def renameSubst ξ σ : ∀ s, rename ξ (subst σ s) = subst (rename ξ ∘ σ)
 def substComp σ τ : ∀ s, (subst σ ∘ subst τ) s = subst (subst σ ∘ τ) s :=
   substComp' _ _ (subst σ ∘ τ) (by simp)
 
+-- A renaming embeds into a substitution by
+theorem renameToSubst ξ : ∀ s, rename ξ s = subst (var ∘ ξ) s := by
+  intro s; induction s generalizing ξ
+  all_goals simp [-up] <;> try constructor
+  all_goals (try rw [← substExt _ _ (upVar ξ)]); apply_rules
+
 /-*-------------------------------------------------
   Handy dandy derived renaming substitution lemmas
 -------------------------------------------------*-/
@@ -257,6 +267,12 @@ theorem substDist σ a s : subst (subst σ a +: var) (subst (⇑ σ) s) = subst 
       = subst (subst σ a +: σ) s       := by rw [← substUnion]
     _ = subst (subst σ ∘ (a +: var)) s := by apply substExt; intro n; cases n <;> rfl
     _ = (subst σ ∘ subst (a +: var)) s := by rw [← substComp]
+
+theorem substToRename x s : subst (var x +: var) s = rename (x +: id) s := by
+  calc
+    subst (var x +: var) s
+      = subst (var ∘ (x +: id)) s := by apply substExt; intro n; cases n <;> simp
+    _ = rename (x +: id) s        := by rw [renameToSubst]
 
 /-*------------------------
   Contexts and membership
