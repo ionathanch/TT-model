@@ -121,18 +121,31 @@ As such, the naturals are an appropriate instance of levels, as would be ordinal
 * `level.lean`: Typeclass of cofinal, well-ordered levels.
 * `syntactics.lean`: Syntax, substitution, contexts, and context membership.
 * `reduction.lean`: Parallel reduction, substitution lemmas, confluence, and conversion.
-* `normal.lean`: Normal and neutral forms.
 * `typing.lean`: Definitional equality, context well-formedness, well-typedness, and inversion.
 * `safety.lean`: Progress and preservation.
+* `example.lean`: Partially-complete typing derivations for some example judgements
+  involving terms with universe polymorphism.
+
+Here, the files diverge. The first path uses the logical relation for closed terms
+to prove only consistency and canonicity.
+
 * `semantics.lean`: Logical relations stating semantic typing and well-formedness,
   along with important properties.
-* `candidates.lean`: The same logical relation but handling open (possibly neutral) terms,
-  and an adequacy lemma wrt reducibility candidates.
 * `soundness.lean`: The fundamental theorem of soundness of typing —
   syntactic well-typedness implies semantic well-typedness.
   Consistency is proven as a corollary.
-* `example.lean`: Partially-complete typing derivations for some example judgements
-  involving terms with universe polymorphism.
+
+The second path uses the logical relation for open terms and reducibility candidates
+to prove normalization, along with consistency and canonicity.
+
+* `normal.lean`: Normal and neutral forms.
+* `candidates.lean`: The same logical relation but handling open (possibly neutral) terms,
+  and an adequacy lemma wrt reducibility candidates.
+* `normalization.lean`: The fundamental theorem of soundness of typing
+  with respect to the open logical relation.
+  Normalization is proven as a corollary.
+* `canonicity.lean`: Using type safety, showing that closed terms evaluate to values.
+  Consistency and canonicity follow from normalization and evaluation.
 
 # Extensions
 

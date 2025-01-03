@@ -294,3 +294,24 @@ theorem inHere {Γ A A'} (e : A' = rename succ A) : (Γ ∷ A) ∋ 0 ∶ A' := b
 
 theorem inThere {Γ x A A' B} (h : Γ ∋ x ∶ A) (e : A' = rename succ A) : Γ ∷ B ∋ succ x ∶ A' := by
   subst e; apply In.there; assumption
+
+/-*----------------------
+  Well-scoped renamings
+----------------------*-/
+
+-- N.B. These used to be in the safety.lean file
+-- but turns out they're needed for weakening semantic typing
+
+def wRename ξ Γ Δ := ∀ x A, Γ ∋ x ∶ A → Δ ∋ ξ x ∶ rename ξ A
+notation:40 Δ:41 "⊢" ξ:41 "∶" Γ:41 => wRename ξ Γ Δ
+
+theorem wRenameSucc {Γ A} : Γ ∷ A ⊢ succ ∶ Γ := by
+  intro x B mem; constructor; assumption
+
+theorem wRenameLift {ξ : ℕ → ℕ} {Γ Δ A}
+  (h : Δ ⊢ ξ ∶ Γ) :
+  Δ ∷ (rename ξ A) ⊢ lift ξ ∶ Γ ∷ A := by
+  intro x B mem
+  cases mem with
+  | here => apply inHere; simp [renameComp]; rfl
+  | there => apply inThere; apply_rules [h]; simp [h, renameComp]; rfl

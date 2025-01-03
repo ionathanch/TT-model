@@ -143,6 +143,9 @@ theorem wneFwds {a b} (r : a ⇒⋆ b) : wne a → wne b
   Constructors for weak normal/neutral forms
 -------------------------------------------*-/
 
+theorem wneVar {s} : wne (var s) :=
+  ⟨var s, ⟨⟩, Pars.refl _⟩
+
 theorem wnfPi {a b} (wnfa : wnf a) (wnfb : wnf b) : wnf (pi a b) :=
   let ⟨a', nfa, ra⟩ := wnfa
   let ⟨b', nfb, rb⟩ := wnfb
@@ -156,9 +159,6 @@ theorem wneApp {b a} (wneb : wne b) (wnfa : wnf a) : wne (app b a) :=
   let ⟨b', neb, rb⟩ := wneb
   let ⟨a', nfa, ra⟩ := wnfa
   ⟨app b' a', ⟨neb, nfa⟩, parsApp rb ra⟩
-
-theorem wneVar {s} : wne (var s) :=
-  ⟨var s, ⟨⟩, Pars.refl _⟩
 
 theorem wneExf {b} (wneb : wne b) : wne (exf b) :=
   let ⟨c, nfc, rc⟩ := wneb

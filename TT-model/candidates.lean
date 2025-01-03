@@ -93,25 +93,25 @@ theorem interpLvlInv {i I a P} (h : ⟦ lvl a ⟧ i , I ↘ P) :
     exact ⟨k, Pars.trans r₁ r₂, e⟩
   all_goals contradiction
 
-/-
 theorem interpStepInv {i I T P} (h : ⟦ T ⟧ i , I ↘ P) :
+  wne T ∨
   (∃ A B, T ⇒⋆ pi A B) ∨
   (∃ i, T ⇒⋆ 𝒰 i) ∨
   (T ⇒⋆ mty) ∨
   (∃ k, T ⇒⋆ lvl (lof k)) := by
   induction h
-  case ne => sorry
-  case pi => left; exact ⟨_, _, Pars.refl _⟩
-  case 𝒰 => right; left; exact ⟨_, Pars.refl _⟩
-  case mty => right; right; left; exact Pars.refl _
-  case lvl => right; right; right; exact ⟨_, Pars.refl _⟩
+  case ne nea => left; exact neWne nea
+  case pi => right; left; exact ⟨_, _, Pars.refl _⟩
+  case 𝒰 => right; right; left; exact ⟨_, Pars.refl _⟩
+  case mty => right; right; right; left; exact Pars.refl _
+  case lvl => right; right; right; right; exact ⟨_, Pars.refl _⟩
   case step r₁ _ h =>
-    rcases h with ⟨A, B, r₂⟩ | ⟨i, r₂⟩ | r₂ | ⟨k, r₂⟩
-    . left; exact ⟨A, B, Pars.trans r₁ r₂⟩
-    . right; left; exact ⟨i, Pars.trans r₁ r₂⟩
-    . right; right; left; exact Pars.trans r₁ r₂
-    . right; right; right; exact ⟨k, Pars.trans r₁ r₂⟩
--/
+    rcases h with neb | ⟨A, B, r₂⟩ | ⟨i, r₂⟩ | r₂ | ⟨k, r₂⟩
+    . left; exact wneBwds (parPars r₁) neb
+    . right; left; exact ⟨A, B, Pars.trans r₁ r₂⟩
+    . right; right; left; exact ⟨i, Pars.trans r₁ r₂⟩
+    . right; right; right; left; exact Pars.trans r₁ r₂
+    . right; right; right; right; exact ⟨k, Pars.trans r₁ r₂⟩
 
 /-*--------------------
   Better constructors
@@ -282,14 +282,13 @@ theorem interpsLvlInv {i a P} (h : ⟦ lvl a ⟧ i ↘ P) :
   ∃ k, a ⇒⋆ lof k ∧ P = (λ a ↦ (∃ j, a ⇒⋆ lof j ∧ j < k) ∨ wne a) := by
   unfold Interps at h; exact interpLvlInv h
 
-/-
 theorem interpsStepInv {I T P} (h : ⟦ T ⟧ I ↘ P) :
+  wne T ∨
   (∃ A B, T ⇒⋆ pi A B) ∨
   (∃ i, T ⇒⋆ 𝒰 i) ∨
   (T ⇒⋆ mty) ∨
   (∃ k, T ⇒⋆ lvl (lof k)) := by
   unfold Interps at h; exact interpStepInv h
--/
 
 /-*-------------------------------------
   Reducibility candidates and adequacy
@@ -299,7 +298,7 @@ theorem interpsStepInv {I T P} (h : ⟦ T ⟧ I ↘ P) :
 def CR (P : Term → Prop) : Prop :=
   ∀ a, (wne a → P a) ∧ (P a → wnf a)
 
-theorem adqWnf {i I a P}
+theorem interpWnf {i I a P}
   (adq : ∀ {a P}, (⟦ a ⟧ i , I ↘ P) → CR P)
   (h : ⟦ a ⟧ i , I ↘ P) : wnf a := by
   induction h
@@ -337,7 +336,7 @@ theorem adequacy {i a P} (h : ⟦ a ⟧ i ↘ P) : CR P := by
     . intro h
       let ⟨P, ha⟩ := h
       unfold Interps at ha
-      refine adqWnf (λ {a} {P} ha ↦ @adequacy j a P ?_) ha
+      refine interpWnf (λ {a} {P} ha ↦ @adequacy j a P ?_) ha
       unfold Interps; exact ha
   case mty => intro b; exact ⟨id, wneWnf⟩
   case lvl =>
@@ -351,7 +350,7 @@ termination_by i
 
 theorem interpsWnf {i a P} (h : ⟦ a ⟧ i ↘ P) : wnf a := by
   unfold Interps at h
-  refine adqWnf (λ {a} {P} ha ↦ @adequacy _ i a P ?_) h
+  refine interpWnf (λ {a} {P} ha ↦ @adequacy _ i a P ?_) h
   unfold Interps; exact ha
 
 /-*----------------

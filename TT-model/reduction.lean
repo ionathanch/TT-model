@@ -248,6 +248,24 @@ theorem parsPiInv {a b c} (r : pi a b ⇒⋆ c) : ∃ a' b', c = pi a' b' ∧ a 
     let ⟨a', b', e, ra₂, rb₂⟩ := ih rfl
     exact ⟨a', b', e, trans ra₁ ra₂, trans rb₁ rb₂⟩
 
+theorem parsAbsInv {b c} (r : abs b ⇒⋆ c) : ∃ b', c = abs b' ∧ b ⇒⋆ b' := by
+  generalize e : abs b = c' at r
+  induction r generalizing b <;> subst e
+  case refl => exists b; repeat constructor
+  case trans ih r =>
+    cases r with | abs r₁ =>
+    let ⟨b', e, r₂⟩ := ih rfl
+    exact ⟨b', e, trans r₁ r₂⟩
+
+theorem parsExfInv {b c} (r : exf b ⇒⋆ c) : ∃ b', c = exf b' ∧ b ⇒⋆ b' := by
+  generalize e : exf b = c' at r
+  induction r generalizing b <;> subst e
+  case refl => exists b; repeat constructor
+  case trans ih r =>
+    cases r with | exf r₁ =>
+    let ⟨b', e, r₂⟩ := ih rfl
+    exact ⟨b', e, trans r₁ r₂⟩
+
 theorem parsLvlInv {i b} (r : lvl i ⇒⋆ b) : ∃ j, b = lvl j ∧ i ⇒⋆ j := by
   generalize e : lvl i = a at r
   induction r generalizing i <;> subst e

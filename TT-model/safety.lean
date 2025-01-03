@@ -11,24 +11,6 @@ set_option pp.fieldNotation false
 
 variable [LevelClass]
 
-/-*----------------------
-  Well-scoped renamings
-----------------------*-/
-
-def wRename ξ Γ Δ := ∀ x A, Γ ∋ x ∶ A → Δ ∋ ξ x ∶ rename ξ A
-notation:40 Δ:41 "⊢" ξ:41 "∶" Γ:41 => wRename ξ Γ Δ
-
-theorem wRenameLift {ξ : ℕ → ℕ} {Γ Δ A}
-  (h : Δ ⊢ ξ ∶ Γ) :
-  Δ ∷ (rename ξ A) ⊢ lift ξ ∶ Γ ∷ A := by
-  intro x B mem
-  cases mem with
-  | here => apply inHere; simp [renameComp]; rfl
-  | there => apply inThere; apply_rules [h]; simp [h, renameComp]; rfl
-
-theorem wRenameSucc {Γ A} : Γ ∷ A ⊢ succ ∶ Γ := by
-  intro x B mem; constructor; assumption
-
 /-*------------------------------
   Renaming and weakening lemmas
 ------------------------------*-/
@@ -218,6 +200,11 @@ theorem wtPar {Γ} {a b A : Term} (r : a ⇒ b) (h : Γ ⊢ a ∶ A) : Γ ⊢ b 
   case trans hj ihi _ => exact Wtf.trans (ihi r) hj
   case conv e _ hB iha _ => exact Wtf.conv e (iha r) hB
   case sub hj _ _ ihA => exact Wtf.sub hj (ihA r)
+
+theorem wtPars {Γ} {a b A : Term} (r : a ⇒⋆ b) (h : Γ ⊢ a ∶ A) : Γ ⊢ b ∶ A := by
+  induction r
+  case refl => exact h
+  case trans r _ ih => exact ih (wtPar r h)
 
 /-*---------
   Progress

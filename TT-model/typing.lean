@@ -268,7 +268,7 @@ theorem wtfInd {w} (wtf : Wtf w) (P : ∀ {w}, Wtf w → Prop)
   case conv e ha hB iha ihB => exact conv e ha hB iha ihB
   case sub hj hA ihj ihA => exact sub hj hA ihj ihA
 
-theorem wtInd {Γ a A} (wt : Γ ⊢ a ∶ A) (P : ∀ {Γ a A}, Γ ⊢ a ∶ A → Prop)
+theorem wtInd {Γ} {a A : Term} (wt : Γ ⊢ a ∶ A) (P : ∀ {Γ} {a A : Term}, Γ ⊢ a ∶ A → Prop)
   (var : ∀ {Γ x A}
     (wf : ⊢ Γ)
     (mem : Γ ∋ x ∶ A),
@@ -316,7 +316,6 @@ theorem wtInd {Γ a A} (wt : Γ ⊢ a ∶ A) (P : ∀ {Γ a A}, Γ ⊢ a ∶ A �
     (hA : Γ ⊢ A ∶ Term.𝒰 j),
     P hj → P hA → P (Wtf.sub hj hA))
   : P wt := by
-  -- generalize e : @Sigma.mk I idx I.wt ⟨Γ, a, A⟩ = t at wt
   apply wtfInd wt (λ {w} _ ↦
     match w with
     | Sigma.mk I.wf _ => True
