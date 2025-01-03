@@ -177,16 +177,16 @@ theorem interpsConv {i a b P} (r : a ⇔ b) (h : ⟦ a ⟧ i ↘ P) : ⟦ b ⟧ 
 
 theorem interpsBwdsP {i a x y P} (r : x ⇒⋆ y) (h : ⟦ a ⟧ i ↘ P) : P y → P x := by
   unfold Interps at h; induction h generalizing x y
-  case ne => exact wnePars r
+  case ne => exact wneBwds r
   case pi ihb =>
     intro h x Pb Pax PfxPb
     exact ihb x Pb PfxPb (parsApp r (Pars.refl x)) (h x Pb Pax PfxPb)
   case 𝒰 => exact λ ⟨P, h⟩ ↦ ⟨P, interpsBwds r h⟩
-  case mty => exact wnePars r
+  case mty => exact wneBwds r
   case lvl =>
     intro Py; rcases Py with ⟨j, r₂, lt⟩ | wney
     . exact Or.inl ⟨j, parsTrans r r₂, lt⟩
-    . exact Or.inr (wnePars r wney)
+    . exact Or.inr (wneBwds r wney)
   case step ih => exact ih r
 
 /-*--------------------------------
@@ -291,9 +291,9 @@ theorem interpsStepInv {I T P} (h : ⟦ T ⟧ I ↘ P) :
   unfold Interps at h; exact interpStepInv h
 -/
 
-/-*------------------------
-  Reducibility candidates
-------------------------*-/
+/-*-------------------------------------
+  Reducibility candidates and adequacy
+-------------------------------------*-/
 
 @[simp]
 def CR (P : Term → Prop) : Prop :=
@@ -305,7 +305,7 @@ theorem adqWnf {i I a P}
   induction h
   case ne a nea => exact wneWnf (neWne nea)
   case 𝒰 | mty | lvl => exact nfWnf ⟨⟩
-  case step r _ wnfb => exact wnfPar r wnfb
+  case step r _ wnfb => exact wnfBwd r wnfb
   case pi ha hPf _ wnfa wnfb =>
     let ⟨CRne, _⟩ := adq ha (var 0)
     let ⟨Pb, PfPb⟩ := hPf (var 0) (CRne (neWne ⟨⟩))
@@ -349,15 +349,23 @@ theorem adequacy {i a P} (h : ⟦ a ⟧ i ↘ P) : CR P := by
   case step ih => exact ih
 termination_by i
 
+theorem interpsWnf {i a P} (h : ⟦ a ⟧ i ↘ P) : wnf a := by
+  unfold Interps at h
+  refine adqWnf (λ {a} {P} ha ↦ @adequacy _ i a P ?_) h
+  unfold Interps; exact ha
+
 /-*----------------
   Semantic typing
 ----------------*-/
 
-def semSubst σ Γ := ∀ x a, In x a Γ → ∃ i P, (⟦ subst σ a ⟧ i ↘ P) ∧ P (σ x)
+def semSubst σ Γ := ∀ x a, In x a Γ → ∀ i P, (⟦ subst σ a ⟧ i ↘ P) → P (σ x)
 infix:40 "⊨" => semSubst
 
 def semWt Γ a A := ∀ σ, σ ⊨ Γ → ∃ i P, (⟦ subst σ A ⟧ i ↘ P) ∧ P (subst σ a)
 notation:40 Γ:41 "⊨" a:41 "∶" A:41 => semWt Γ a A
+
+def semWf Γ := ∀ x A, In x A Γ → ∃ k, Γ ⊨ A ∶ 𝒰 k
+prefix:40 "⊨" => semWf
 
 theorem semSubstNil σ : σ ⊨ ⬝ := by
   intro _ _ mem; cases mem
@@ -367,5 +375,9 @@ theorem semSubstCons {Γ : Ctxt} {σ i a A P} :
   σ ⊨ Γ → a +: σ ⊨ Γ ∷ A := by
   intro hA ha hσ x B mem
   cases mem
-  case here => rw [substRename]; exists i, P
+  case here =>
+    intro j Q hA'
+    rw [substRename, substExt ((a +: σ) ∘ Nat.succ) σ] at hA'
+    rw [interpsDet hA' hA]; exact ha
+    intro n; cases n <;> simp
   case there B mem => rw [substRename]; apply_rules [hσ]
