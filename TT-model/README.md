@@ -121,10 +121,13 @@ As such, the naturals are an appropriate instance of levels, as would be ordinal
 * `level.lean`: Typeclass of cofinal, well-ordered levels.
 * `syntactics.lean`: Syntax, substitution, contexts, and context membership.
 * `reduction.lean`: Parallel reduction, substitution lemmas, confluence, and conversion.
+* `normal.lean`: Normal and neutral forms.
 * `typing.lean`: Definitional equality, context well-formedness, well-typedness, and inversion.
 * `safety.lean`: Progress and preservation.
 * `semantics.lean`: Logical relations stating semantic typing and well-formedness,
   along with important properties.
+* `candidates.lean`: The same logical relation but handling open (possibly neutral) terms,
+  and an adequacy lemma wrt reducibility candidates.
 * `soundness.lean`: The fundamental theorem of soundness of typing —
   syntactic well-typedness implies semantic well-typedness.
   Consistency is proven as a corollary.
