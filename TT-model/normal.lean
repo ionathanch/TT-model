@@ -123,8 +123,8 @@ theorem wneRename {ξ a} : wne (rename ξ a) → wne a
   Forward/backward preservation of weak normal/neutral forms
 -----------------------------------------------------------*-/
 
-theorem wnfBwd {a b} (r : a ⇒ b) : wnf b → wnf a
-  | ⟨c, nfc, rc⟩ => ⟨c, nfc, Pars.trans r rc⟩
+theorem wnfBwds {a b} (r : a ⇒⋆ b) : wnf b → wnf a
+  | ⟨c, nfc, rc⟩ => ⟨c, nfc, parsTrans r rc⟩
 
 theorem wneBwds {a b} (r : a ⇒⋆ b) : wne b → wne a
   | ⟨c, nec, rc⟩ => ⟨c, nec, parsTrans r rc⟩
@@ -164,6 +164,12 @@ theorem wneExf {b} (wneb : wne b) : wne (exf b) :=
   let ⟨c, nfc, rc⟩ := wneb
   ⟨exf c, nfc, parsExf rc⟩
 
+theorem wnfLvl {b} (wnfb : wnf b) : wnf (lvl b) :=
+  let ⟨c, nfc, rc⟩ := wnfb
+  ⟨lvl c, nfc, parsLvl rc⟩
+
+theorem wnfLof {k} : wnf (lof k) := ⟨lof k, ⟨⟩, Pars.refl _⟩
+
 theorem wneLof {a j} (r : a ⇒⋆ lof j) (wnea : wne a) : False :=
   match wneFwds r wnea with
   | ⟨b, neb, rb⟩ => by rw [parsLofInv rb] at neb; simp at neb
@@ -186,4 +192,4 @@ theorem wnfAppInv {b s} : wnf (app b (var s)) → wnf b
         exact wnfAbs ⟨c, nfRename nfc, rb⟩
       case app rb ra ih =>
         cases ra
-        apply wnfBwd rb (ih nfc rfl)
+        apply wnfBwds (parPars rb) (ih nfc rfl)

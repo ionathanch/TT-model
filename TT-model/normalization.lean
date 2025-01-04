@@ -28,7 +28,7 @@ theorem semRename {ξ : ℕ → ℕ} {Γ Δ a A}
   (ha : Γ ⊨ a ∶ A) :
   Δ ⊨ rename ξ a ∶ rename ξ A := by
   intro σ hσ
-  rw [substRename]; rw [substRename]
+  rw [substRename, substRename]
   exact ha (σ ∘ ξ) (semComp hξ hσ)
 
 theorem semWeaken {Γ a A B}
@@ -103,26 +103,24 @@ theorem soundness {w} (h : Wtf w) :
     exact ⟨_, _, hB, hb _ _ ha hB⟩
   case 𝒰 ih =>
     let ⟨_, P, hk, hj⟩ := ih σ hσ
-    let ⟨k, rk, e⟩ := interpsLvlInv hk
+    let ⟨wnfk, e⟩ := interpsLvlInv hk; subst e
+    rcases hj with ⟨j, k, rj, rk, lt⟩ | wnej
+    case inr => sorry
+    case inl =>
     let ⟨ℓ, ltk⟩ := exists_gt k
-    subst e
-    refine ⟨ℓ, _, interpsBwds (pars𝒰 rk) (interps𝒰 ltk), ?_⟩
-    cases hj
-    case inl hj =>
-      let ⟨j, rj, ltj⟩ := hj
-      exact ⟨_, interpsBwds (pars𝒰 rj) (interps𝒰 ltj)⟩
-    case inr wnej => sorry
+    exact ⟨ℓ, _,
+      interpsBwds (pars𝒰 rk) (interps𝒰 ltk),
+      ⟨_, interpsBwds (pars𝒰 rj) (interps𝒰 lt)⟩⟩
   case mty ih =>
     let ⟨_, _, hj, hi⟩ := ih σ hσ
-    let ⟨j, _, e⟩ := interpsLvlInv hj
-    subst e
-    cases hi
-    case inl hi =>
-      let ⟨i, ri, lt⟩ := hi
-      exact ⟨j, _,
-        interpsBwds (pars𝒰 ri) (interps𝒰 lt),
-        ⟨_, interpsMty⟩⟩
+    let ⟨_, e⟩ := interpsLvlInv hj
+    rw [e] at hi; cases hi
     case inr wnei => sorry
+    case inl hi =>
+    let ⟨i, j, ri, rj, lt⟩ := hi
+    exact ⟨j, _,
+      interpsBwds (pars𝒰 ri) (interps𝒰 lt),
+      ⟨_, interpsMty⟩⟩
   case exf b _ _ _ ihA ihb =>
     let ⟨k, _, hmty, hb⟩ := ihb σ hσ
     let ⟨_, _, h𝒰, hA⟩ := ihA σ hσ
@@ -134,37 +132,33 @@ theorem soundness {w} (h : Wtf w) :
   case lvl k _ iha =>
     let ⟨_, P, hlvl, ha⟩ := iha σ hσ
     let ⟨ℓ, lt⟩ := exists_gt k
+    let ⟨_, e⟩ := interpsLvlInv hlvl
     refine ⟨ℓ, _, interps𝒰 lt, ?_⟩
-    let ⟨_, _, e⟩ := interpsLvlInv hlvl
-    subst e
-    cases ha
-    case inl ha =>
-      let ⟨k, r, _⟩ := ha
-      exact ⟨_, interpsBwds (parsLvl r) interpsLvl⟩
-    case inr wnea => sorry
-  case lof j k _ lt _ =>
-    exact ⟨j, _, interpsLvl, Or.inl ⟨_, Pars.refl _, lt⟩⟩
-  case trans j k _ _ ihj ihk =>
-    let ⟨k, Pj, hk, hPj⟩ := ihk σ hσ
-    let ⟨k, _, ePj⟩ := interpsLvlInv hk
-    subst ePj
+    rw [e] at ha; rcases ha with ⟨k, _, r, _, _⟩ | wnea
+    case inl ha => exact ⟨_, interpsBwds (parsLvl r) (interpsLvl wnfLof)⟩
+    case inr => exact ⟨_, interpsLvl (wneWnf wnea)⟩
+  case lof j k _ lt ih =>
+    refine ⟨j, _,
+      interpsLvl wnfLof,
+      Or.inl ⟨_, k, Pars.refl _, Pars.refl _, lt⟩⟩
+  case trans i j k _ _ ihj ihk =>
+    let ⟨ℓ, Pj, hk, hPj⟩ := ihk σ hσ
+    let ⟨wnfk, ePj⟩ := interpsLvlInv hk; subst ePj
     let ⟨_, Pi, hj, hPi⟩ := ihj σ hσ
-    let ⟨j', rj', ePi⟩ := interpsLvlInv hj
-    subst ePi
-    cases hPj
-    case inr wnej => cases wneLof rj' wnej
-    case inl hPj =>
-    let ⟨j, rj, _⟩ := hPj
-    let ⟨j'', rj, rj'⟩ := confluence rj rj'
-    rw [parsLofInv rj] at rj'
-    injection (parsLofInv rj') with e; subst e
-    refine ⟨_, _, hk, ?_⟩
-    cases hPi
-    case inr wnei => exact Or.inr wnei
-    case inl hPi =>
-    let ⟨i, r, _⟩ := hPi
-    refine Or.inl ⟨i, r, ?_⟩
-    apply IsTrans.trans <;> assumption
+    let ⟨_, ePi⟩ := interpsLvlInv hj; subst ePi
+    rcases hPi with ⟨i', j', ri', rj', ltij⟩ | wnei
+    case inr => exact ⟨ℓ, ⟨_, interpsLvl wnfk, Or.inr wnei⟩⟩
+    case inl =>
+    rcases hPj with ⟨j'', k', rj'', rk', ltjk⟩ | wnej
+    case inr => cases wneLof rj' wnej
+    case inl =>
+    let ⟨lofj, rlofj', rlofj''⟩ := confluence rj' rj''
+    have e' := parsLofInv rlofj'
+    have e'' := parsLofInv rlofj''
+    subst e'; cases e''
+    exists ℓ
+    refine ⟨_, interpsLvl wnfk, Or.inl ⟨i', k', ri', rk', ?_⟩⟩
+    apply IsTrans.trans; repeat assumption
   case conv e _ _ iha _ =>
     let ⟨_, _, hA, ha⟩ := iha σ hσ
     exact ⟨_, _, interpsConv (convSubst σ (eqvConv e)) hA, ha⟩
@@ -174,12 +168,10 @@ theorem soundness {w} (h : Wtf w) :
     subst e
     let ⟨P, hA⟩ := hA
     let ⟨_, Pk, hk, hj⟩ := ihj σ hσ
-    let ⟨k, rk, e⟩ := interpsLvlInv hk
-    subst e
-    cases hj
-    case inr wnej => cases wneLof rj wnej
-    case inl hj =>
-    let ⟨_, rj', ltj'⟩ := hj
+    let ⟨wnfk, e⟩ := interpsLvlInv hk
+    subst e; rcases hj with ⟨_, k, rj', rk, ltj'⟩ | wnej
+    case inr => cases wneLof rj wnej
+    case inl =>
     let ⟨_, rj, rj'⟩ := confluence rj rj'
     rw [parsLofInv rj'] at rj
     injection (parsLofInv rj) with e; subst e

@@ -18,7 +18,8 @@ inductive Interp (i : lc.L) (I : ∀ j, j < i → Term → Prop) : Term → (Ter
     Interp i I (pi a b) (λ f ↦ ∀ x Pb, Pa x → Pf x Pb → Pb (app f x))
   | 𝒰 j (lt : j < i) : Interp i I (𝒰 (lof j)) (I j lt)
   | mty : Interp i I mty wne
-  | lvl k : Interp i I (lvl (lof k)) (λ a ↦ (∃ j, a ⇒⋆ lof j ∧ j < k) ∨ wne a)
+  | lvl b : wnf b → Interp i I (lvl b)
+    (λ a ↦ (∃ j k, a ⇒⋆ lof j ∧ b ⇒⋆ lof k ∧ j < k) ∨ wne a)
   | step a b P :
     a ⇒ b →
     Interp i I b P →
@@ -30,6 +31,25 @@ def Interps (i : lc.L) : Term → (Term → Prop) → Prop :=
 termination_by i
 
 notation:40 "⟦" a "⟧" i "↘" P => Interps i a P
+
+/-*-------------------------------------------------------
+  Helper for interpretations of `lvl`:
+  they are the same when even when extra steps are taken
+-------------------------------------------------------*-/
+
+-- ⚠️ uses funext and propext ⚠️
+theorem interpLvlEq {b c} (r : b ⇒ c) :
+  (λ a ↦ (∃ j k, a ⇒⋆ lof j ∧ b ⇒⋆ lof k ∧ j < k) ∨ wne a) =
+  (λ a ↦ (∃ j k, a ⇒⋆ lof j ∧ c ⇒⋆ lof k ∧ j < k) ∨ wne a) := by
+  funext a; apply propext; constructor
+  . intro Pa; rcases Pa with ⟨j, k, rj, rk, jk⟩ | wnea
+    . let ⟨k', rk', r₂⟩ := diacon rk r
+      rw [parsLofInv rk'] at r₂
+      refine Or.inl ⟨j, k, rj, r₂, jk⟩
+    . exact Or.inr wnea
+  . intro Pa; rcases Pa with ⟨j, k, rj, rk, jk⟩ | wnea
+    . exact Or.inl ⟨j, k, rj, Pars.trans r rk, jk⟩
+    . exact Or.inr wnea
 
 /-*------------------------
   Simple inversion lemmas
@@ -81,16 +101,17 @@ theorem interpMtyInv {i I P} (h : ⟦ mty ⟧ i , I ↘ P) : P = wne := by
   case step r _ ih => subst e; cases r; simp [ih]
   all_goals contradiction
 
-theorem interpLvlInv {i I a P} (h : ⟦ lvl a ⟧ i , I ↘ P) :
-  ∃ k, a ⇒⋆ lof k ∧ P = (λ a ↦ (∃ j, a ⇒⋆ lof j ∧ j < k) ∨ wne a) := by
-  generalize e : lvl a = b at h
-  induction h generalizing a
+theorem interpLvlInv {i I b P} (h : ⟦ lvl b ⟧ i , I ↘ P) :
+  wnf b ∧ P = (λ a ↦ (∃ j k, a ⇒⋆ lof j ∧ b ⇒⋆ lof k ∧ j < k) ∨ wne a) := by
+  generalize e : lvl b = c at h
+  induction h generalizing b
   case ne => subst e; contradiction
-  case lvl k => injection e with e; subst e; exists k, Pars.refl _
+  case lvl wnfb => injection e with e; subst e; exact ⟨wnfb, rfl⟩
   case step r _ ih =>
     subst e; let (Par.lvl r₁) := r
-    let ⟨k, r₂, e⟩ := ih rfl
-    exact ⟨k, Pars.trans r₁ r₂, e⟩
+    let ⟨wnfc, e⟩ := ih rfl; subst e
+    rw [interpLvlEq r₁]
+    exact ⟨wnfBwds (parPars r₁) wnfc, rfl⟩
   all_goals contradiction
 
 theorem interpStepInv {i I T P} (h : ⟦ T ⟧ i , I ↘ P) :
@@ -98,7 +119,7 @@ theorem interpStepInv {i I T P} (h : ⟦ T ⟧ i , I ↘ P) :
   (∃ A B, T ⇒⋆ pi A B) ∨
   (∃ i, T ⇒⋆ 𝒰 i) ∨
   (T ⇒⋆ mty) ∨
-  (∃ k, T ⇒⋆ lvl (lof k)) := by
+  (∃ b, T ⇒⋆ lvl b) := by
   induction h
   case ne nea => left; exact neWne nea
   case pi => right; left; exact ⟨_, _, Pars.refl _⟩
@@ -134,8 +155,9 @@ theorem interps𝒰 {i j} (lt : j < i) :
 theorem interpsMty {i} : ⟦ mty ⟧ i ↘ wne := by
   unfold Interps at *; exact Interp.mty
 
-theorem interpsLvl {i k} : ⟦ lvl (lof k) ⟧ i ↘ (λ a ↦ (∃ j, a ⇒⋆ lof j ∧ j < k) ∨ wne a) := by
-  unfold Interps at *; constructor
+theorem interpsLvl {i b} (wnfb : wnf b) :
+  ⟦ lvl b ⟧ i ↘ (λ a ↦ (∃ j k, a ⇒⋆ lof j ∧ b ⇒⋆ lof k ∧ j < k) ∨ wne a) := by
+  unfold Interps at *; constructor; assumption
 
 /-*------------------------------------------------
   Interpretation respects conversion wrt the type
@@ -149,7 +171,8 @@ theorem interpFwd {i I a b P} (r : a ⇒ b) (h : ⟦ a ⟧ i , I ↘ P) : ⟦ b 
   case ne nea => constructor; exact nePar r nea
   case 𝒰 => cases r; case 𝒰 r => cases r; constructor
   case mty => cases r; exact Interp.mty
-  case lvl => cases r; case lvl r => cases r; constructor
+  case lvl => cases r; case lvl wnfb _ r =>
+    rw [interpLvlEq r]; constructor; exact wnfFwds (parPars r) wnfb
   case step r' _ ih =>
     let ⟨c, rc, rc'⟩ := diamond r r'
     constructor <;> apply_rules
@@ -184,8 +207,8 @@ theorem interpsBwdsP {i a x y P} (r : x ⇒⋆ y) (h : ⟦ a ⟧ i ↘ P) : P y 
   case 𝒰 => exact λ ⟨P, h⟩ ↦ ⟨P, interpsBwds r h⟩
   case mty => exact wneBwds r
   case lvl =>
-    intro Py; rcases Py with ⟨j, r₂, lt⟩ | wney
-    . exact Or.inl ⟨j, parsTrans r r₂, lt⟩
+    intro Py; rcases Py with ⟨j, k, rj, rk, lt⟩ | wney
+    . exact Or.inl ⟨j, k, parsTrans r rj, rk, lt⟩
     . exact Or.inr (wneBwds r wney)
   case step ih => exact ih r
 
@@ -216,8 +239,7 @@ theorem interpDet' {i I a P Q} (hP : ⟦ a ⟧ i , I ↘ P) (hQ : ⟦ a ⟧ i , 
     injection (parsLofInv r) with ej; subst ej; simp [e]
   case mty => simp [interpMtyInv hQ]
   case lvl =>
-    let ⟨k, r, e⟩ := interpLvlInv hQ
-    injection (parsLofInv r) with ek; subst ek; simp [e]
+    let ⟨_, e⟩ := interpLvlInv hQ; rw [e]
   case step r _ ih => exact ih (interpFwd r hQ)
 
 theorem interpsDet' {i a P Q} (hP : ⟦ a ⟧ i ↘ P) (hQ : ⟦ a ⟧ i ↘ Q) : P = Q := by
@@ -233,7 +255,7 @@ theorem interpsCumul {i j a P} (lt : i < j) (h : ⟦ a ⟧ i ↘ P) : ⟦ a ⟧ 
     . intro x Pb PfxPb; unfold Interps at ihb; exact ihb x Pb PfxPb lt
   case 𝒰 k _ => constructor; apply_rules [IsTrans.trans]
   case mty => exact Interp.mty
-  case lvl => constructor
+  case lvl => constructor; assumption
   case step ih => constructor; assumption; unfold Interps at ih; exact ih lt
 
 -- this is the only place we need trichotomy of <
@@ -278,8 +300,8 @@ theorem interps𝒰Inv {i a P} (h : ⟦ 𝒰 a ⟧ i ↘ P) :
 theorem interpsMtyInv {i P} (h : ⟦ mty ⟧ i ↘ P) : P = wne := by
   unfold Interps at h; exact interpMtyInv h
 
-theorem interpsLvlInv {i a P} (h : ⟦ lvl a ⟧ i ↘ P) :
-  ∃ k, a ⇒⋆ lof k ∧ P = (λ a ↦ (∃ j, a ⇒⋆ lof j ∧ j < k) ∨ wne a) := by
+theorem interpsLvlInv {i b P} (h : ⟦ lvl b ⟧ i ↘ P) :
+  wnf b ∧ P = (λ a ↦ (∃ j k, a ⇒⋆ lof j ∧ b ⇒⋆ lof k ∧ j < k) ∨ wne a) := by
   unfold Interps at h; exact interpLvlInv h
 
 theorem interpsStepInv {I T P} (h : ⟦ T ⟧ I ↘ P) :
@@ -287,7 +309,7 @@ theorem interpsStepInv {I T P} (h : ⟦ T ⟧ I ↘ P) :
   (∃ A B, T ⇒⋆ pi A B) ∨
   (∃ i, T ⇒⋆ 𝒰 i) ∨
   (T ⇒⋆ mty) ∨
-  (∃ k, T ⇒⋆ lvl (lof k)) := by
+  (∃ b, T ⇒⋆ lvl b) := by
   unfold Interps at h; exact interpStepInv h
 
 /-*-------------------------------------
@@ -303,8 +325,9 @@ theorem interpWnf {i I a P}
   (h : ⟦ a ⟧ i , I ↘ P) : wnf a := by
   induction h
   case ne a nea => exact wneWnf (neWne nea)
-  case 𝒰 | mty | lvl => exact nfWnf ⟨⟩
-  case step r _ wnfb => exact wnfBwd r wnfb
+  case 𝒰 | mty => exact nfWnf ⟨⟩
+  case step r _ wnfb => exact wnfBwds (parPars r) wnfb
+  case lvl wnfb => exact wnfLvl wnfb
   case pi ha hPf _ wnfa wnfb =>
     let ⟨CRne, _⟩ := adq ha (var 0)
     let ⟨Pb, PfPb⟩ := hPf (var 0) (CRne (neWne ⟨⟩))
@@ -342,7 +365,7 @@ theorem adequacy {i a P} (h : ⟦ a ⟧ i ↘ P) : CR P := by
   case lvl =>
     intro _; constructor
     . exact Or.inr
-    . intro Pa; rcases Pa with ⟨_, r, _⟩ | wnea
+    . intro Pa; rcases Pa with ⟨_, _, r, _, _⟩ | wnea
       . exact ⟨lof _, ⟨⟩, r⟩
       . exact wneWnf wnea
   case step ih => exact ih
