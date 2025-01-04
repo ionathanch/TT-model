@@ -1,8 +1,4 @@
-import «TT-model».syntactics
-import «TT-model».reduction
-import «TT-model».typing
 import «TT-model».safety
-import «TT-model».candidates
 import «TT-model».normalization
 
 open Term
@@ -64,7 +60,7 @@ theorem canon𝒰 {T j} (h : ⬝ ⊢ T ∶ 𝒰 j) :
   (∃ A B, T ⇒⋆ pi A B) ∨
   (∃ i, T ⇒⋆ 𝒰 i) ∨
   (T ⇒⋆ mty) ∨
-  (∃ k, T ⇒⋆ lvl (lof k)) := by
+  (∃ b, T ⇒⋆ lvl b) := by
   let ⟨_, _, h𝒰, hT⟩ := soundness h var (semSubstNil _)
   let ⟨_, _, _, e⟩ := interps𝒰Inv h𝒰; subst e
   let ⟨_, hT⟩ := hT; rw [substId] at hT
@@ -74,8 +70,8 @@ theorem canon𝒰 {T j} (h : ⬝ ⊢ T ∶ 𝒰 j) :
 
 theorem canonLvl {a k} (h : ⬝ ⊢ a ∶ lvl k) : ∃ j, a ⇒⋆ lof j := by
   let ⟨_, _, hlvl, ha⟩ := soundness h var (semSubstNil _)
-  let ⟨_, _, e⟩ := interpsLvlInv hlvl; subst e
+  let ⟨_, e⟩ := interpsLvlInv hlvl; subst e
   rw [substId] at ha
   cases ha
-  case inl ha => let ⟨_, r, _⟩ := ha; exact ⟨_, r⟩
+  case inl ha => let ⟨_, _, _, r, _⟩ := ha; exact ⟨_, r⟩
   case inr wnea => cases closed h wnea

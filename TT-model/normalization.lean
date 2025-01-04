@@ -1,5 +1,3 @@
-import «TT-model».syntactics
-import «TT-model».reduction
 import «TT-model».typing
 import «TT-model».candidates
 
@@ -104,7 +102,7 @@ theorem soundness {w} (h : Wtf w) :
   case 𝒰 ih =>
     let ⟨_, P, hk, hj⟩ := ih σ hσ
     let ⟨wnfk, e⟩ := interpsLvlInv hk; subst e
-    rcases hj with ⟨j, k, rj, rk, lt⟩ | wnej
+    rcases hj with ⟨j, k, lt, rj, rk⟩ | wnej
     case inr => sorry
     case inl =>
     let ⟨ℓ, ltk⟩ := exists_gt k
@@ -117,7 +115,7 @@ theorem soundness {w} (h : Wtf w) :
     rw [e] at hi; cases hi
     case inr wnei => sorry
     case inl hi =>
-    let ⟨i, j, ri, rj, lt⟩ := hi
+    let ⟨i, j, lt, ri, rj⟩ := hi
     exact ⟨j, _,
       interpsBwds (pars𝒰 ri) (interps𝒰 lt),
       ⟨_, interpsMty⟩⟩
@@ -134,22 +132,22 @@ theorem soundness {w} (h : Wtf w) :
     let ⟨ℓ, lt⟩ := exists_gt k
     let ⟨_, e⟩ := interpsLvlInv hlvl
     refine ⟨ℓ, _, interps𝒰 lt, ?_⟩
-    rw [e] at ha; rcases ha with ⟨k, _, r, _, _⟩ | wnea
+    rw [e] at ha; rcases ha with ⟨k, _, _, r, _⟩ | wnea
     case inl ha => exact ⟨_, interpsBwds (parsLvl r) (interpsLvl wnfLof)⟩
     case inr => exact ⟨_, interpsLvl (wneWnf wnea)⟩
   case lof j k _ lt ih =>
     refine ⟨j, _,
       interpsLvl wnfLof,
-      Or.inl ⟨_, k, Pars.refl _, Pars.refl _, lt⟩⟩
+      Or.inl ⟨_, k, lt, Pars.refl _, Pars.refl _⟩⟩
   case trans i j k _ _ ihj ihk =>
     let ⟨ℓ, Pj, hk, hPj⟩ := ihk σ hσ
     let ⟨wnfk, ePj⟩ := interpsLvlInv hk; subst ePj
     let ⟨_, Pi, hj, hPi⟩ := ihj σ hσ
     let ⟨_, ePi⟩ := interpsLvlInv hj; subst ePi
-    rcases hPi with ⟨i', j', ri', rj', ltij⟩ | wnei
+    rcases hPi with ⟨i', j', ltij, ri', rj'⟩ | wnei
     case inr => exact ⟨ℓ, ⟨_, interpsLvl wnfk, Or.inr wnei⟩⟩
     case inl =>
-    rcases hPj with ⟨j'', k', rj'', rk', ltjk⟩ | wnej
+    rcases hPj with ⟨j'', k', ltjk, rj'', rk'⟩ | wnej
     case inr => cases wneLof rj' wnej
     case inl =>
     let ⟨lofj, rlofj', rlofj''⟩ := confluence rj' rj''
@@ -157,7 +155,7 @@ theorem soundness {w} (h : Wtf w) :
     have e'' := parsLofInv rlofj''
     subst e'; cases e''
     exists ℓ
-    refine ⟨_, interpsLvl wnfk, Or.inl ⟨i', k', ri', rk', ?_⟩⟩
+    refine ⟨_, interpsLvl wnfk, Or.inl ⟨i', k', ?_, ri', rk'⟩⟩
     apply IsTrans.trans; repeat assumption
   case conv e _ _ iha _ =>
     let ⟨_, _, hA, ha⟩ := iha σ hσ
@@ -169,7 +167,7 @@ theorem soundness {w} (h : Wtf w) :
     let ⟨P, hA⟩ := hA
     let ⟨_, Pk, hk, hj⟩ := ihj σ hσ
     let ⟨wnfk, e⟩ := interpsLvlInv hk
-    subst e; rcases hj with ⟨_, k, rj', rk, ltj'⟩ | wnej
+    subst e; rcases hj with ⟨_, k, ltj', rj', rk⟩ | wnej
     case inr => cases wneLof rj wnej
     case inl =>
     let ⟨_, rj, rj'⟩ := confluence rj rj'

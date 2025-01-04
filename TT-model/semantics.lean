@@ -1,4 +1,3 @@
-import «TT-model».syntactics
 import «TT-model».reduction
 
 open Term

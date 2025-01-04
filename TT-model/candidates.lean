@@ -1,5 +1,3 @@
-import «TT-model».syntactics
-import «TT-model».reduction
 import «TT-model».normal
 
 open Term
@@ -19,7 +17,7 @@ inductive Interp (i : lc.L) (I : ∀ j, j < i → Term → Prop) : Term → (Ter
   | 𝒰 j (lt : j < i) : Interp i I (𝒰 (lof j)) (I j lt)
   | mty : Interp i I mty wne
   | lvl b : wnf b → Interp i I (lvl b)
-    (λ a ↦ (∃ j k, a ⇒⋆ lof j ∧ b ⇒⋆ lof k ∧ j < k) ∨ wne a)
+    (λ a ↦ (∃ j k, j < k ∧ a ⇒⋆ lof j ∧ b ⇒⋆ lof k) ∨ wne a)
   | step a b P :
     a ⇒ b →
     Interp i I b P →
@@ -39,16 +37,16 @@ notation:40 "⟦" a "⟧" i "↘" P => Interps i a P
 
 -- ⚠️ uses funext and propext ⚠️
 theorem interpLvlEq {b c} (r : b ⇒ c) :
-  (λ a ↦ (∃ j k, a ⇒⋆ lof j ∧ b ⇒⋆ lof k ∧ j < k) ∨ wne a) =
-  (λ a ↦ (∃ j k, a ⇒⋆ lof j ∧ c ⇒⋆ lof k ∧ j < k) ∨ wne a) := by
+  (λ a ↦ (∃ j k, j < k ∧ a ⇒⋆ lof j ∧ b ⇒⋆ lof k) ∨ wne a) =
+  (λ a ↦ (∃ j k, j < k ∧ a ⇒⋆ lof j ∧ c ⇒⋆ lof k) ∨ wne a) := by
   funext a; apply propext; constructor
-  . intro Pa; rcases Pa with ⟨j, k, rj, rk, jk⟩ | wnea
+  . intro Pa; rcases Pa with ⟨j, k, lt, rj, rk⟩ | wnea
     . let ⟨k', rk', r₂⟩ := diacon rk r
       rw [parsLofInv rk'] at r₂
-      refine Or.inl ⟨j, k, rj, r₂, jk⟩
+      refine Or.inl ⟨j, k, lt, rj, r₂⟩
     . exact Or.inr wnea
-  . intro Pa; rcases Pa with ⟨j, k, rj, rk, jk⟩ | wnea
-    . exact Or.inl ⟨j, k, rj, Pars.trans r rk, jk⟩
+  . intro Pa; rcases Pa with ⟨j, k, lt, rj, rk⟩ | wnea
+    . exact Or.inl ⟨j, k, lt, rj, Pars.trans r rk⟩
     . exact Or.inr wnea
 
 /-*------------------------
@@ -102,7 +100,7 @@ theorem interpMtyInv {i I P} (h : ⟦ mty ⟧ i , I ↘ P) : P = wne := by
   all_goals contradiction
 
 theorem interpLvlInv {i I b P} (h : ⟦ lvl b ⟧ i , I ↘ P) :
-  wnf b ∧ P = (λ a ↦ (∃ j k, a ⇒⋆ lof j ∧ b ⇒⋆ lof k ∧ j < k) ∨ wne a) := by
+  wnf b ∧ P = (λ a ↦ (∃ j k, j < k ∧ a ⇒⋆ lof j ∧ b ⇒⋆ lof k) ∨ wne a) := by
   generalize e : lvl b = c at h
   induction h generalizing b
   case ne => subst e; contradiction
@@ -156,7 +154,7 @@ theorem interpsMty {i} : ⟦ mty ⟧ i ↘ wne := by
   unfold Interps at *; exact Interp.mty
 
 theorem interpsLvl {i b} (wnfb : wnf b) :
-  ⟦ lvl b ⟧ i ↘ (λ a ↦ (∃ j k, a ⇒⋆ lof j ∧ b ⇒⋆ lof k ∧ j < k) ∨ wne a) := by
+  ⟦ lvl b ⟧ i ↘ (λ a ↦ (∃ j k, j < k ∧ a ⇒⋆ lof j ∧ b ⇒⋆ lof k) ∨ wne a) := by
   unfold Interps at *; constructor; assumption
 
 /-*------------------------------------------------
@@ -207,8 +205,8 @@ theorem interpsBwdsP {i a x y P} (r : x ⇒⋆ y) (h : ⟦ a ⟧ i ↘ P) : P y 
   case 𝒰 => exact λ ⟨P, h⟩ ↦ ⟨P, interpsBwds r h⟩
   case mty => exact wneBwds r
   case lvl =>
-    intro Py; rcases Py with ⟨j, k, rj, rk, lt⟩ | wney
-    . exact Or.inl ⟨j, k, parsTrans r rj, rk, lt⟩
+    intro Py; rcases Py with ⟨j, k, lt, rj, rk⟩ | wney
+    . exact Or.inl ⟨j, k, lt, parsTrans r rj, rk⟩
     . exact Or.inr (wneBwds r wney)
   case step ih => exact ih r
 
@@ -301,7 +299,7 @@ theorem interpsMtyInv {i P} (h : ⟦ mty ⟧ i ↘ P) : P = wne := by
   unfold Interps at h; exact interpMtyInv h
 
 theorem interpsLvlInv {i b P} (h : ⟦ lvl b ⟧ i ↘ P) :
-  wnf b ∧ P = (λ a ↦ (∃ j k, a ⇒⋆ lof j ∧ b ⇒⋆ lof k ∧ j < k) ∨ wne a) := by
+  wnf b ∧ P = (λ a ↦ (∃ j k, j < k ∧ a ⇒⋆ lof j ∧ b ⇒⋆ lof k) ∨ wne a) := by
   unfold Interps at h; exact interpLvlInv h
 
 theorem interpsStepInv {I T P} (h : ⟦ T ⟧ I ↘ P) :
@@ -365,7 +363,7 @@ theorem adequacy {i a P} (h : ⟦ a ⟧ i ↘ P) : CR P := by
   case lvl =>
     intro _; constructor
     . exact Or.inr
-    . intro Pa; rcases Pa with ⟨_, _, r, _, _⟩ | wnea
+    . intro Pa; rcases Pa with ⟨_, _, _, r, _⟩ | wnea
       . exact ⟨lof _, ⟨⟩, r⟩
       . exact wneWnf wnea
   case step ih => exact ih
