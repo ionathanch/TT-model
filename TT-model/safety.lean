@@ -148,7 +148,7 @@ theorem wtRegularity {Γ} {a A : Term} (h : Γ ⊢ a ∶ A) : ∃ k, Γ ⊢ A �
     let ⟨_, hPi⟩ := ihb
     let ⟨k, hB⟩ := wtfPiInvB hPi
     exact ⟨subst _ k, wtSubst ha hB⟩
-  case mty hj _ => exact ⟨_, Wtf.𝒰 hj⟩
+  case mty hj _ => exact ⟨_, hj⟩
   case lvl k ha _ =>
     let ⟨l, klgt⟩ := exists_gt k
     exact ⟨lof l, Wtf.𝒰 (Wtf.lof (wtWf ha) klgt)⟩

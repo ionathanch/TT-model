@@ -155,8 +155,8 @@ inductive Wtf : (Σ w, idx w) → Prop where
     --------------------------------
     Γ ⊢ app b a ∶ subst (a +: var) B
   | mty {Γ j k} :
-    Γ ⊢ j ∶ lvl k →
-    ---------------
+    Γ ⊢ 𝒰 j ∶ 𝒰 k →
+    -----------------
     Γ ⊢ mty ∶ 𝒰 j
   | exf {Γ A b k} :
     Γ ⊢ A ∶ 𝒰 k →
@@ -223,7 +223,7 @@ theorem wtfInd {w} (wtf : Wtf w) (P : ∀ {w}, Wtf w → Prop)
     (ha : Γ ⊢ a ∶ A),
     P hb → P ha → P (Wtf.app hb ha))
   (mty : ∀ {Γ j k}
-    (h : Γ ⊢ j ∶ lvl k),
+    (h : Γ ⊢ Term.𝒰 j ∶ Term.𝒰 k),
     P h → P (Wtf.mty h))
   (exf : ∀ {Γ A b k}
     (hA : Γ ⊢ A ∶ Term.𝒰 k)
@@ -287,7 +287,7 @@ theorem wtInd {Γ} {a A : Term} (wt : Γ ⊢ a ∶ A) (P : ∀ {Γ} {a A : Term}
     (ha : Γ ⊢ a ∶ A),
     P hb → P ha → P (Wtf.app hb ha))
   (mty : ∀ {Γ j k}
-    (h : Γ ⊢ j ∶ lvl k),
+    (h : Γ ⊢ Term.𝒰 j ∶ Term.𝒰 k),
     P h → P (Wtf.mty h))
   (exf : ∀ {Γ A b k}
     (hA : Γ ⊢ A ∶ Term.𝒰 k)

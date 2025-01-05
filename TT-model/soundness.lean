@@ -55,12 +55,10 @@ theorem soundness {Γ} {a A : Term} (h : Γ ⊢ a ∶ A) : Γ ⊨ a ∶ A := by
       ⟨_, interpsBwds (pars𝒰 rj) (interps𝒰 ltj)⟩⟩
   case mty ih =>
     let ⟨_, _, hj, hi⟩ := ih σ hσ
-    let ⟨j, _, e⟩ := interpsLvlInv hj
-    subst e
-    let ⟨i, ri, lt⟩ := hi
-    exact ⟨j, _,
-      interpsBwds (pars𝒰 ri) (interps𝒰 lt),
-      ⟨_, interpsMty⟩⟩
+    let ⟨j, _, _, e⟩ := interps𝒰Inv hj; subst e
+    let ⟨P, hi⟩ := hi
+    let ⟨_, _, _, e⟩ := interps𝒰Inv hi; subst e
+    exact ⟨j, _, hi, ⟨_, interpsMty⟩⟩
   case exf ihb =>
     let ⟨_, _, hmty, hb⟩ := ihb σ hσ
     rw [interpsMtyInv hmty] at hb

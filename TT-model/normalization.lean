@@ -111,14 +111,10 @@ theorem soundness {w} (h : Wtf w) :
       ⟨_, interpsBwds (pars𝒰 rj) (interps𝒰 lt)⟩⟩
   case mty ih =>
     let ⟨_, _, hj, hi⟩ := ih σ hσ
-    let ⟨_, e⟩ := interpsLvlInv hj
-    rw [e] at hi; cases hi
-    case inr wnei => sorry
-    case inl hi =>
-    let ⟨i, j, lt, ri, rj⟩ := hi
-    exact ⟨j, _,
-      interpsBwds (pars𝒰 ri) (interps𝒰 lt),
-      ⟨_, interpsMty⟩⟩
+    let ⟨j, _, _, e⟩ := interps𝒰Inv hj; subst e
+    let ⟨P, hi⟩ := hi
+    let ⟨_, _, _, e⟩ := interps𝒰Inv hi; subst e
+    exact ⟨j, _, hi, ⟨_, interpsMty⟩⟩
   case exf b _ _ _ ihA ihb =>
     let ⟨k, _, hmty, hb⟩ := ihb σ hσ
     let ⟨_, _, h𝒰, hA⟩ := ihA σ hσ

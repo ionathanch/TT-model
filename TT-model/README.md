@@ -24,17 +24,33 @@ x : A ∈ Γ    Γ ⊢ a : A    A ≈ B
 ---------    ------------------
 Γ ⊢ x : A        Γ ⊢ a : B
 
-    Γ ⊢ A : 𝒰 k            Γ ⊢ Πx : A. B           Γ ⊢ b : Πx: A. B
+    Γ ⊢ A : 𝒰 k          Γ ⊢ Πx : A. B : 𝒰 k      Γ ⊢ b : Πx: A. B
 Γ, x : A ⊢ B : 𝒰 k        Γ, x : A ⊢ b : B            Γ ⊢ a : A
 --------------------    ----------------------    -------------------
 Γ ⊢ Πx : A. B : 𝒰 k     Γ ⊢ λx. b : Πx : A. B     Γ ⊢ b a : B{x ↦ a}
 
-Γ ⊢ k : Level< ℓ    Γ ⊢ A : 𝒰 k    Γ ⊢ b : ⊥
+ Γ ⊢ 𝒰 k : 𝒰 ℓ     Γ ⊢ A : 𝒰 k    Γ ⊢ b : ⊥
 ----------------    -------------------------
   Γ ⊢ ⊥ : 𝒰 k            Γ ⊢ abs b : A
 
 --------------------    + reflexivity,  symmetry,
 (λx. b) a ≈ b{x ↦ a}     transitivity, congruence
+```
+
+In the rules for functions and the empty type,
+well-typedness of their types are directly included as premises
+to strengthen the induction hypotheses when proving the fundamental theorem.
+The following simpler typing rules are derivable.
+Note that the function rule still requires well-typedness of the codomain type
+to ensure that its universe level matches that of the domain type,
+since the existence of suprema of levels is not imposed.
+
+```
+    Γ ⊢ A : 𝒰 k
+ Γ, x : A ⊢ B : 𝒰 k
+  Γ, x : A ⊢ b : B        Γ ⊢ k : Level< ℓ
+----------------------    ----------------
+Γ ⊢ λx. b : Πx : A. B       Γ ⊢ ⊥ : 𝒰 k
 ```
 
 Now here are the typing rules involving universes and levels,

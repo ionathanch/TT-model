@@ -158,6 +158,10 @@ theorem wneApp {b a} (wneb : wne b) (wnfa : wnf a) : wne (app b a) :=
   let ⟨a', nfa, ra⟩ := wnfa
   ⟨app b' a', ⟨neb, nfa⟩, parsApp rb ra⟩
 
+theorem wnf𝒰 {b} (wnfb : wnf b) : wnf (𝒰 b) :=
+  let ⟨c, nfc, rc⟩ := wnfb
+  ⟨𝒰 c, nfc, pars𝒰 rc⟩
+
 theorem wneExf {b} (wneb : wne b) : wne (exf b) :=
   let ⟨c, nfc, rc⟩ := wneb
   ⟨exf c, nfc, parsExf rc⟩
