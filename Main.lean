@@ -12,3 +12,8 @@ import «TT-model».canonicity
 
 def main : IO Unit :=
   pure ()
+
+#print axioms wtSafety
+#print axioms consistency
+#print axioms canon𝒰
+#print axioms canonLvl
