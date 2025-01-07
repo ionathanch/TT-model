@@ -63,14 +63,15 @@ theorem soundness {Γ} {a A : Term} (h : Γ ⊢ a ∶ A) : Γ ⊨ a ∶ A := by
     let ⟨_, _, hmty, hb⟩ := ihb σ hσ
     rw [interpsMtyInv hmty] at hb
     contradiction
-  case lvl k _ iha =>
+  case lvl iha ihj =>
+    let ⟨_, _, hj, hi⟩ := ihj σ hσ
+    let ⟨j, _, _, e⟩ := interps𝒰Inv hj; subst e
+    let ⟨P, hi⟩ := hi
+    let ⟨_, _, _, e⟩ := interps𝒰Inv hi; subst e
     let ⟨_, P, hlvl, ha⟩ := iha σ hσ
-    let ⟨ℓ, lt⟩ := exists_gt k
-    refine ⟨ℓ, _, interps𝒰 lt, ?_⟩
-    let ⟨_, _, e⟩ := interpsLvlInv hlvl
-    subst e
+    let ⟨_, _, e⟩ := interpsLvlInv hlvl; subst e
     let ⟨k, r, _⟩ := ha
-    exact ⟨_, interpsBwds (parsLvl r) interpsLvl⟩
+    refine ⟨_, _, hi, ⟨_, interpsBwds (parsLvl r) interpsLvl⟩⟩
   case lof j k _ lt =>
     exact ⟨j, _, interpsLvl, ⟨_, Pars.refl _, lt⟩⟩
   case trans j k _ _ ihj ihk =>

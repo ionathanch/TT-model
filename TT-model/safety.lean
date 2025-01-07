@@ -31,7 +31,7 @@ theorem wtRename {ξ : ℕ → ℕ} {Γ Δ} {a A : Term}
   case app ihb iha => rw [← renameDist]; exact Wtf.app (ihb hξ hΔ) (iha hξ hΔ)
   case mty ih => exact Wtf.mty (ih hξ hΔ)
   case exf ihb ihA => exact Wtf.exf (ihb hξ hΔ) (ihA hξ hΔ)
-  case lvl ih => exact Wtf.lvl (ih hξ hΔ)
+  case lvl iha ihj => exact Wtf.lvl (iha hξ hΔ) (ihj hξ hΔ)
   case lof => constructor <;> assumption
   case trans ihi ihj => exact Wtf.trans (ihi hξ hΔ) (ihj hξ hΔ)
   case conv e _ _ iha ihA =>
@@ -90,7 +90,7 @@ theorem wtMorph {σ : ℕ → Term} {Γ Δ} {a A : Term}
   case app ihb iha => rw [← substDist]; exact Wtf.app (ihb hσ hΔ) (iha hσ hΔ)
   case mty ih => exact Wtf.mty (ih hσ hΔ)
   case exf ihb ihA => exact Wtf.exf (ihb hσ hΔ) (ihA hσ hΔ)
-  case lvl ih => exact Wtf.lvl (ih hσ hΔ)
+  case lvl iha ihj => exact Wtf.lvl (iha hσ hΔ) (ihj hσ hΔ)
   case lof => constructor <;> assumption
   case trans ihi ihj => exact Wtf.trans (ihi hσ hΔ) (ihj hσ hΔ)
   case conv e _ _ iha ihA =>
@@ -149,12 +149,13 @@ theorem wtRegularity {Γ} {a A : Term} (h : Γ ⊢ a ∶ A) : ∃ k, Γ ⊢ A �
     let ⟨k, hB⟩ := wtfPiInvB hPi
     exact ⟨subst _ k, wtSubst ha hB⟩
   case mty hj _ => exact ⟨_, hj⟩
-  case lvl k ha _ =>
-    let ⟨l, klgt⟩ := exists_gt k
-    exact ⟨lof l, Wtf.𝒰 (Wtf.lof (wtWf ha) klgt)⟩
+  case lvl hj _ _ => exact ⟨_, hj⟩
   case lof k wf _ =>
     let ⟨l, klgt⟩ := exists_gt k
-    exact ⟨lof l, Wtf.lvl (Wtf.lof wf klgt)⟩
+    let ⟨m, lmgt⟩ := exists_gt l
+    refine ⟨lof l, ?_⟩
+    apply Wtf.lvl (Wtf.lof wf klgt)
+    apply Wtf.𝒰 (Wtf.lof wf lmgt)
   case sub ih _ =>
     let ⟨_, ihk⟩ := ih
     let ⟨l, _, hk, _⟩ := wtfLvlInv ihk
@@ -192,7 +193,7 @@ theorem wtPar {Γ} {a b A : Term} (r : a ⇒ b) (h : Γ ⊢ a ∶ A) : Γ ⊢ b 
         (Wtf.app (ihb rb) (iha ra)) hBa
   case mty ih => cases r; exact Wtf.mty (ih (parRefl _))
   case exf hA _ _ ihb => cases r with | exf r' => exact Wtf.exf hA (ihb r')
-  case lvl ih => cases r with | lvl r' => exact Wtf.lvl (ih r')
+  case lvl hj iha _ => cases r with | lvl r' => exact Wtf.lvl (iha r') hj
   case lof => cases r; constructor <;> assumption
   case trans hj ihi _ => exact Wtf.trans (ihi r) hj
   case conv e _ hB iha _ => exact Wtf.conv e (iha r) hB

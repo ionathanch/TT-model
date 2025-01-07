@@ -111,10 +111,10 @@ theorem soundness {w} (h : Wtf w) :
       ⟨_, interpsBwds (pars𝒰 rj) (interps𝒰 lt)⟩⟩
   case mty ih =>
     let ⟨_, _, hj, hi⟩ := ih σ hσ
-    let ⟨j, _, _, e⟩ := interps𝒰Inv hj; subst e
+    let ⟨_, _, _, e⟩ := interps𝒰Inv hj; subst e
     let ⟨P, hi⟩ := hi
     let ⟨_, _, _, e⟩ := interps𝒰Inv hi; subst e
-    exact ⟨j, _, hi, ⟨_, interpsMty⟩⟩
+    exact ⟨_, _, hi, ⟨_, interpsMty⟩⟩
   case exf b _ _ _ ihA ihb =>
     let ⟨k, _, hmty, hb⟩ := ihb σ hσ
     let ⟨_, _, h𝒰, hA⟩ := ihA σ hσ
@@ -123,11 +123,14 @@ theorem soundness {w} (h : Wtf w) :
     let ⟨CRne, _⟩ := adequacy hA (exf (subst σ b))
     rw [interpsMtyInv hmty] at hb
     refine ⟨_, P, hA, CRne (wneExf hb)⟩
-  case lvl k _ iha =>
+  case lvl iha ihj =>
+    let ⟨_, _, hj, hi⟩ := ihj σ hσ
+    let ⟨j, _, _, e⟩ := interps𝒰Inv hj; subst e
+    let ⟨P, hi⟩ := hi
+    let ⟨_, _, _, e⟩ := interps𝒰Inv hi; subst e
     let ⟨_, P, hlvl, ha⟩ := iha σ hσ
-    let ⟨ℓ, lt⟩ := exists_gt k
     let ⟨_, e⟩ := interpsLvlInv hlvl
-    refine ⟨ℓ, _, interps𝒰 lt, ?_⟩
+    refine ⟨_, _, hi, ?_⟩
     rw [e] at ha; rcases ha with ⟨k, _, _, r, _⟩ | wnea
     case inl ha => exact ⟨_, interpsBwds (parsLvl r) (interpsLvl ⟨⟩)⟩
     case inr =>

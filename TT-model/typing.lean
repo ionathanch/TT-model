@@ -163,10 +163,11 @@ inductive Wtf : (Σ w, idx w) → Prop where
     Γ ⊢ b ∶ mty →
     -------------
     Γ ⊢ exf b ∶ A
-  | lvl {Γ a b k} :
+  | lvl {Γ a b j k} :
     Γ ⊢ a ∶ lvl b →
+    Γ ⊢ 𝒰 j ∶ 𝒰 k →
     ----------------------
-    Γ ⊢ lvl a ∶ 𝒰 (lof k)
+    Γ ⊢ lvl a ∶ 𝒰 j
   | lof {Γ j k} :
     ⊢ Γ →
     j < k →
@@ -229,9 +230,10 @@ theorem wtfInd {w} (wtf : Wtf w) (P : ∀ {w}, Wtf w → Prop)
     (hA : Γ ⊢ A ∶ Term.𝒰 k)
     (hb : Γ ⊢ b ∶ Term.mty),
     P hA → P hb → P (Wtf.exf hA hb))
-  (lvl : ∀ {Γ a b k}
-    (h : Γ ⊢ a ∶ lvl b),
-    P h → P (Wtf.lvl (k := k) h))
+  (lvl : ∀ {Γ a b j k}
+    (ha : Γ ⊢ a ∶ lvl b)
+    (hj : Γ ⊢ Term.𝒰 j ∶ Term.𝒰 k),
+    P ha → P hj → P (Wtf.lvl ha hj))
   (lof : ∀ {Γ j k}
     (wf : ⊢ Γ)
     (lt : j < k),
@@ -260,7 +262,7 @@ theorem wtfInd {w} (wtf : Wtf w) (P : ∀ {w}, Wtf w → Prop)
   case app hb ha ihb iha => exact app hb ha ihb iha
   case mty h ih => exact mty h ih
   case exf hA hb ihA ihb => exact exf hA hb ihA ihb
-  case lvl h ih => exact lvl h ih
+  case lvl ha hj iha ihj => exact lvl ha hj iha ihj
   case lof wf lt ih => exact lof wf lt ih
   case trans hi hj ihi ihj => exact trans hi hj ihi ihj
   case conv e ha hB iha ihB => exact conv e ha hB iha ihB
@@ -293,9 +295,10 @@ theorem wtInd {Γ} {a A : Term} (wt : Γ ⊢ a ∶ A) (P : ∀ {Γ} {a A : Term}
     (hA : Γ ⊢ A ∶ Term.𝒰 k)
     (hb : Γ ⊢ b ∶ Term.mty),
     P hA → P hb → P (Wtf.exf hA hb))
-  (lvl : ∀ {Γ a b k}
-    (h : Γ ⊢ a ∶ lvl b),
-    P h → P (Wtf.lvl (k := k) h))
+  (lvl : ∀ {Γ a b j k}
+    (ha : Γ ⊢ a ∶ lvl b)
+    (hj : Γ ⊢ Term.𝒰 j ∶ Term.𝒰 k),
+    P ha → P hj → P (Wtf.lvl ha hj))
   (lof : ∀ {Γ j k}
     (wf : ⊢ Γ)
     (lt : j < k),
@@ -326,7 +329,7 @@ theorem wtInd {Γ} {a A : Term} (wt : Γ ⊢ a ∶ A) (P : ∀ {Γ} {a A : Term}
   case app hb ha ihb iha => exact app hb ha ihb iha
   case mty h ih => exact mty h ih
   case exf hA hb ihA ihb => exact exf hA hb ihA ihb
-  case lvl h ih => exact lvl h ih
+  case lvl ha hj iha ihj => exact lvl ha hj iha ihj
   case lof wf lt _ => exact lof wf lt
   case trans hi hj ihi ihj => exact trans hi hj ihi ihj
   case conv e ha hB iha ihB => exact conv e ha hB iha ihB

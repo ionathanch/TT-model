@@ -41,7 +41,7 @@ In the rules for functions and the empty type,
 well-typedness of their types are directly included as premises
 to strengthen the induction hypotheses when proving the fundamental theorem.
 The following simpler typing rules are derivable.
-Note that the function rule still requires well-typedness of the codomain type
+The function rule still requires well-typedness of the codomain type
 to ensure that its universe level matches that of the domain type,
 since the existence of suprema of levels is not imposed.
 
@@ -61,9 +61,10 @@ and `Level< ℓ` represents bounded levels strictly smaller than `ℓ`.
 Universes `𝒰` then take a level expression `ℓ` instead of just a natural.
 
 ```
-Γ ⊢ k : Level< ℓ        Γ ⊢ k : Level< ℓ                ⊢ Γ    i < j 
-────────────────    ─────────────────────────    ──────────────────────────
-Γ ⊢ 𝒰 k : 𝒰 ℓ      Γ ⊢ Level< k : 𝒰 (lvl j)    Γ ⊢ lvl i : Level< (lvl j)
+                      Γ ⊢ k₁ : Level< ℓ₁
+Γ ⊢ k : Level< ℓ      Γ ⊢ 𝒰 k₂ : 𝒰 ℓ₂            ⊢ Γ    i < j 
+────────────────    ─────────────────────    ──────────────────────────
+Γ ⊢ 𝒰 k : 𝒰 ℓ      Γ ⊢ Level< k₁ : 𝒰 k₂    Γ ⊢ lvl i : Level< (lvl j)
 
 Γ ⊢ k₁ : Level< k₂    Γ ⊢ k₂ : Level< k₃    Γ ⊢ A : 𝒰 k    Γ ⊢ k : Level< ℓ
 ────────────────────────────────────────    ────────────────────────────────
@@ -88,6 +89,11 @@ function types aren't contravariant in the domain with respect to levels.
 However, cumulativity allows eta-expanding `f`, namely that
 `(λx. f x)` *can* be assigned type `Πx : 𝒰 (lvl 6). B`,
 since the variable `x : 𝒰 (lvl 6)` can be assigned type `𝒰 (lvl 9)` to match `f`.
+
+Similar to the rule for the empty type,
+the rule for `Level<` types includes well-typedness of its universe as a premise.
+The corresponding simpler typing rule with the premise
+`Γ ⊢ k₂ : Level< ℓ₂` is similarly derivable.
 
 ## Logical Relation
 
