@@ -5,6 +5,50 @@ open Term
 set_option autoImplicit false
 set_option pp.fieldNotation false
 
+theorem wfMty : ⊢ ⬝ ∷ mty := by
+  apply Wtf.cons
+  apply Wtf.nil
+  apply Wtf.mty
+  apply Wtf.𝒰
+  apply Wtf.lof (j := 69) (k := 70)
+  apply Wtf.nil
+  simp
+
+theorem wtfMty : ⬝ ∷ mty ⊢ var 0 ∶ mty := by
+  apply Wtf.var
+  . exact wfMty
+  . apply inHere; rfl
+
+-- in an inconsistent context b : ⊥, absurd b : Level< (absurd b)
+theorem loopLvl : ⬝ ∷ mty ⊢ exf (var 0) ∶ lvl (exf (var 0)) := by
+  apply Wtf.exf
+  . apply Wtf.lvl (k := 69)
+    apply Wtf.exf
+    apply Wtf.lvl (k := 69)
+    apply Wtf.lof (j := 69) (k := 70)
+    exact wfMty
+    simp; simp
+    exact wtfMty
+  . exact wtfMty
+
+-- loop : (b : ⊥) → 𝒰 (absurd b)
+-- loop ≔ λ b. 𝒰 (absurd b)
+-- in an inconsistent context b : ⊥, 𝒰 (absurd b) : 𝒰 (absurd b)
+theorem loop : ⬝ ⊢ abs (𝒰 (exf (var 0))) ∶ pi mty (𝒰 (exf (var 0))) := by
+  apply Wtf.abs
+  apply Wtf.pi
+  apply Wtf.mty
+  apply Wtf.𝒰
+  apply Wtf.lof (j := 69) (k := 70)
+  apply Wtf.nil; simp
+  apply Wtf.𝒰
+  apply Wtf.exf
+  apply Wtf.lvl (k := 69)
+  apply Wtf.lof (k := 70)
+  exact wfMty; simp
+  exact wtfMty
+  apply Wtf.𝒰 loopLvl
+
 @[simp]
 def idType k := (pi (lvl (lof k)) (pi (𝒰 (var 0)) (pi (var 0) (var 1))))
 
