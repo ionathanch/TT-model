@@ -16,7 +16,7 @@ inductive Interp (i : lc.L) (I : ∀ j, j < i → Term → Prop) : Term → (Ter
     Interp i I (pi a b) (λ f ↦ ∀ x Pb, Pa x → Pf x Pb → Pb (app f x))
   | 𝒰 j (lt : j < i) : Interp i I (𝒰 (lof j)) (I j lt)
   | mty : Interp i I mty wne
-  | lvl b : wnf b → Interp i I (lvl b)
+  | lvl b : nf b → Interp i I (lvl b)
     (λ a ↦ (∃ j k, j < k ∧ a ⇒⋆ lof j ∧ b ⇒⋆ lof k) ∨ wne a)
   | step a b P :
     a ⇒ b →
@@ -104,12 +104,12 @@ theorem interpLvlInv {i I b P} (h : ⟦ lvl b ⟧ i , I ↘ P) :
   generalize e : lvl b = c at h
   induction h generalizing b
   case ne => subst e; contradiction
-  case lvl wnfb => injection e with e; subst e; exact ⟨wnfb, rfl⟩
+  case lvl nfb => injection e with e; subst e; exact ⟨nfWnf nfb, rfl⟩
   case step r _ ih =>
     subst e; let (Par.lvl r₁) := r
-    let ⟨wnfc, e⟩ := ih rfl; subst e
+    let ⟨nfc, e⟩ := ih rfl; subst e
     rw [interpLvlEq r₁]
-    exact ⟨wnfBwds (parPars r₁) wnfc, rfl⟩
+    exact ⟨wnfBwds (parPars r₁) nfc, rfl⟩
   all_goals contradiction
 
 theorem interpStepInv {i I T P} (h : ⟦ T ⟧ i , I ↘ P) :
@@ -153,7 +153,7 @@ theorem interps𝒰 {i j} (lt : j < i) :
 theorem interpsMty {i} : ⟦ mty ⟧ i ↘ wne := by
   unfold Interps at *; exact Interp.mty
 
-theorem interpsLvl {i b} (wnfb : wnf b) :
+theorem interpsLvl {i b} (nfb : nf b) :
   ⟦ lvl b ⟧ i ↘ (λ a ↦ (∃ j k, j < k ∧ a ⇒⋆ lof j ∧ b ⇒⋆ lof k) ∨ wne a) := by
   unfold Interps at *; constructor; assumption
 
@@ -169,8 +169,8 @@ theorem interpFwd {i I a b P} (r : a ⇒ b) (h : ⟦ a ⟧ i , I ↘ P) : ⟦ b 
   case ne nea => constructor; exact nePar r nea
   case 𝒰 => cases r; case 𝒰 r => cases r; constructor
   case mty => cases r; exact Interp.mty
-  case lvl => cases r; case lvl wnfb _ r =>
-    rw [interpLvlEq r]; constructor; exact wnfFwds (parPars r) wnfb
+  case lvl => cases r; case lvl nfb _ r =>
+    rw [interpLvlEq r]; constructor; exact nfPars (parPars r) nfb
   case step r' _ ih =>
     let ⟨c, rc, rc'⟩ := diamond r r'
     constructor <;> apply_rules
@@ -325,7 +325,7 @@ theorem interpWnf {i I a P}
   case ne a nea => exact wneWnf (neWne nea)
   case 𝒰 | mty => exact nfWnf ⟨⟩
   case step r _ wnfb => exact wnfBwds (parPars r) wnfb
-  case lvl wnfb => exact wnfLvl wnfb
+  case lvl nfb => exact wnfLvl (nfWnf nfb)
   case pi ha hPf _ wnfa wnfb =>
     let ⟨CRne, _⟩ := adq ha (var 0)
     let ⟨Pb, PfPb⟩ := hPf (var 0) (CRne (neWne ⟨⟩))

@@ -99,11 +99,11 @@ theorem soundness {w} (h : Wtf w) :
     let ⟨_, hB⟩ := hB (subst σ _) ha
     subst e; rw [← substDist]
     exact ⟨_, _, hB, hb _ _ ha hB⟩
-  case 𝒰 ih =>
+  case 𝒰 j k _ ih =>
     let ⟨_, P, hk, hj⟩ := ih σ hσ
     let ⟨wnfk, e⟩ := interpsLvlInv hk; subst e
     rcases hj with ⟨j, k, lt, rj, rk⟩ | wnej
-    case inr => sorry
+    case inr ℓ => sorry
     case inl =>
     let ⟨ℓ, ltk⟩ := exists_gt k
     exact ⟨ℓ, _,
@@ -129,19 +129,22 @@ theorem soundness {w} (h : Wtf w) :
     let ⟨_, e⟩ := interpsLvlInv hlvl
     refine ⟨ℓ, _, interps𝒰 lt, ?_⟩
     rw [e] at ha; rcases ha with ⟨k, _, _, r, _⟩ | wnea
-    case inl ha => exact ⟨_, interpsBwds (parsLvl r) (interpsLvl wnfLof)⟩
-    case inr => exact ⟨_, interpsLvl (wneWnf wnea)⟩
+    case inl ha => exact ⟨_, interpsBwds (parsLvl r) (interpsLvl ⟨⟩)⟩
+    case inr =>
+      let ⟨_, nea, r⟩ := wnea
+      exact ⟨_, interpsBwds (parsLvl r) (interpsLvl (neNf nea))⟩
   case lof j k _ lt ih =>
     refine ⟨j, _,
-      interpsLvl wnfLof,
+      interpsLvl ⟨⟩,
       Or.inl ⟨_, k, lt, Pars.refl _, Pars.refl _⟩⟩
   case trans i j k _ _ ihj ihk =>
     let ⟨ℓ, Pj, hk, hPj⟩ := ihk σ hσ
     let ⟨wnfk, ePj⟩ := interpsLvlInv hk; subst ePj
+    let ⟨_, nfk, r⟩ := wnfk
     let ⟨_, Pi, hj, hPi⟩ := ihj σ hσ
     let ⟨_, ePi⟩ := interpsLvlInv hj; subst ePi
     rcases hPi with ⟨i', j', ltij, ri', rj'⟩ | wnei
-    case inr => exact ⟨ℓ, ⟨_, interpsLvl wnfk, Or.inr wnei⟩⟩
+    case inr => exact ⟨ℓ, _, interpsBwds (parsLvl r) (interpsLvl nfk), Or.inr wnei⟩
     case inl =>
     rcases hPj with ⟨j'', k', ltjk, rj'', rk'⟩ | wnej
     case inr => cases wneLof rj' wnej
@@ -150,8 +153,11 @@ theorem soundness {w} (h : Wtf w) :
     have e' := parsLofInv rlofj'
     have e'' := parsLofInv rlofj''
     subst e'; cases e''
-    exists ℓ
-    refine ⟨_, interpsLvl wnfk, Or.inl ⟨i', k', ?_, ri', rk'⟩⟩
+    let ⟨lofk, rlofk', rlofk''⟩ := confluence rk' r
+    rw [parsLofInv rlofk'] at rlofk''
+    refine ⟨ℓ, _,
+      interpsBwds (parsLvl r) (interpsLvl nfk),
+      Or.inl ⟨i', k', ?_, ri', rlofk''⟩⟩
     apply IsTrans.trans; repeat assumption
   case conv e _ _ iha _ =>
     let ⟨_, _, hA, ha⟩ := iha σ hσ
