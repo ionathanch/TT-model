@@ -1,4 +1,4 @@
-import «TT-model».typing
+import «src».typing
 
 open Term
 
@@ -22,13 +22,21 @@ theorem wtfMty : ⬝ ∷ mty ⊢ var 0 ∶ mty := by
 -- in an inconsistent context b : ⊥, absurd b : Level< (absurd b)
 theorem loopLvl : ⬝ ∷ mty ⊢ exf (var 0) ∶ lvl (exf (var 0)) := by
   apply Wtf.exf
-  . apply Wtf.lvl (k := 69)
+  . apply Wtf.lvl (j := lof 69)
     apply Wtf.exf
-    apply Wtf.lvl (k := 69)
+    apply Wtf.lvl (j := lof 69)
     apply Wtf.lof (j := 69) (k := 70)
     exact wfMty
     simp; simp
+    apply Wtf.𝒰 (j := lof 69) (k := lof 70)
+    apply Wtf.lof
+    exact wfMty
+    simp
     exact wtfMty
+    apply Wtf.𝒰 (j := lof 69) (k := lof 70)
+    apply Wtf.lof
+    exact wfMty
+    simp
   . exact wtfMty
 
 -- loop : (b : ⊥) → 𝒰 (absurd b)
@@ -43,9 +51,13 @@ theorem loop : ⬝ ⊢ abs (𝒰 (exf (var 0))) ∶ pi mty (𝒰 (exf (var 0))) 
   apply Wtf.nil; simp
   apply Wtf.𝒰
   apply Wtf.exf
-  apply Wtf.lvl (k := 69)
+  apply Wtf.lvl (j := lof 69)
   apply Wtf.lof (k := 70)
   exact wfMty; simp
+  apply Wtf.𝒰 (k := lof 70)
+  apply Wtf.lof
+  apply wfMty
+  simp
   exact wtfMty
   apply Wtf.𝒰 loopLvl
 
@@ -57,7 +69,9 @@ def idType k := (pi (lvl (lof k)) (pi (𝒰 (var 0)) (pi (var 0) (var 1))))
 theorem idpoly : ⬝ ⊢ (abs (abs (abs (var 0)))) ∶ idType 69 := by
   apply Wtf.abs (k := lof 69)
   . apply Wtf.pi
-    . apply Wtf.lvl; apply Wtf.lof (k := 70); sorry; simp
+    . apply Wtf.lvl
+      . apply Wtf.lof (k := 70) Wtf.nil; simp
+      . apply Wtf.𝒰 (k := lof 70) (Wtf.lof Wtf.nil ?_); simp
     . apply Wtf.pi
       . apply Wtf.𝒰
         apply Wtf.var
@@ -126,7 +140,9 @@ theorem idid : ⬝ ⊢ (abs (app (app ((app (var 0) (lof 3))) (idType 3)) (abs (
   apply Wtf.abs (k := lof 4)
   . apply Wtf.pi
     . apply Wtf.pi
-      . apply Wtf.lvl; apply @Wtf.lof _ _ _ 5; sorry; simp
+      . apply Wtf.lvl
+        . apply Wtf.lof (k := 70) Wtf.nil; simp
+        . apply Wtf.𝒰 (k := lof 70) (Wtf.lof Wtf.nil ?_); simp
       . apply Wtf.pi
         . apply Wtf.𝒰
           apply Wtf.var
@@ -150,7 +166,9 @@ theorem idid : ⬝ ⊢ (abs (app (app ((app (var 0) (lof 3))) (idType 3)) (abs (
     . apply Wtf.sub
       . apply @Wtf.lof _ _ 3; sorry; simp
       . apply Wtf.pi
-        . apply Wtf.lvl; apply @Wtf.lof _ _ _ 4; sorry; simp
+        . apply Wtf.lvl
+          . apply Wtf.lof (k := 4); sorry; simp
+          . apply Wtf.𝒰 (k := lof 4); apply Wtf.lof; sorry; simp
         . apply Wtf.pi
           . apply Wtf.𝒰
             apply Wtf.var
@@ -181,7 +199,8 @@ theorem idid : ⬝ ⊢ (abs (app (app ((app (var 0) (lof 3))) (idType 3)) (abs (
         . simp; exact ⟨rfl, rfl⟩
       . apply Wtf.pi
         . apply Wtf.lvl
-          apply @Wtf.lof _ _ _ 4; sorry; simp
+          . apply Wtf.lof (k := 4); sorry; simp
+          . apply Wtf.𝒰 (k := lof 4); apply Wtf.lof; sorry; simp
         . apply Wtf.pi
           . apply Wtf.𝒰
             apply Wtf.var
@@ -205,7 +224,9 @@ theorem idid : ⬝ ⊢ (abs (app (app ((app (var 0) (lof 3))) (idType 3)) (abs (
       . simp; exact ⟨rfl, rfl⟩
     . apply Wtf.abs (k := lof 3)
       . apply Wtf.pi
-        . apply Wtf.lvl; apply @Wtf.lof _ _ _ 4; sorry; simp
+        . apply Wtf.lvl
+          . apply Wtf.lof (k := 4); sorry; simp
+          . apply Wtf.𝒰 (k := lof 4); apply Wtf.lof; sorry; simp
         . apply Wtf.pi
           . apply Wtf.𝒰
             apply Wtf.var

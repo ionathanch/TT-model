@@ -1,5 +1,5 @@
-import «TT-model».typing
-import «TT-model».semantics
+import «src».typing
+import «src».semantics
 
 open Term
 

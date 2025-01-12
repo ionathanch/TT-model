@@ -1,4 +1,4 @@
-import «TT-model».level
+import «src».level
 
 open Nat
 

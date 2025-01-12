@@ -1,5 +1,5 @@
-import «TT-model».typing
-import «TT-model».candidates
+import «src».typing
+import «src».candidates
 
 open Term
 open Nat

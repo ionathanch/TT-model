@@ -1,5 +1,5 @@
-import «TT-model».safety
-import «TT-model».normalization
+import «src».safety
+import «src».normalization
 
 open Term
 open Nat

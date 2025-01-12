@@ -1,4 +1,4 @@
-import «TT-model».reduction
+import «src».reduction
 
 open Nat
 open Term

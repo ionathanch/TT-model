@@ -1,5 +1,5 @@
-import «TT-model».tactics
-import «TT-model».syntactics
+import «src».tactics
+import «src».syntactics
 
 open Term
 

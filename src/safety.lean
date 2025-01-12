@@ -1,4 +1,4 @@
-import «TT-model».typing
+import «src».typing
 
 open Nat
 open Term
