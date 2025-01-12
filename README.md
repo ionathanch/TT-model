@@ -1,139 +1,238 @@
-# Mechanization of consistency
+# Bounded First-Class Universe Levels
 
-This is a mechanization of a minimal type theory with universes,
+This is a Lean mechanization of a type theory with first-class universe levels,
 based on @yiyunliu's [mltt-consistency](https://github.com/yiyunliu/mltt-consistency)
 proof written in Rocq.
-It has been checked with Agda 2.6.4.3 using agda-stdlib 2.0.
-The top-level file can be checked by `agda consistency.agda`.
+This mechanization of the logical relation takes advantage
+of Lean's impredicative Prop in place of using induction–recursion.
+It has been checked with Lean 4.13.0-rc3 and requires Mathlib for some typeclasses.
+The development can be checked and built using `lake build`.
 
 ## Type Theory
 
 The object theory is a type theory with universes à la Russell,
-dependent functions, an empty type, booleans, equality types, and untyped conversion.
-The below is an overview of the typing and conversion rules with variable names,
-although the mechanization uses de Bruijn indexing and simultaneous substitution.
+first-class bounded levels, simple cumulativity, dependent functions, an empty type,
+and untyped conversion.
+First, the below is an overview of the last three features,
+which should appear unsurprising compared to what was mechanized in Agda.
+Again, the overview uses variable names, while the mechanization uses de Bruijn indexing.
 
 ```
                 Γ ⊢ B : 𝒰 k
-x : A ∈ Γ    Γ ⊢ a : A    A ≈ B       ⊢ Γ    j < k
----------    ------------------    -------------------
-Γ ⊢ x : A        Γ ⊢ a : B         Γ ⊢ 𝒰 j : Γ ⊢ 𝒰 k
+x : A ∈ Γ    Γ ⊢ a : A    A ≈ B
+─────────    ──────────────────
+Γ ⊢ x : A        Γ ⊢ a : B
 
-    Γ ⊢ A : 𝒰 k            Γ ⊢ Πx : A. B           Γ ⊢ b : Πx: A. B
+    Γ ⊢ A : 𝒰 k          Γ ⊢ Πx : A. B : 𝒰 k      Γ ⊢ b : Πx: A. B
 Γ, x : A ⊢ B : 𝒰 k        Γ, x : A ⊢ b : B            Γ ⊢ a : A
---------------------    ----------------------    -------------------
+────────────────────    ──────────────────────    ───────────────────
 Γ ⊢ Πx : A. B : 𝒰 k     Γ ⊢ λx. b : Πx : A. B     Γ ⊢ b a : B{x ↦ a}
 
-    ⊢ Γ         Γ ⊢ A : 𝒰 k    Γ ⊢ b : ⊥
-------------    -------------------------
-Γ ⊢ ⊥ : 𝒰 k          Γ ⊢ abs b : A
-                                                           Γ ⊢ p : eq A a b
-     Γ ⊢ A : 𝒰 k                                  Γ, y : A, q : eq A a y ⊢ B : 𝒰 k
-Γ ⊢ a : A    Γ ⊢ b : A         Γ ⊢ a : A              Γ ⊢ d : B{y ↦ a, q ↦ refl}
-----------------------    --------------------    ----------------------------------
-  Γ ⊢ eq A a b : 𝒰 k      Γ ⊢ refl : eq A a a        Γ ⊢ J d p : B{y ↦ b, q ↦ p}
+ Γ ⊢ 𝒰 k : 𝒰 ℓ     Γ ⊢ A : 𝒰 k    Γ ⊢ b : ⊥
+────────────────    ─────────────────────────
+  Γ ⊢ ⊥ : 𝒰 k            Γ ⊢ abs b : A
 
-                                                   Γ, x : 𝔹 ⊢ A : 𝒰 k
-                                                   Γ ⊢ b : 𝔹
-                                                   Γ ⊢ a : A{x ↦ true}
-    ⊢ Γ             ⊢ Γ              ⊢ Γ           Γ ⊢ c : A{x ↦ false}
-------------    ------------    -------------    -----------------------
-Γ ⊢ 𝔹 : 𝒰 k    Γ ⊢ true : 𝔹    Γ ⊢ false : 𝔹    Γ ⊢ if b a c : A{x ↦ b}
-
---------------------    ------------    ---------------    ----------------
-(λx. b) a ≈ b{x ↦ a}    J d refl ≈ d    if true a c ≃ a    if false a c ≃ c
-
-+ reflexivity,  symmetry,
-  transitivity, congruence
+────────────────────    + reflexivity,  symmetry,
+(λx. b) a ≈ b{x ↦ a}     transitivity, congruence
 ```
+
+In the rules for functions and the empty type,
+well-typedness of their types are directly included as premises
+to strengthen the induction hypotheses when proving the fundamental theorem.
+The following simpler typing rules are derivable.
+The function rule still requires well-typedness of the codomain type
+to ensure that its universe level matches that of the domain type,
+since the existence of suprema of levels is not imposed.
+
+```
+    Γ ⊢ A : 𝒰 k
+ Γ, x : A ⊢ B : 𝒰 k
+  Γ, x : A ⊢ b : B        Γ ⊢ k : Level< ℓ
+──────────────────────    ────────────────
+Γ ⊢ λx. b : Πx : A. B       Γ ⊢ ⊥ : 𝒰 k
+```
+
+Now here are the typing rules involving universes and levels,
+which rely on a meta-level notion of elements `i`, `j` with an order `· < ·`.
+These elements embed into object-level universe levels via the constructor `lvl`.
+The metavariables `k`, `ℓ` represent syntactic level expressions,
+and `Level< ℓ` represents bounded levels strictly smaller than `ℓ`.
+Universes `𝒰` then take a level expression `ℓ` instead of just a natural.
+
+```
+                      Γ ⊢ k₁ : Level< ℓ₁
+Γ ⊢ k : Level< ℓ      Γ ⊢ 𝒰 k₂ : 𝒰 ℓ₂            ⊢ Γ    i < j 
+────────────────    ─────────────────────    ──────────────────────────
+Γ ⊢ 𝒰 k : 𝒰 ℓ      Γ ⊢ Level< k₁ : 𝒰 k₂    Γ ⊢ lvl i : Level< (lvl j)
+
+Γ ⊢ k₁ : Level< k₂    Γ ⊢ k₂ : Level< k₃    Γ ⊢ A : 𝒰 k    Γ ⊢ k : Level< ℓ
+────────────────────────────────────────    ────────────────────────────────
+           Γ ⊢ k₁ : Level< k₃                         Γ ⊢ A : 𝒰 ℓ
+```
+
+Universes, of course, continue to live in strictly larger universes.
+Any `Level<` type, on the other hand, can live in any universe —
+they don't stand for universes themselves,
+but the set of labels pointing to each universe,
+and so can be as big or as small as you like.
+The introduction rule for `lvl` can be thought of internalizing the order `· < ·`,
+while the other rule for levels can be thought of internalizing its transitivity.
+The latter allows deriving judgements like `x : Level< (lvl 6) ⊢ x : Level< (lvl 9)`
+to allow level variables to be used as if bounded by levels
+larger than that they were declared with.
+
+Finally, a cumulativity rule allows using a type at a larger universe level.
+This is weaker than subtyping, since for instance a function
+`f` of type `Πx : 𝒰 (lvl 9). B` cannot directly be assigned type `Πx : 𝒰 (lvl 6). B`:
+function types aren't contravariant in the domain with respect to levels.
+However, cumulativity allows eta-expanding `f`, namely that
+`(λx. f x)` *can* be assigned type `Πx : 𝒰 (lvl 6). B`,
+since the variable `x : 𝒰 (lvl 6)` can be assigned type `𝒰 (lvl 9)` to match `f`.
+
+Similar to the rule for the empty type,
+the rule for `Level<` types includes well-typedness of its universe as a premise.
+The corresponding simpler typing rule with the premise
+`Γ ⊢ k₂ : Level< ℓ₂` is similarly derivable.
 
 ## Logical Relation
 
 The semantic model of the type theory is a logical relation
-split into an inductive and a recursive part:
-the inductive part defines the interpretation of universes,
-while the recursive part defines the interpretation of types.
-Both are parametrized over a universe level,
-an accessibility proof of that level,
-and an abstract interpretation of universe for all lower levels.
-The top-level interpretations at a given accessible level
-is defined by well-founded induction using the parametrized interpretations.
-Below is a simplified sketch of the logical relation,
-omitting these accessibility details.
-There is also an inductive–recursive interpretation of contexts as predicates on substitutions,
-but its conceptual meaning is given below informally.
+inductively defined in impredicative Prop
+which relates a type to a set of terms, i.e. a predicate on terms.
+The inductive is parametrized over a semantic universe level
+and an abstract relation for all lower levels.
+The top-level relation is defined by well-founded induction on the level.
+Below is a sketch of the logical relation,
+omitting details about the impredicative encoding required for functions,
+since the definition would otherwise not be strictly positive;
+details can be found in @yiyunliu's paper.
+Although the mechanization uses the notation `⟦A⟧ i ↘ P`,
+I continue to also use the notation `a ∈ ⟦A⟧ᵢ` here for better intuition,
+which represents `∃ P, ⟦A⟧ i ↘ P ∧ P a`.
 
 ```
-j < k                        A ⇒ B    ⟦B⟧ₖ
-------    -----    -----    --------------
-⟦𝒰 j⟧ₖ    ⟦⊥⟧ₖ     ⟦𝔹⟧ₖ     ⟦A⟧ₖ
+j < k    ∃ P, ⟦A⟧ⱼ ↘ P                   a ⇒⋆ lvl i    i < j
+──────────────────────    ─────────    ──────────────────────
+   A ∈ ⟦𝒰 (lvl j)⟧ₖ       b ∉ ⟦⊥⟧ₖ     a ∈ ⟦Level< (lvl j)⟧ₖ
 
- ⟦A⟧ₖ    ∀a ∈ ⟦A⟧ₖ. ⟦B{x ↦ a}⟧ₖ
--------------------------------
-         ⟦Πx : A. B⟧ₖ
-
-⟦A⟧ₖ    a ∈ ⟦A⟧ₖ    b ∈ ⟦A⟧ₖ
-----------------------------
-        ⟦eq A a b⟧ₖ
-
-A ∈ ⟦𝒰 j⟧ₖ       = ⟦A⟧ⱼ
-b ∉ ⟦⊥⟧ₖ
-f ∈ ⟦Πx : A. B⟧ₖ = ∀a ∈ ⟦A⟧ₖ. f a ∈ ⟦B{x ↦ a}⟧ₖ
-p ∈ ⟦eq A a b⟧ₖ  = p ⇒⋆ refl ∧ a ⇔ b
-b ∈ ⟦𝔹⟧ₖ         = b ⇒⋆ true ∨ b ⇒⋆ false
-x ∈ ⟦A⟧ₖ         = x ∈ ⟦B⟧ₖ    (where A ⇒ B)
-
-σ ∈ ⟦Γ⟧ = x : A ∈ Γ → σ(x) ∈ ⟦A{σ}⟧ₖ
+∀ a ∈ ⟦A⟧ₖ, f a ∈ ⟦B{x ↦ a}⟧ₖ     A ⇒ B    a ∈ ⟦B⟧ₖ
+─────────────────────────────    ──────────────────
+      f ∈ ⟦Πx : A. B⟧ₖ                a ∈ ⟦A⟧ₖ
 ```
 
-## Axioms
+An important property when using this impredicative encoding
+rather than induction–recursion is determinism:
+If `⟦A⟧ i ↘ P` and `⟦A⟧ i ↘ Q`, then `P = Q`.
+Because we're handling equalities between predicates,
+proving determinism requires function extensionality and propositional extensionality.
 
-The only axiom used is function extensionality,
-which is located in the `ext` module of `accessibility.agda`
-as private postulates (one for an implicit and one for an explicit domain).
-Function extensionality is used to prove two extensional principles:
-* mere propositionality of the accessibility predicate,
-  which is used to prove `accU≡` in `semantics.agda`; and
-* congruence of dependent function types,
-  which is needed to prove cumulativity of the logical relation in `semantics.agda`.
+The semantic universe levels are abstracted out via a typeclass
+containing a type of levels, an order on the levels,
+and further typeclasses for the following required properties on the order:
+
+* Wellfoundedness, to construct logical relation;
+* Transitivity, to ensure the logical relation is cumulative;
+* Trichotomy, to prove determinism of the logical relation; and
+* Cofinality, since every universe must have a type.
+
+As such, the naturals are an appropriate instance of levels, as would be ordinals.
 
 ## Contents
 
-Most of the modules are parametrized over an abstract `Level`
-and its strict transitive order with all strict upper bounds,
-only to be instantiated at the very end by the naturals.
+* `level.lean`: Typeclass of cofinal, well-ordered levels.
+* `syntactics.lean`: Syntax, substitution, contexts, and context membership.
+* `reduction.lean`: Parallel reduction, substitution lemmas, confluence, and conversion.
+* `typing.lean`: Definitional equality, context well-formedness, well-typedness, and inversion.
+* `safety.lean`: Progress and preservation.
+* `example.lean`: Partially-complete typing derivations for some example judgements
+  involving terms with universe polymorphism.
 
-* `common.agda`: Reëxports all the necessary agda-stdlib modules,
-  and defines common definitions.
-* `accessibility.agda`: The accessibility predicate and its mere propositionality.
-* `syntactics.agda`: Syntax, substitution, contexts, and context membership.
-* `reduction.agda`: Parallel reduction, substitution lemmas, confluence, and conversion.
-* `typing.agda`: Definitional equality, context well-formedness, and well-typedness.
-* `semantics.agda`: Logical relations stating semantic typing and semantic context formation,
+Here, the files diverge. The first path uses the logical relation for closed terms
+to prove only consistency and canonicity.
+
+* `semantics.lean`: Logical relations stating semantic typing and well-formedness,
   along with important properties.
-* `soundness.agda`: The fundamental theorem of soundness of typing —
+* `soundness.lean`: The fundamental theorem of soundness of typing —
   syntactic well-typedness implies semantic well-typedness.
-* `consistency.agda`: Strict order on the naturals, well-foundedness of the naturals
-  with respect to its strict order, and logical consistency using the naturals as levels.
+  Consistency is proven as a corollary.
 
-## Statistics
+The second path uses the logical relation for open terms and reducibility candidates
+to prove normalization, along with consistency and canonicity.
+
+* `normal.lean`: Normal and neutral forms.
+* `candidates.lean`: The same logical relation but handling open (possibly neutral) terms,
+  and an adequacy lemma wrt reducibility candidates.
+* `normalization.lean`: The fundamental theorem of soundness of typing
+  with respect to the open logical relation.
+  Normalization is proven as a corollary.
+* `canonicity.lean`: Using type safety, showing that closed terms evaluate to values.
+  Consistency and canonicity follow from normalization and evaluation.
+
+# Extensions
+
+This type theory is missing a number of common operations on levels.
+Some of these would require the corresponding operation from the meta-level elements.
+For instance, we could add a successor operator `↑ ·`, or a supremum operator `· ⊔ ·`,
+which are the same operators that Agda has.
 
 ```
-$ cloc --include-lang=Agda --exclude-content=model --by-file .
+                            k₁ : Level< ℓ₁
+   k : Level< ℓ             k₂ : Level< ℓ₂
+──────────────────    ──────────────────────────
+↑ k : Level< (↑ ℓ)    k₁ ⊔ k₂ : Level< (ℓ₁ ⊔ ℓ₂)
+```
 
-github.com/AlDanial/cloc v 2.02  T=4.86 s (1.6 files/s, 351.8 lines/s)
-----------------------------------------------------------------------------------
-File                                blank        comment           code
-----------------------------------------------------------------------------------
-./reduction.agda                       71             17            412
-./syntactics.agda                      50             22            277
-./semantics.agda                       50             25            262
-./typing.agda                          13             33            165
-./soundness.agda                        4              0            145
-./consistency.agda                     26              4             79
-./accessibility.agda                    9              0             26
-./common.agda                           3              0             16
-----------------------------------------------------------------------------------
-SUM:                                  226            101           1382
-----------------------------------------------------------------------------------
+These operators reduce on canonical levels (i.e. the internalizations)
+to the appropriate meta-level operations, written below as additional conversion rules.
+To support the supremum operator, the meta-level order must be trichotomous to compute a maximum.
+
+```
+───────────────────────    ─────────────────────────────────
+↑ (lvl i) ≃ lvl (i + 1)    (lvl i) ⊔ (lvl j) ≃ lvl max(i, j)
+```
+
+They also need to satisfy additional conversion rules to behave properly; the below list is taken from
+[Agda](https://agda.readthedocs.io/en/latest/language/universe-levels.html#intrinsic-level-properties).
+
+* Idempotence:   `k ⊔ k ≃ k`
+* Associativity: `(k₁ ⊔ k₂) ⊔ k₃ ≃ k₁ ⊔ (k₂ ⊔ k₃)`
+* Commutativity: `k₁ ⊔ k₂ ≃ k₂ ⊔ k₁`
+* Distributivity: `↑ (k₁ ⊔ k₂) ≃ (↑ k₁) ⊔ (↑ k₂)`
+* Subsumption:    `k ⊔ (↑ k) ≃ ↑ k`
+
+More unconventionally, it's possible to add well-founded induction
+on universe levels internally to the type theory,
+since the meta-level elements are already well founded.
+
+```
+Γ, z : Level< k ⊢ B : 𝒰 ℓ
+Γ ⊢ f : Πx : Level< k. (Πy : Level< x. B{z ↦ y}) → B{z ↦ x}
+───────────────────────────────────────────────────────────
+Γ ⊢ wf f : Πz : Level< k. B
+
+───────────────
+wf f k ≃ f k wf
+```
+
+Aside from level operations, it should also be possible to add a typecase operator,
+since canonicity of closed terms of type `𝒰 k` say they must be `Π`, `𝒰`, `⊥`, or `Level<`.
+
+```
+Γ ⊢ T : 𝒰 k
+Γ ⊢ C : 𝒰 k → 𝒰 ℓ′
+Γ, x : 𝒰 k, y : x → 𝒰 k ⊢ a : C (Πz : x. y z)
+Γ, x : Level< k ⊢ b : C (𝒰 x)
+Γ ⊢ c : C ⊥
+Γ, x : Level< ℓ ⊢ d : C (Level< x)                [where does ℓ come from??]
+──────────────────────────────────────────────
+Γ ⊢ case T of
+    | Π x y ⇒ a
+    | 𝒰 x ⇒ b      : C T
+    | ⊥ ⇒ c
+    | Level< x ⇒ d
+
+case (Πz : A. B) of | Π x y ⇒ a    | ... ≃ a[x ↦ A, y ↦ λz. B]
+case (𝒰 k)      of | 𝒰 x ⇒ b      | ... ≃ b[x ↦ k]
+case ⊥           of | ⊥ ⇒ c        | ... ≃ c
+case (Level< k)  of | Level< x ⇒ d | ... ≃ d[x ↦ k]    [does k : Level< ℓ hold??]
 ```

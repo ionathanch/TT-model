@@ -1,3 +1,5 @@
+.vscode/
 *.agdai
 /.lake
 lake-manifest.json
+latex.out/
