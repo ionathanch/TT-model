@@ -8,7 +8,7 @@ metavar x, y, z, f, g ::=
   {{ com term variables }}
   {{ lex alphanum }}
 
-metavar i, j ::=
+metavar i, j, o {{ tex \omega }} ::=
   {{ com level variables }}
   {{ lex numeral }}
 
@@ -25,6 +25,9 @@ a, b, c, A, B, C, k, l {{ tex \ell }} :: 'tm_' ::= {{ com terms }}
     (+ bind x in B +)
     {{ com function type }}
     {{ tex \Pi [[x]] \mathbin{:} [[A]] \mathpunct{.} [[B]] }}
+  | A → B :: S :: Fun
+    {{ com nondependent function type }}
+    {{ tex [[A]] \to [[B]] }}
   | b a :: :: App
     {{ com function application }}
     {{ tex [[b]] \gap [[a]] }}
@@ -46,6 +49,9 @@ a, b, c, A, B, C, k, l {{ tex \ell }} :: 'tm_' ::= {{ com terms }}
   | b { x ↦ a } :: S :: Subst
     {{ com single substitution }}
     {{ tex [[b]][ [[x]] \mapsto [[a]] ]}}
+  | _ :: M :: Hole
+    {{ com hole }}
+    {{ tex \relax }}
   | ( a ) :: S :: Parens
     {{ com parentheses }}
     {{ tex ([[a]]) }}

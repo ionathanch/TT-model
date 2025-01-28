@@ -56,11 +56,13 @@
   #2%
 }
 
+\setlength{\fboxsep}{2pt}
+\setlength{\abovecaptionskip}{0.5\baselineskip}
+
 \hypersetup{
   colorlinks=true,
   urlcolor=blue,
-  citecolor=magenta,
-  backref=true
+  citecolor=magenta
 }
 \urlstyle{tt}
 
@@ -106,6 +108,21 @@
 
 \section{A basic type theory with bounded first-class universe levels}
 
+We consider with a Curry-style type theory \`a la Russell,
+where terms have no type annotations,
+and there is no separate typing judgement for well-formedness of types.
+To keep the type theory minimal, it contains only dependent functions,
+an empty type, predicative universes, and bounded universe levels.
+By convention, we use $\ottnt{a}, \ottnt{b}, \ottnt{c}$ for terms,
+$\ottnt{A}, \ottnt{B}, \ottnt{C}$ for types,
+and $\ottnt{k}, \ell$ for level terms.
+The syntax is presented in nominally in \cref{fig:syntax},
+although the mechanization uses de Bruijn indexing.
+We write single substitution of a variable $\ottmv{x}$ in a term $\ottnt{b}$ by another term $\ottnt{a}$
+as $ \ottnt{b} [  \ottmv{x}  \mapsto  \ottnt{a}  ] $.
+We also use $ \ottnt{A}  \to  \ottnt{B} $ as sugar for nondependent functions
+$ \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B} $ where $\ottmv{x}$ does not occur in $\ottnt{B}$.
+
 \begin{figure}
 \begin{align*}
   i, j & \Coloneqq \texttt{<external universe levels>} \\
@@ -120,8 +137,27 @@
 \label{fig:syntax}
 \end{figure}
 
+The type theory is parametrized over a cofinal woset of levels,
+\ie a set of levels that are well founded, totally ordered,
+and each have some strictly larger level;
+these properties are required when modelling the type theory.
+Instances of such sets include the naturals $0, 1, 2, \dots$,
+as well as the naturals extended by one limit ordinal $\omega$
+and its successors $\omega + 1, \omega + 2, \dots$.
+We continue to use these concrete levels for our examples.
+These metalevel levels are internalized directly in system as terms $\ottmv{i}$.
+
 \begin{figure}
 \begin{mathpar}
+  \fbox{$ \mathop{\vdash}  \Gamma $} \qquad \fbox{$ \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $} \qquad \fbox{$ \ottnt{a}  =  \ottnt{b} $} \hfill \\
+  \inferrule[\ottdrulename{Nil}]{~}{ \mathop{\vdash}   \cdot  }
+  \and
+  \inferrule[\ottdrulename{Cons}]
+    { \mathop{\vdash}  \Gamma  \and
+      \Gamma  \vdash  \ottnt{A}  \mathrel{:}   \kw{U} \gap  \ottnt{k}  }
+    %------------------%
+    { \mathop{\vdash}   \Gamma ,  \ottmv{x}  \mathbin{:}  \ottnt{A}  }
+  \and
   \inferrule[\ottdrulename{Var}]
     { \mathop{\vdash}  \Gamma  \and
       \ottmv{x}  \mathrel{:}  \ottnt{A}  \in  \Gamma }
@@ -164,17 +200,29 @@
     %------------------%
     { \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{B} }
 \end{mathpar}
-
+%
 \begin{mathpar}
   \inferrule[\ottdrulename{E-Beta}]{~}{   (  \lambda  \ottmv{x}  \mathpunct{.}  \ottnt{b}  )   \gap  \ottnt{a}   =   \ottnt{b} [  \ottmv{x}  \mapsto  \ottnt{a}  ]  } \and
   \inferrule[\ottdrulename{E-Refl}]{~}{ \ottnt{a}  =  \ottnt{a} } \and
   \inferrule[\ottdrulename{E-Sym}]{ \ottnt{a}  =  \ottnt{b} }{ \ottnt{b}  =  \ottnt{a} } \and
   \inferrule[\ottdrulename{E-Trans}]{ \ottnt{a}  =  \ottnt{b}  \and  \ottnt{b}  =  \ottnt{c} }{ \ottnt{a}  =  \ottnt{c} } \and
+  \cdots
 \end{mathpar}
 
 \caption{Typing and selected equality rules (no universes or levels)}
 \label{fig:typing:basic}
 \end{figure}
+
+We begin first with the basic rules that don't concern universes or levels in \cref{fig:typing:basic},
+consisting of a context well-formedness judgement $ \mathop{\vdash}  \Gamma $,
+a typing judgement $ \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $, and an untyped definitional equality $ \ottnt{a}  =  \ottnt{b} $.
+\Rref{Lam} explicitly includes well-typedness of a function's type as a premise
+rather than merely well-typedness of the domain type $\ottnt{A}$
+to guarantee that it lives at the same universe level as the codomain type $\ottnt{B}$,
+which we need to prove our fundamental theorem.
+The remaining rules are otherwise as expected.
+We use $\beta$-conversion as our definitional equality,
+and omit the usual congruence rules.
 
 \begin{figure}
 \begin{mathpar}
@@ -210,6 +258,42 @@
 \caption{Typing rules (universes and levels)}
 \label{fig:typing:univ}
 \end{figure}
+
+The rules relating to universes and levels are given in \cref{fig:typing:univ}.
+By \rref{Lvl}, we can view the type constructor $ \kw{Level}\texttt{<} \gap   \relax  $
+as the internalization of the order on levels.
+As the level type is combined with level bounding,
+it is impossible to declare a level variable strictly less than itself.
+The level type itself can be typed at any universe
+regardless of what the bounding level is.
+For example, we can construct a derivation for $  \cdot   \vdash   \kw{Level}\texttt{<} \gap   2    \mathrel{:}   \kw{U} \gap   0   $
+solely knowing that $  \cdot   \vdash   2   \mathrel{:}   \kw{Level}\texttt{<} \gap   3   $ and $  \cdot   \vdash   \kw{U} \gap   0    \mathrel{:}   \kw{U} \gap   1   $.
+
+\Rref{Trans} internalizes transitivity of the order on levels,
+which is now required since levels are terms in general and not only concrete levels.
+For example, we can construct a derivation for $   \ottmv{x}  \mathbin{:}   \kw{Level}\texttt{<} \gap   \omega    ,  \ottmv{y}  \mathbin{:}   \kw{Level}\texttt{<} \gap  \ottmv{x}    \vdash  \ottmv{x}  \mathrel{:}   \kw{Level}\texttt{<} \gap   \omega   $,
+where the levels $\ottmv{x}, \ottmv{y}$ are variables.
+
+\Rref{Sub} is a subsumption rule that permits lifting a type
+from one universe to a higher universe.
+This rule is weaker than a full cumulativity rule that accounts for
+contravariance in the domain and covariance in the codomain of function types.
+Therefore, for instance, $  \ottmv{f}  \mathbin{:}    \kw{U} \gap   2    \to   \kw{U} \gap   0      \vdash  \ottmv{f}  \mathrel{:}    \kw{U} \gap   1    \to   \kw{U} \gap   1    $ does \emph{not} hold.
+Nonetheless, subsumption allows us to instead type the $\eta$-expansion
+$  \ottmv{f}  \mathbin{:}    \kw{U} \gap   2    \to   \kw{U} \gap   0      \vdash    \lambda  \ottmv{x}  \mathpunct{.}  \ottmv{f}   \gap  \ottmv{x}   \mathrel{:}    \kw{U} \gap   1    \to   \kw{U} \gap   1    $.
+
+Finally, \rref{Univ} asserts that a universe at level $\ottnt{k}$
+lives in the universe at level $\ell$ when $\ottnt{k}$ is strictly bounded by $\ell$.
+Allowing universes with general level terms and not just concrete levels
+to be well typed is what permits typing level-polymorphic types.
+For example, we can derive a typing judgement for
+the following level-polymorphic identity function type:
+$$  \cdot   \vdash    \Pi  \ottmv{x}  \mathbin{:}   \kw{Level}\texttt{<} \gap   \omega    \mathpunct{.}   \Pi  \ottmv{y}  \mathbin{:}   \kw{U} \gap  \ottmv{x}   \mathpunct{.}  \ottmv{y}    \to  \ottmv{y}   \mathrel{:}   \kw{U} \gap   \omega   $$
+$ \kw{Level}\texttt{<} \gap   \omega  $ can be assigned an arbitrary type by \rref{Level},
+$ \kw{U} \gap  \ottmv{x} $ has type $ \kw{U} \gap   \omega  $ by \rref{Univ} and \rref{Var},
+and $\ottmv{y}$ can be assigned type $ \kw{U} \gap   \omega  $ transitively
+via \rref{Trans,Var}.
+Then the entire term has type $ \kw{U} \gap   \omega  $ by repeated application of \rref{Pi}.
 
 \section{Metatheory}
 

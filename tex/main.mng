@@ -56,6 +56,9 @@
   #2%
 }
 
+\setlength{\fboxsep}{2pt}
+\setlength{\abovecaptionskip}{0.5\baselineskip}
+
 \hypersetup{
   colorlinks=true,
   urlcolor=blue,
@@ -105,6 +108,21 @@
 
 \section{A basic type theory with bounded first-class universe levels}
 
+We consider with a Curry-style type theory \`a la Russell,
+where terms have no type annotations,
+and there is no separate typing judgement for well-formedness of types.
+To keep the type theory minimal, it contains only dependent functions,
+an empty type, predicative universes, and bounded universe levels.
+By convention, we use $[[a]], [[b]], [[c]]$ for terms,
+$[[A]], [[B]], [[C]]$ for types,
+and $[[k]], [[l]]$ for level terms.
+The syntax is presented in nominally in \cref{fig:syntax},
+although the mechanization uses de Bruijn indexing.
+We write single substitution of a variable $[[x]]$ in a term $[[b]]$ by another term $[[a]]$
+as $[[b{x ↦ a}]]$.
+We also use $[[A → B]]$ as sugar for nondependent functions
+$[[Πx : A. B]]$ where $[[x]]$ does not occur in $[[B]]$.
+
 \begin{figure}
 \begin{align*}
   i, j & \Coloneqq \texttt{<external universe levels>} \\
@@ -119,8 +137,27 @@
 \label{fig:syntax}
 \end{figure}
 
+The type theory is parametrized over a cofinal woset of levels,
+\ie a set of levels that are well founded, totally ordered,
+and each have some strictly larger level;
+these properties are required when modelling the type theory.
+Instances of such sets include the naturals $0, 1, 2, \dots$,
+as well as the naturals extended by one limit ordinal $\omega$
+and its successors $\omega + 1, \omega + 2, \dots$.
+We continue to use these concrete levels for our examples.
+These metalevel levels are internalized directly in system as terms $[[i]]$.
+
 \begin{figure}
 \begin{mathpar}
+  \fbox{$[[⊢ G]]$} \qquad \fbox{$[[G ⊢ a : A]]$} \qquad \fbox{$[[a = b]]$} \hfill \\
+  \inferrule[\ottdrulename{Nil}]{~}{[[⊢ •]]}
+  \and
+  \inferrule[\ottdrulename{Cons}]
+    {[[⊢ G]] \and
+     [[G ⊢ A : Type k]]}
+    %------------------%
+    {[[⊢ G, x : A]]}
+  \and
   \inferrule[\ottdrulename{Var}]
     {[[⊢ G]] \and
      [[x : A ∈ G]]}
@@ -163,17 +200,29 @@
     %------------------%
     {[[G ⊢ a : B]]}
 \end{mathpar}
-
+%
 \begin{mathpar}
   \inferrule[\ottdrulename{E-Beta}]{~}{[[(λx. b) a = b{x ↦ a}]]} \and
   \inferrule[\ottdrulename{E-Refl}]{~}{[[a = a]]} \and
   \inferrule[\ottdrulename{E-Sym}]{[[a = b]]}{[[b = a]]} \and
   \inferrule[\ottdrulename{E-Trans}]{[[a = b]] \and [[b = c]]}{[[a = c]]} \and
+  \cdots
 \end{mathpar}
 
 \caption{Typing and selected equality rules (no universes or levels)}
 \label{fig:typing:basic}
 \end{figure}
+
+We begin first with the basic rules that don't concern universes or levels in \cref{fig:typing:basic},
+consisting of a context well-formedness judgement $[[⊢ G]]$,
+a typing judgement $[[G ⊢ a : A]]$, and an untyped definitional equality $[[a = b]]$.
+\Rref{Lam} explicitly includes well-typedness of a function's type as a premise
+rather than merely well-typedness of the domain type $[[A]]$
+to guarantee that it lives at the same universe level as the codomain type $[[B]]$,
+which we need to prove our fundamental theorem.
+The remaining rules are otherwise as expected.
+We use $\beta$-conversion as our definitional equality,
+and omit the usual congruence rules.
 
 \begin{figure}
 \begin{mathpar}
@@ -209,6 +258,42 @@
 \caption{Typing rules (universes and levels)}
 \label{fig:typing:univ}
 \end{figure}
+
+The rules relating to universes and levels are given in \cref{fig:typing:univ}.
+By \rref{Lvl}, we can view the type constructor $[[Level< _]]$
+as the internalization of the order on levels.
+As the level type is combined with level bounding,
+it is impossible to declare a level variable strictly less than itself.
+The level type itself can be typed at any universe
+regardless of what the bounding level is.
+For example, we can construct a derivation for $[[• ⊢ Level< 2 : Type 0]]$
+solely knowing that $[[• ⊢ 2 : Level< 3]]$ and $[[• ⊢ Type 0 : Type 1]]$.
+
+\Rref{Trans} internalizes transitivity of the order on levels,
+which is now required since levels are terms in general and not only concrete levels.
+For example, we can construct a derivation for $[[x : Level< o, y : Level< x ⊢ x : Level< o]]$,
+where the levels $[[x]], [[y]]$ are variables.
+
+\Rref{Sub} is a subsumption rule that permits lifting a type
+from one universe to a higher universe.
+This rule is weaker than a full cumulativity rule that accounts for
+contravariance in the domain and covariance in the codomain of function types.
+Therefore, for instance, $[[f : Type 2 → Type 0 ⊢ f : Type 1 → Type 1]]$ does \emph{not} hold.
+Nonetheless, subsumption allows us to instead type the $\eta$-expansion
+$[[f : Type 2 → Type 0 ⊢ λx. f x : Type 1 → Type 1]]$.
+
+Finally, \rref{Univ} asserts that a universe at level $[[k]]$
+lives in the universe at level $[[l]]$ when $[[k]]$ is strictly bounded by $[[l]]$.
+Allowing universes with general level terms and not just concrete levels
+to be well typed is what permits typing level-polymorphic types.
+For example, we can derive a typing judgement for
+the following level-polymorphic identity function type:
+$$[[• ⊢ Πx : Level< o. Πy : Type x. y → y : Type o]]$$
+$[[Level< o]]$ can be assigned an arbitrary type by \rref{Level},
+$[[Type x]]$ has type $[[Type o]]$ by \rref{Univ} and \rref{Var},
+and $[[y]]$ can be assigned type $[[Type o]]$ transitively
+via \rref{Trans,Var}.
+Then the entire term has type $[[Type o]]$ by repeated application of \rref{Pi}.
 
 \section{Metatheory}
 

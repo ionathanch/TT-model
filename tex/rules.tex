@@ -31,7 +31,7 @@
 \newcommand{\ottmetavars}{
 \ottmetavartabular{
  $ \ottmv{x} ,\, \ottmv{y} ,\, \ottmv{z} ,\, \ottmv{f} ,\, \ottmv{g} $ & \ottcom{term variables} \\
- $ \ottmv{i} ,\, \ottmv{j} $ & \ottcom{level variables} \\
+ $ \ottmv{i} ,\, \ottmv{j} ,\, \omega $ & \ottcom{level variables} \\
 }}
 
 \newcommand{\otta}{
@@ -39,6 +39,7 @@
 \ottfirstprodline{|}{\ottmv{x}}{}{}{}{\ottcom{variable}}\ottprodnewline
 \ottprodline{|}{ \lambda  \ottmv{x}  \mathpunct{.}  \ottnt{b} }{}{\textsf{bind}\; \ottmv{x}\; \textsf{in}\; \ottnt{b}}{}{\ottcom{function}}\ottprodnewline
 \ottprodline{|}{ \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B} }{}{\textsf{bind}\; \ottmv{x}\; \textsf{in}\; \ottnt{B}}{}{\ottcom{function type}}\ottprodnewline
+\ottprodline{|}{ \ottnt{A}  \to  \ottnt{B} } {\textsf{S}}{}{}{\ottcom{nondependent function type}}\ottprodnewline
 \ottprodline{|}{ \ottnt{b}  \gap  \ottnt{a} }{}{}{}{\ottcom{function application}}\ottprodnewline
 \ottprodline{|}{ \bot }{}{}{}{\ottcom{empty type}}\ottprodnewline
 \ottprodline{|}{ \kw{absurd} \gap  \ottnt{b} }{}{}{}{\ottcom{ex false quodlibet}}\ottprodnewline
