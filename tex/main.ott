@@ -1,0 +1,124 @@
+embed
+  {{ tex-preamble
+    \newcommand{\gap}{\:}
+    \newcommand{\kw}[1]{ \mathsf{#1} }
+  }}
+
+metavar x, y, z, f, g ::=
+  {{ com term variables }}
+  {{ lex alphanum }}
+
+metavar i, j ::=
+  {{ com level variables }}
+  {{ lex numeral }}
+
+grammar
+
+a, b, c, A, B, C, k, l {{ tex \ell }} :: 'tm_' ::= {{ com terms }}
+  | x :: :: Var
+    {{ com variable }}
+  | λ x . b :: :: Abs
+    (+ bind x in b +)
+    {{ com function }}
+    {{ tex \lambda [[x]] \mathpunct{.} [[b]] }}
+  | Π x : A . B :: :: Pi
+    (+ bind x in B +)
+    {{ com function type }}
+    {{ tex \Pi [[x]] \mathbin{:} [[A]] \mathpunct{.} [[B]] }}
+  | b a :: :: App
+    {{ com function application }}
+    {{ tex [[b]] \gap [[a]] }}
+  | ⊥ :: :: Mty
+    {{ com empty type }}
+    {{ tex \bot }}
+  | abs b :: :: Exf
+    {{ com ex false quodlibet }}
+    {{ tex \kw{absurd} \gap [[b]] }}
+  | Type k :: :: Univ
+    {{ com type universe }}
+    {{ tex \kw{U} \gap [[k]] }}
+  | Level< l :: :: Lvl
+    {{ com level type }}
+    {{ tex \kw{Level}\texttt{<} \gap [[l]] }}
+  | i :: :: Lof
+    {{ com concrete level }}
+    {{ tex [[i]] }}
+  | b { x ↦ a } :: S :: Subst
+    {{ com single substitution }}
+    {{ tex [[b]][ [[x]] \mapsto [[a]] ]}}
+  | ( a ) :: S :: Parens
+    {{ com parentheses }}
+    {{ tex ([[a]]) }}
+
+G {{ tex \Gamma }}, D {{ tex \Delta }} :: 'ctxt_' ::= {{ com contexts }}
+  | • :: :: Nil
+    {{ com empty context }}
+    {{ tex \cdot }}
+  | x : A :: S :: Singleton
+    {{ com singleton context }}
+    {{ tex [[x]] \mathbin{:} [[A]] }}
+  | G , x : A :: :: Cons
+    {{ com context extension }}
+    {{ tex [[G]], [[x]] \mathbin{:} [[A]] }}
+  | G , D :: M :: Append
+    {{ com context append }}
+    {{ tex [[G]], [[D]] }}
+
+P, Q :: 'set_' ::= {{ com sets }}
+  | ∅ :: :: Empty
+    {{ tex \varnothing }}
+  | { x | formula } :: :: Builder
+    (+ bind x in formula +)
+    {{ tex \lbrace [[x]] \mid [[formula]] \rbrace }}
+  | { i , x | formula } :: :: IBuilder
+    (+ bind i union x in formula +)
+    {{ tex \lbrace [[x]] \mid [[formula]] \rbrace_{[[i]]} }}
+  | I i :: :: Idx
+    {{ tex [[I]] \gap [[i]] }}
+
+R :: 'rel_' ::= {{ com relation }}
+
+formula :: 'formula_' ::=
+  | judgement :: :: judgement
+  | formula1 ∧ formula2 :: :: and
+    {{ tex [[formula1]] \wedge [[formula2]] }}
+  | formula1 ∨ formula2 :: :: or
+    {{ tex [[formula1]] \vee [[formula2]] }}
+  | formula1 → formula2 :: :: implies
+    {{ tex [[formula1]] \to [[formula2]] }}
+  | ∀ x . formula :: :: forall
+    {{ tex \forall [[x]] \mathpunct{.} [[formula]] }}
+  | ∀ P . formula :: :: setforall
+    {{ tex \forall [[P]] \mathpunct{.} [[formula]] }}
+  | ∃ i . formula :: :: exists
+    {{ tex \exists [[i]] \mathpunct{.} [[formula]] }}
+  | ∃ P . formula :: :: setexists
+    {{ tex \exists [[P]] \mathpunct{.} [[formula]] }}
+  | i < j :: S :: lt
+    {{ tex [[i]] < [[j]] }}
+  | i ≤ j :: S :: le
+    {{ tex [[i]] \leq [[j]] }}
+  | x : A ∈ G :: S :: mem
+    {{ tex [[x]] \mathrel{:} [[A]] \in [[G]] }}
+  | ⊢ G :: S :: ctxt
+    {{ tex \mathop{\vdash} [[G]] }}
+  | G ⊢ a : A :: S :: typing
+    {{ tex [[G]] \vdash [[a]] \mathrel{:} [[A]] }}
+  | A = B :: S :: defeq
+    {{ tex [[A]] = [[B]] }}
+  | a ⇒ b :: S :: par
+    {{ tex [[a]] \Rightarrow [[b]] }}
+  | a ⇒* b :: S :: pars
+    {{ tex [[a]] \Rightarrow^\ast [[b]] }}
+  | a ⇔ b :: S :: conv
+    {{ tex [[a]] \Leftrightarrow [[b]] }}
+  | ⟦ A ⟧ i , I ↘ P :: S :: interp
+    {{ tex \mathopen{\llbracket} [[A]] \mathclose{\rrbracket}_{[[i]]} \gap [[I]] \searrow [[P]] }}
+  | ⟦ A ⟧ i ↘ P :: S :: interps
+    {{ tex \mathopen{\llbracket} [[A]] \mathclose{\rrbracket}_{[[i]]} \searrow [[P]] }}
+  | a ∈ P :: S :: in
+    {{ tex [[a]] \in [[P]] }}
+  | R ( x , P ) :: S :: rel
+    {{ tex [[R]]([[x]], [[P]]) }}
+  | ( formula ) :: S :: parentheses
+    {{ tex ([[formula]]) }}

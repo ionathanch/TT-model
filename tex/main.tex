@@ -1,0 +1,267 @@
+\documentclass[a4paper,UKenglish,cleveref,autoref,thm-restate]{lipics-v2021}
+
+% \pdfoutput=1
+% \hideLIPIcs
+
+\usepackage[supertabular]{ottalt}
+\let\newlist\relax
+\let\renewlist\relax
+\usepackage{enumitem,xspace,doi}
+\usepackage{mathpartir,mathtools,stmaryrd}
+\usepackage[flushmargin,multiple,para]{footmisc} % para spacing is weird and ugly
+
+\newcommand{\citep}[1]{\cite{#1}}
+\newcommand{\citet}[1]{\cite{#1}}
+\newcommand{\publicrepo}{\url{https://github.com/ionathanch/TT-model}}
+\newcommand{\lang}{\textsf{TT}\@\xspace}
+\newcommand{\titlebreak}{\texorpdfstring{\\}{}}
+\newcommand{\ie}{\textit{i.e.}\@\xspace}
+\newcommand{\eg}{\textit{e.g.}\@\xspace}
+\newcommand{\etal}{\textit{et al.}\@\xspace}
+\newcommand{\vs}{\textit{vs.}\@\xspace}
+\newcommand{\welltyped}{well-\hspace{0pt}typed\@\xspace}
+\newcommand{\wellfounded}{well-\hspace{0pt}founded\@\xspace}
+\newcommand{\wellfoundedness}{well-\hspace{0pt}foundedness\@\xspace}
+\newcommand{\wellformedness}{well-\hspace{0pt}formedness\@\xspace}
+\newcommand{\welldefinedness}{well-\hspace{0pt}definedness\@\xspace}
+\newcommand{\crude}{crude-\hspace{0pt}but-\hspace{0pt}effective\@\xspace}
+
+\newcommand{\footfile}[1]{%
+  \raggedright
+  \href{\publicrepo{}/tree/main/TT-model/#1}{\texttt{#1}}
+}
+\newcommand{\footfilethm}[2]{%
+  \raggedright
+  \href{\publicrepo{}/tree/main/TT-model/#1}{\texttt{#1}}\texttt{:#2}
+}
+
+\setlength{\fboxsep}{1.5pt}
+
+\newlength{\punctwidth}
+% \nspace{<punct>} is a negative space the size of <punct>
+\newcommand{\nspace}[1]{%
+  \settowidth{\punctwidth}{#1}%
+  \hspace*{-\the\punctwidth}%
+}
+% \npunct{<punct>} treats <punct> as having no width,
+% so that footnotes after it can stack on top
+\newcommand{\npunct}[1]{#1%
+  \nspace{#1}%
+}
+% \nsup{<sup>}{<punct>} shifts <punct> left by
+% the width of <sup> as a superscript
+% so that footnotes *before* it will stack on top
+\newcommand{\nsup}[2]{%
+  \nspace{$^{#1}$}%
+  #2%
+}
+
+\hypersetup{
+  colorlinks=true,
+  urlcolor=blue,
+  citecolor=magenta,
+  backref=true
+}
+\urlstyle{tt}
+
+\title{Bounded First-Class Universe Levels \titlebreak in Type Theory}
+\titlerunning{Bounded First-Class Universe Levels}
+\authorrunning{J. Chan, S. Weirich}
+\Copyright{Jonathan Chan, Stephanie Weirich}
+\ccsdesc{Theory of computation~Type theory}
+\keywords{type theory, universes, universe polymorphism}
+\hideLIPIcs
+
+\author{Jonathan Chan}
+  {University of Pennsylvania, Philadelphia, USA}
+  {jcxz@seas.upenn.edu}
+  {0000-0003-0830-3180}
+  {}
+
+\author{Stephanie Weirich}
+  {University of Pennsylvania, Philadelphia, USA}
+  {sweirich@seas.upenn.edu}
+  {0000-0002-6756-9168}
+  {}
+
+\supplementdetails[subcategory={source code},
+  swhid={swh:1:dir:} % see https://www.softwareheritage.org/
+]{Software}{https://github.com/ionathanch/TT-model}
+
+\inputott{rules}
+
+\acknowledgements{hi \href{https://types.pl}{\texttt{types.pl}}!}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+  abstract
+\end{abstract}
+
+\section{Introduction}
+
+\subsection{Comparison to other work}
+
+\section{A basic type theory with bounded first-class universe levels}
+
+\begin{figure}
+\begin{align*}
+  i, j & \Coloneqq \texttt{<external universe levels>} \\
+  x, y, z & \Coloneqq \texttt{<term variables>} \\
+  a, b, c, A, B, C, k, \ell & \Coloneqq \ottmv{x} \mid \ottmv{i}
+    \mid  \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}  \mid  \lambda  \ottmv{x}  \mathpunct{.}  \ottnt{b}  \mid  \ottnt{b}  \gap  \ottnt{a} 
+    \mid  \bot  \mid  \kw{absurd} \gap  \ottnt{b} 
+    \mid  \kw{U} \gap  \ottnt{k}  \mid  \kw{Level}\texttt{<} \gap  \ell  \\
+  \Gamma, \Delta & \Coloneqq  \cdot  \mid  \Gamma ,  \ottmv{x}  \mathbin{:}  \ottnt{A} 
+\end{align*}
+\caption{Syntax}
+\label{fig:syntax}
+\end{figure}
+
+\begin{figure}
+\begin{mathpar}
+  \inferrule[\ottdrulename{Var}]
+    { \mathop{\vdash}  \Gamma  \and
+      \ottmv{x}  \mathrel{:}  \ottnt{A}  \in  \Gamma }
+    %-------------%
+    { \Gamma  \vdash  \ottmv{x}  \mathrel{:}  \ottnt{A} }
+  \and
+  \inferrule[\ottdrulename{Pi}]
+    { \Gamma  \vdash  \ottnt{A}  \mathrel{:}   \kw{U} \gap  \ottnt{k}   \and
+       \Gamma ,  \ottmv{x}  \mathbin{:}  \ottnt{A}   \vdash  \ottnt{B}  \mathrel{:}   \kw{U} \gap  \ottnt{k}  }
+    %--------------------------%
+    { \Gamma  \vdash   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \mathrel{:}   \kw{U} \gap  \ottnt{k}  }
+  \and
+  \inferrule[\ottdrulename{Lam}]
+    { \Gamma  \vdash   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \mathrel{:}   \kw{U} \gap  \ottnt{k}   \and
+       \Gamma ,  \ottmv{x}  \mathbin{:}  \ottnt{A}   \vdash  \ottnt{b}  \mathrel{:}  \ottnt{B} }
+    %-------------------------%
+    { \Gamma  \vdash   \lambda  \ottmv{x}  \mathpunct{.}  \ottnt{b}   \mathrel{:}   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}  }
+  \and
+  \inferrule[\ottdrulename{App}]
+    { \Gamma  \vdash  \ottnt{b}  \mathrel{:}   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \and
+      \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} }
+    %----------------------%
+    { \Gamma  \vdash   \ottnt{b}  \gap  \ottnt{a}   \mathrel{:}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottnt{a}  ]  }
+  \and
+  \inferrule[\ottdrulename{Mty}]
+    { \Gamma  \vdash   \kw{U} \gap  \ottnt{k}   \mathrel{:}   \kw{U} \gap  \ell  }
+    %-----------------------%
+    { \Gamma  \vdash   \bot   \mathrel{:}   \kw{U} \gap  \ottnt{k}  }
+  \and
+  \inferrule[\ottdrulename{Abs}]
+    { \Gamma  \vdash  \ottnt{A}  \mathrel{:}   \kw{U} \gap  \ottnt{k}   \and
+      \Gamma  \vdash  \ottnt{b}  \mathrel{:}   \bot  }
+    %-----------------%
+    { \Gamma  \vdash   \kw{absurd} \gap  \ottnt{b}   \mathrel{:}  \ottnt{A} }
+  \and
+  \inferrule[\ottdrulename{Conv}]
+    { \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A}  \and
+      \Gamma  \vdash  \ottnt{B}  \mathrel{:}   \kw{U} \gap  \ottnt{k}   \and
+      \ottnt{A}  =  \ottnt{B} }
+    %------------------%
+    { \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{B} }
+\end{mathpar}
+
+\begin{mathpar}
+  \inferrule[\ottdrulename{E-Beta}]{~}{   (  \lambda  \ottmv{x}  \mathpunct{.}  \ottnt{b}  )   \gap  \ottnt{a}   =   \ottnt{b} [  \ottmv{x}  \mapsto  \ottnt{a}  ]  } \and
+  \inferrule[\ottdrulename{E-Refl}]{~}{ \ottnt{a}  =  \ottnt{a} } \and
+  \inferrule[\ottdrulename{E-Sym}]{ \ottnt{a}  =  \ottnt{b} }{ \ottnt{b}  =  \ottnt{a} } \and
+  \inferrule[\ottdrulename{E-Trans}]{ \ottnt{a}  =  \ottnt{b}  \and  \ottnt{b}  =  \ottnt{c} }{ \ottnt{a}  =  \ottnt{c} } \and
+\end{mathpar}
+
+\caption{Typing and selected equality rules (no universes or levels)}
+\label{fig:typing:basic}
+\end{figure}
+
+\begin{figure}
+\begin{mathpar}
+  \inferrule[\ottdrulename{Univ}]
+    { \Gamma  \vdash  \ottnt{k}  \mathrel{:}   \kw{Level}\texttt{<} \gap  \ell  }
+    %-----------------------%
+    { \Gamma  \vdash   \kw{U} \gap  \ottnt{k}   \mathrel{:}   \kw{U} \gap  \ell  }
+  \and
+  \inferrule[\ottdrulename{Level<}]
+    { \Gamma  \vdash   \kw{U} \gap  \ottnt{k_{{\mathrm{1}}}}   \mathrel{:}   \kw{U} \gap  \ell_{{\mathrm{1}}}   \and
+      \Gamma  \vdash  \ottnt{k_{{\mathrm{0}}}}  \mathrel{:}   \kw{Level}\texttt{<} \gap  \ell_{{\mathrm{0}}}  }
+    %---------------------------%
+    { \Gamma  \vdash   \kw{Level}\texttt{<} \gap  \ottnt{k_{{\mathrm{0}}}}   \mathrel{:}   \kw{U} \gap  \ottnt{k_{{\mathrm{1}}}}  }
+  \and
+  \inferrule[\ottdrulename{Lvl}]
+    { \mathop{\vdash}  \Gamma  \and
+      \ottmv{i}  <  \ottmv{j} }
+    %--------------------%
+    { \Gamma  \vdash   \ottmv{i}   \mathrel{:}   \kw{Level}\texttt{<} \gap   \ottmv{j}   }
+  \and
+  \inferrule[\ottdrulename{Trans}]
+    { \Gamma  \vdash  \ottnt{k_{{\mathrm{1}}}}  \mathrel{:}   \kw{Level}\texttt{<} \gap  \ottnt{k_{{\mathrm{2}}}}   \and
+      \Gamma  \vdash  \ottnt{k_{{\mathrm{2}}}}  \mathrel{:}   \kw{Level}\texttt{<} \gap  \ottnt{k_{{\mathrm{3}}}}  }
+    %----------------------%
+    { \Gamma  \vdash  \ottnt{k_{{\mathrm{1}}}}  \mathrel{:}   \kw{Level}\texttt{<} \gap  \ottnt{k_{{\mathrm{3}}}}  }
+  \and
+  \inferrule[\ottdrulename{Sub}]
+    { \Gamma  \vdash  \ottnt{A}  \mathrel{:}   \kw{U} \gap  \ottnt{k}   \and
+      \Gamma  \vdash  \ottnt{k}  \mathrel{:}   \kw{Level}\texttt{<} \gap  \ell  }
+    %--------------------%
+    { \Gamma  \vdash  \ottnt{A}  \mathrel{:}   \kw{U} \gap  \ell  }
+\end{mathpar}
+\caption{Typing rules (universes and levels)}
+\label{fig:typing:univ}
+\end{figure}
+
+\section{Metatheory}
+
+\subsection{Type safety}
+
+\subsection{Consistency and canonicity}
+
+\begin{figure}
+\begin{mathpar}
+  \inferrule[\ottdrulename{I-Univ}]
+    { \ottmv{j}  <  \ottmv{i} }
+    %---------------------------------------%
+  { \mathopen{\llbracket}   \kw{U} \gap   \ottmv{j}    \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \lbrace  \ottmv{z}  \mid   \exists  \ottnt{P}  \mathpunct{.}   \mathopen{\llbracket}  \ottmv{z}  \mathclose{\rrbracket}_{ \ottmv{j} } \searrow  \ottnt{P}    \rbrace  }
+  \and
+  \inferrule[\ottdrulename{I-Pi}]
+    { \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{1}}}}  \and
+       \forall  \ottmv{y}  \mathpunct{.}   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}    \to   \exists  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )    \and
+       \forall  \ottmv{y}  \mathpunct{.}   \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )     \to   \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}  }
+    %--------------------------------------------------------------------------------%
+    { \mathopen{\llbracket}   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \lbrace  \ottmv{f}  \mid   \forall  \ottmv{y}  \mathpunct{.}    \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}    \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )   \to   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}     \to    \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}     \rbrace  }
+  \and
+  \inferrule[\ottdrulename{I-Pi'}]
+    { \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{1}}}}  \and
+       \forall  \ottmv{y}  \mathpunct{.}   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}    \to   \exists  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}   }
+    %--------------------------------------------------------------------------------%
+    { \mathopen{\llbracket}   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \lbrace  \ottmv{f}  \mid   \forall  \ottmv{y}  \mathpunct{.}    \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}    (  \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}  )   \to   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}     \to    \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}     \rbrace  }
+  \and
+  \inferrule[\ottdrulename{I-Mty}]{~}
+    { \mathopen{\llbracket}   \bot   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \varnothing  }
+  \and
+  \inferrule[\ottdrulename{I-Level<}]{~}
+    { \mathopen{\llbracket}   \kw{Level}\texttt{<} \gap   \ottmv{j_{{\mathrm{1}}}}    \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \lbrace  \ottmv{z}  \mid   \exists  \ottmv{j_{{\mathrm{2}}}}  \mathpunct{.}    \ottmv{z}  \Rightarrow^\ast   \ottmv{j_{{\mathrm{2}}}}    \wedge   \ottmv{j_{{\mathrm{1}}}}  <  \ottmv{j_{{\mathrm{2}}}}     \rbrace  }
+  \and
+  \inferrule[\ottdrulename{I-Step}]
+    { \ottnt{A}  \Rightarrow  \ottnt{B}  \and
+      \mathopen{\llbracket}  \ottnt{B}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} }
+     %--------------%
+    { \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} }
+\end{mathpar}
+\caption{Logical relation for closed types}
+\label{fig:lr:closed}
+\end{figure}
+
+\subsection{Attempts at proving normalization}
+
+\section{Conclusion and future work}
+
+\subsection{Extensions}
+
+\citet{gen-univ,univ-poly}
+
+\bibliographystyle{plainurl}
+\bibliography{main.bib}
+
+\end{document}
