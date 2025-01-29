@@ -297,7 +297,201 @@ Then the entire term has type $[[Type o]]$ by repeated application of \rref{Pi}.
 
 \section{Metatheory}
 
+The key properties of the type theory that we prove are
+type safety and logical consistency.
+Type safety is proven using standard syntactic methods
+to show progress and preservation (\ie subject reduction).
+Consistency follow from the fundamental soundness theorem
+for a logical relation on closed types
+where the empty type is interpreted as the empty set of terms.
+The fundamental theorem also gives canonicity results for other types:
+closed terms of the universe reduce to types,
+and closed terms of level types reduce to concrete levels.
+
+All of these results are mechanized in Lean.
+While the mechanization uses de Bruijn indexing and simultaneous substitutions,
+we omit the details of manipulating these substitutions,
+continuing to state theorems in nominal form
+to focus on the ideas rather than the minutiae.
+
 \subsection{Type safety}
+
+Our type safety theorem is stated in terms of a call-by-name evaluation strategy,
+which we define shortly.
+Closed terms evaluate (if they terminate) to values,
+which are type formers and constructors,
+defined as follows.
+$$[[v]] \Coloneqq [[i]] \mid [[Πx: A. B]] \mid [[λx. b]] \mid [[⊥]] \mid [[Type k]] \mid [[Level< l]]$$
+
+\subsubsection{Reduction and conversion}
+
+\begin{figure}
+\begin{mathpar}
+  \inferrule[\ottdrulename{P-Beta}]
+    {[[b ⇒ b']] \and
+     [[a ⇒ a']]}
+    {[[(λx. b) a ⇒ b'{x ↦ a'}]]}
+  \and
+  \inferrule[\ottdrulename{P-Var}]{~}{[[x ⇒ x]]}
+  \quad
+  \inferrule[\ottdrulename{P-Mty}]{~}{[[⊥ ⇒ ⊥]]}
+  \and
+  \inferrule[\ottdrulename{P-Pi}]
+    {[[A ⇒ A']] \and
+     [[B ⇒ B']]}
+    {[[Πx: A. B ⇒ Πx: A'. B']]}
+  \and
+  \inferrule[\ottdrulename{P-Lam}]
+    {[[b ⇒ b']]}
+    {[[λx. b ⇒ λx. b']]}
+  \and
+  \inferrule[\ottdrulename{P-App}]
+    {[[b ⇒ b']] \and
+     [[a ⇒ a']]}
+    {[[b a ⇒ b' a']]}
+  \and
+  \inferrule[\ottdrulename{P-Abs}]
+    {[[b ⇒ b']]}
+    {[[abs b ⇒ abs b']]}
+  \and
+  \inferrule[\ottdrulename{P-Univ}]
+    {[[k ⇒ k']]}
+    {[[Type k ⇒ Type k']]}
+  \and
+  \inferrule[\ottdrulename{P-Level<}]
+    {[[l ⇒ l']]}
+    {[[Level< l ⇒ Level< l']]}
+  \quad
+  \inferrule[\ottdrulename{P-Lvl}]{~}{[[i ⇒ i]]}
+\end{mathpar}
+\caption{Parallel reduction rules}
+\label{fig:par}
+\end{figure}
+
+Rather than working directly with $\beta$-reduction,
+we use parallel reduction $[[a ⇒ b]]$,
+defined in \cref{fig:par},
+and its reflexive, transitive closure $[[a ⇒* b]]$,
+into which call-by-name evaluation embeds.
+We begin with simple lemmas about parallel reduction, stated without proof.
+
+\begin{lemma}[Substitution (p.r.)] \label{lem:pars:subst}
+  If $[[a ⇒* a']]$ and $[[b ⇒* b']]$,
+  then $[[b{x ↦ a} ⇒* b'{x ↦ a'}]]$.
+\end{lemma}
+
+\begin{lemma}[Congruence (p.r.)] \label{lem:pars:cong}
+  Parallel reduction is congruent,
+  \eg if $[[A ⇒* A']]$ and $[[B ⇒* B']]$,
+  then $[[Πx: A. B ⇒ Πx: A'. B']]$,
+  and so on for all terms.
+\end{lemma}
+
+\begin{lemma}[Construction (p.r.)] \label{lem:pars:cons}
+  Analogous constructors of parallel reduction hold
+  for its reflexive, transitive closure,
+  \eg if $[[b ⇒* b']]$ and $[[a ⇒* a']]$,
+  then $[[(λx. b) a ⇒* b'{x ↦ a'}]]$.
+\end{lemma}
+
+\begin{lemma}[Inversion (p.r.)] \label{lem:pars:inv}
+  If $[[v ⇒* c]]$, then $[[c]]$ is also a value of the same syntactic shape
+  such that the reduction is congruent,
+  \eg if $[[λx. b ⇒* c]]$, then $[[c]]$ is syntactically equal to $[[λx. b']]$
+  for some $[[b']]$ such that $[[b ⇒* b']]$.
+\end{lemma}
+
+Similarly, rather than working directly with definitional equality,
+we use conversion $[[a ⇔ b]]$,
+which is defined in terms of parallel reduction.
+
+\begin{definition}[Conversion]
+  $[[a ⇔ b]]$ iff there exists a $[[c]]$ such that
+  $[[a ⇒* c]]$ and $[[b ⇒* c]]$
+\end{definition}
+
+\begin{figure}
+\begin{align*}
+  \begin{aligned}
+    [[(Πx: A. B) ^ T]] &\triangleq [[Πx: A ^ T. B ^ T]] \\
+    [[(λx. b) ^ T]] &\triangleq [[λx. b ^ T]] \\
+    [[(abs b) ^ T]] &\triangleq [[abs b ^ T]]
+  \end{aligned}
+  &
+  \begin{aligned}
+    [[(Type k) ^ T]] &\triangleq [[Type k ^ T]] \\
+    [[(Level< l) ^ T]] &\triangleq [[Level< l ^ T]] \\
+    [[a ^ T]] &\triangleq a ~ \textit{otherwise}
+  \end{aligned}
+  &
+  \begin{aligned}
+    [[(b a) ^ T]] &\triangleq
+    \begin{cases}
+      [[b' ^ T {x ↦ a ^ T}]] &\textit{if } [[b]] \textit{ is } [[λx. b']] \\
+      [[b ^ T a ^ T]] &\textit{otherwise}
+    \end{cases} \\
+    &
+  \end{aligned}
+\end{align*}
+\caption{Definition of complete development}
+\label{fig:taka}
+\end{figure}
+
+Proving that conversion is transitive requires proving confluence for parallel reduction,
+which we prove using the notion of complete development by Takahashi~\citep{takahashi}.
+Complete development $[[a ^ T]]$ is defined in \cref{fig:taka},
+and is used to join parallel reductions and prove the diamond property.
+
+\begin{lemma}[Completion (p.r.)] \label{lem:par:compl}
+  If $[[a ⇒ b]]$, then $[[b ⇒ a ^ T]]$.
+\end{lemma}
+
+\begin{corollary}[Diamond (p.r.)]
+  If $[[a ⇒ b]]$ and $[[a ⇒ c]]$,
+  then there exists some $[[d]]$ such that $[[b ⇒ d]]$ and $[[c ⇒ d]]$.
+  In particular, $[[d]]$ is $[[a ^ T]]$,
+  with the reductions given by \nameref{lem:par:compl}.
+\end{corollary}
+
+\begin{theorem}[Confluence (p.r.)] \label{lem:par:confl}
+  If $[[a ⇒* b]]$ and $[[a ⇒* c]]$,
+  then there exists some $[[d]]$ such that $[[b ⇒* d]]$ and $[[c ⇒* d]]$.
+\end{theorem}
+
+\begin{corollary}[Properties of conversion]
+  Conversion is reflexive, symmetric, transitive, substitutive, and congruent.
+  Transitivity requires \nameref{lem:par:confl};
+  the remaining properties are straightforward
+  from the corresponding properties of parallel reduction.
+\end{corollary}
+
+Inversion on parallel reduction gives syntactic consistency and injectivity of conversion.
+
+\begin{lemma}[Syntactic consistency]
+  If $[[v1]]$ and $[[v2]]$ have different syntactic shapes,
+  then $[[v1 ⇔ v2]]$ is impossible.
+\end{lemma}
+
+\begin{lemma}[Injectivity] ~
+  \begin{enumerate}[topsep=0pt]
+    \item If $[[Πx: A1. B1 ⇔ Πx: A2. B2]]$, then $[[A1 ⇔ A2]]$ and $[[B1 ⇔ B2]]$.
+    \item If $[[Type k1 ⇔ Type k2]]$, then $[[k1 ⇔ k2]]$.
+  \end{enumerate}
+\end{lemma}
+
+Finally, definitional equality is equivalent to conversion,
+which allows us to use them interchangeably later on.
+The right-to-left direction is proven using induction on parallel reduction,
+while the left-to-right direction is proven by induction on definitional equality,
+using the various properties of conversion.
+
+\begin{theorem}
+  $[[a = b]]$ iff $[[a ⇔ b]]$.
+\end{theorem}
+
+\subsubsection{Subject reduction}
+
+\subsubsection{Progress}
 
 \subsection{Consistency and canonicity}
 

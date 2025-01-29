@@ -297,7 +297,201 @@ Then the entire term has type $ \kw{U} \gap   \omega  $ by repeated application 
 
 \section{Metatheory}
 
+The key properties of the type theory that we prove are
+type safety and logical consistency.
+Type safety is proven using standard syntactic methods
+to show progress and preservation (\ie subject reduction).
+Consistency follow from the fundamental soundness theorem
+for a logical relation on closed types
+where the empty type is interpreted as the empty set of terms.
+The fundamental theorem also gives canonicity results for other types:
+closed terms of the universe reduce to types,
+and closed terms of level types reduce to concrete levels.
+
+All of these results are mechanized in Lean.
+While the mechanization uses de Bruijn indexing and simultaneous substitutions,
+we omit the details of manipulating these substitutions,
+continuing to state theorems in nominal form
+to focus on the ideas rather than the minutiae.
+
 \subsection{Type safety}
+
+Our type safety theorem is stated in terms of a call-by-name evaluation strategy,
+which we define shortly.
+Closed terms evaluate (if they terminate) to values,
+which are type formers and constructors,
+defined as follows.
+$$\ottnt{v} \Coloneqq \ottmv{i} \mid  \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}  \mid  \lambda  \ottmv{x}  \mathpunct{.}  \ottnt{b}  \mid  \bot  \mid  \kw{U} \gap  \ottnt{k}  \mid  \kw{Level}\texttt{<} \gap  \ell $$
+
+\subsubsection{Reduction and conversion}
+
+\begin{figure}
+\begin{mathpar}
+  \inferrule[\ottdrulename{P-Beta}]
+    { \ottnt{b}  \Rightarrow  \ottnt{b'}  \and
+      \ottnt{a}  \Rightarrow  \ottnt{a'} }
+    {   (  \lambda  \ottmv{x}  \mathpunct{.}  \ottnt{b}  )   \gap  \ottnt{a}   \Rightarrow   \ottnt{b'} [  \ottmv{x}  \mapsto  \ottnt{a'}  ]  }
+  \and
+  \inferrule[\ottdrulename{P-Var}]{~}{ \ottmv{x}  \Rightarrow  \ottmv{x} }
+  \quad
+  \inferrule[\ottdrulename{P-Mty}]{~}{  \bot   \Rightarrow   \bot  }
+  \and
+  \inferrule[\ottdrulename{P-Pi}]
+    { \ottnt{A}  \Rightarrow  \ottnt{A'}  \and
+      \ottnt{B}  \Rightarrow  \ottnt{B'} }
+    {  \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \Rightarrow   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A'}  \mathpunct{.}  \ottnt{B'}  }
+  \and
+  \inferrule[\ottdrulename{P-Lam}]
+    { \ottnt{b}  \Rightarrow  \ottnt{b'} }
+    {  \lambda  \ottmv{x}  \mathpunct{.}  \ottnt{b}   \Rightarrow   \lambda  \ottmv{x}  \mathpunct{.}  \ottnt{b'}  }
+  \and
+  \inferrule[\ottdrulename{P-App}]
+    { \ottnt{b}  \Rightarrow  \ottnt{b'}  \and
+      \ottnt{a}  \Rightarrow  \ottnt{a'} }
+    {  \ottnt{b}  \gap  \ottnt{a}   \Rightarrow   \ottnt{b'}  \gap  \ottnt{a'}  }
+  \and
+  \inferrule[\ottdrulename{P-Abs}]
+    { \ottnt{b}  \Rightarrow  \ottnt{b'} }
+    {  \kw{absurd} \gap  \ottnt{b}   \Rightarrow   \kw{absurd} \gap  \ottnt{b'}  }
+  \and
+  \inferrule[\ottdrulename{P-Univ}]
+    { \ottnt{k}  \Rightarrow  \ottnt{k'} }
+    {  \kw{U} \gap  \ottnt{k}   \Rightarrow   \kw{U} \gap  \ottnt{k'}  }
+  \and
+  \inferrule[\ottdrulename{P-Level<}]
+    { \ell  \Rightarrow  \ell' }
+    {  \kw{Level}\texttt{<} \gap  \ell   \Rightarrow   \kw{Level}\texttt{<} \gap  \ell'  }
+  \quad
+  \inferrule[\ottdrulename{P-Lvl}]{~}{  \ottmv{i}   \Rightarrow   \ottmv{i}  }
+\end{mathpar}
+\caption{Parallel reduction rules}
+\label{fig:par}
+\end{figure}
+
+Rather than working directly with $\beta$-reduction,
+we use parallel reduction $ \ottnt{a}  \Rightarrow  \ottnt{b} $,
+defined in \cref{fig:par},
+and its reflexive, transitive closure $ \ottnt{a}  \Rightarrow^\ast  \ottnt{b} $,
+into which call-by-name evaluation embeds.
+We begin with simple lemmas about parallel reduction, stated without proof.
+
+\begin{lemma}[Substitution (p.r.)] \label{lem:pars:subst}
+  If $ \ottnt{a}  \Rightarrow^\ast  \ottnt{a'} $ and $ \ottnt{b}  \Rightarrow^\ast  \ottnt{b'} $,
+  then $  \ottnt{b} [  \ottmv{x}  \mapsto  \ottnt{a}  ]   \Rightarrow^\ast   \ottnt{b'} [  \ottmv{x}  \mapsto  \ottnt{a'}  ]  $.
+\end{lemma}
+
+\begin{lemma}[Congruence (p.r.)] \label{lem:pars:cong}
+  Parallel reduction is congruent,
+  \eg if $ \ottnt{A}  \Rightarrow^\ast  \ottnt{A'} $ and $ \ottnt{B}  \Rightarrow^\ast  \ottnt{B'} $,
+  then $  \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \Rightarrow   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A'}  \mathpunct{.}  \ottnt{B'}  $,
+  and so on for all terms.
+\end{lemma}
+
+\begin{lemma}[Construction (p.r.)] \label{lem:pars:cons}
+  Analogous constructors of parallel reduction hold
+  for its reflexive, transitive closure,
+  \eg if $ \ottnt{b}  \Rightarrow^\ast  \ottnt{b'} $ and $ \ottnt{a}  \Rightarrow^\ast  \ottnt{a'} $,
+  then $   (  \lambda  \ottmv{x}  \mathpunct{.}  \ottnt{b}  )   \gap  \ottnt{a}   \Rightarrow^\ast   \ottnt{b'} [  \ottmv{x}  \mapsto  \ottnt{a'}  ]  $.
+\end{lemma}
+
+\begin{lemma}[Inversion (p.r.)] \label{lem:pars:inv}
+  If $ \ottnt{v}  \Rightarrow^\ast  \ottnt{c} $, then $\ottnt{c}$ is also a value of the same syntactic shape
+  such that the reduction is congruent,
+  \eg if $  \lambda  \ottmv{x}  \mathpunct{.}  \ottnt{b}   \Rightarrow^\ast  \ottnt{c} $, then $\ottnt{c}$ is syntactically equal to $ \lambda  \ottmv{x}  \mathpunct{.}  \ottnt{b'} $
+  for some $\ottnt{b'}$ such that $ \ottnt{b}  \Rightarrow^\ast  \ottnt{b'} $.
+\end{lemma}
+
+Similarly, rather than working directly with definitional equality,
+we use conversion $ \ottnt{a}  \Leftrightarrow  \ottnt{b} $,
+which is defined in terms of parallel reduction.
+
+\begin{definition}[Conversion]
+  $ \ottnt{a}  \Leftrightarrow  \ottnt{b} $ iff there exists a $\ottnt{c}$ such that
+  $ \ottnt{a}  \Rightarrow^\ast  \ottnt{c} $ and $ \ottnt{b}  \Rightarrow^\ast  \ottnt{c} $
+\end{definition}
+
+\begin{figure}
+\begin{align*}
+  \begin{aligned}
+      (  \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}  )  ^{ \mathsf{T} }  &\triangleq  \Pi  \ottmv{x}  \mathbin{:}   \ottnt{A} ^{ \mathsf{T} }   \mathpunct{.}   \ottnt{B} ^{ \mathsf{T} }   \\
+      (  \lambda  \ottmv{x}  \mathpunct{.}  \ottnt{b}  )  ^{ \mathsf{T} }  &\triangleq  \lambda  \ottmv{x}  \mathpunct{.}   \ottnt{b} ^{ \mathsf{T} }   \\
+      (  \kw{absurd} \gap  \ottnt{b}  )  ^{ \mathsf{T} }  &\triangleq   \kw{absurd} \gap  \ottnt{b}  ^{ \mathsf{T} } 
+  \end{aligned}
+  &
+  \begin{aligned}
+      (  \kw{U} \gap  \ottnt{k}  )  ^{ \mathsf{T} }  &\triangleq  \kw{U} \gap   \ottnt{k} ^{ \mathsf{T} }   \\
+      (  \kw{Level}\texttt{<} \gap  \ell  )  ^{ \mathsf{T} }  &\triangleq  \kw{Level}\texttt{<} \gap   \ell ^{ \mathsf{T} }   \\
+     \ottnt{a} ^{ \mathsf{T} }  &\triangleq a ~ \textit{otherwise}
+  \end{aligned}
+  &
+  \begin{aligned}
+      (  \ottnt{b}  \gap  \ottnt{a}  )  ^{ \mathsf{T} }  &\triangleq
+    \begin{cases}
+        \ottnt{b'} ^{ \mathsf{T} }  [  \ottmv{x}  \mapsto   \ottnt{a} ^{ \mathsf{T} }   ]  &\textit{if } \ottnt{b} \textit{ is }  \lambda  \ottmv{x}  \mathpunct{.}  \ottnt{b'}  \\
+         \ottnt{b} ^{ \mathsf{T} }   \gap  \ottnt{a}  ^{ \mathsf{T} }  &\textit{otherwise}
+    \end{cases} \\
+    &
+  \end{aligned}
+\end{align*}
+\caption{Definition of complete development}
+\label{fig:taka}
+\end{figure}
+
+Proving that conversion is transitive requires proving confluence for parallel reduction,
+which we prove using the notion of complete development by Takahashi~\citep{takahashi}.
+Complete development $ \ottnt{a} ^{ \mathsf{T} } $ is defined in \cref{fig:taka},
+and is used to join parallel reductions and prove the diamond property.
+
+\begin{lemma}[Completion (p.r.)] \label{lem:par:compl}
+  If $ \ottnt{a}  \Rightarrow  \ottnt{b} $, then $ \ottnt{b}  \Rightarrow   \ottnt{a} ^{ \mathsf{T} }  $.
+\end{lemma}
+
+\begin{corollary}[Diamond (p.r.)]
+  If $ \ottnt{a}  \Rightarrow  \ottnt{b} $ and $ \ottnt{a}  \Rightarrow  \ottnt{c} $,
+  then there exists some $d$ such that $ \ottnt{b}  \Rightarrow  d $ and $ \ottnt{c}  \Rightarrow  d $.
+  In particular, $d$ is $ \ottnt{a} ^{ \mathsf{T} } $,
+  with the reductions given by \nameref{lem:par:compl}.
+\end{corollary}
+
+\begin{theorem}[Confluence (p.r.)] \label{lem:par:confl}
+  If $ \ottnt{a}  \Rightarrow^\ast  \ottnt{b} $ and $ \ottnt{a}  \Rightarrow^\ast  \ottnt{c} $,
+  then there exists some $d$ such that $ \ottnt{b}  \Rightarrow^\ast  d $ and $ \ottnt{c}  \Rightarrow^\ast  d $.
+\end{theorem}
+
+\begin{corollary}[Properties of conversion]
+  Conversion is reflexive, symmetric, transitive, substitutive, and congruent.
+  Transitivity requires \nameref{lem:par:confl};
+  the remaining properties are straightforward
+  from the corresponding properties of parallel reduction.
+\end{corollary}
+
+Inversion on parallel reduction gives syntactic consistency and injectivity of conversion.
+
+\begin{lemma}[Syntactic consistency]
+  If $\ottnt{v_{{\mathrm{1}}}}$ and $\ottnt{v_{{\mathrm{2}}}}$ have different syntactic shapes,
+  then $ \ottnt{v_{{\mathrm{1}}}}  \Leftrightarrow  \ottnt{v_{{\mathrm{2}}}} $ is impossible.
+\end{lemma}
+
+\begin{lemma}[Injectivity] ~
+  \begin{enumerate}[topsep=0pt]
+    \item If $  \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A_{{\mathrm{1}}}}  \mathpunct{.}  \ottnt{B_{{\mathrm{1}}}}   \Leftrightarrow   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A_{{\mathrm{2}}}}  \mathpunct{.}  \ottnt{B_{{\mathrm{2}}}}  $, then $ \ottnt{A_{{\mathrm{1}}}}  \Leftrightarrow  \ottnt{A_{{\mathrm{2}}}} $ and $ \ottnt{B_{{\mathrm{1}}}}  \Leftrightarrow  \ottnt{B_{{\mathrm{2}}}} $.
+    \item If $  \kw{U} \gap  \ottnt{k_{{\mathrm{1}}}}   \Leftrightarrow   \kw{U} \gap  \ottnt{k_{{\mathrm{2}}}}  $, then $ \ottnt{k_{{\mathrm{1}}}}  \Leftrightarrow  \ottnt{k_{{\mathrm{2}}}} $.
+  \end{enumerate}
+\end{lemma}
+
+Finally, definitional equality is equivalent to conversion,
+which allows us to use them interchangeably later on.
+The right-to-left direction is proven using induction on parallel reduction,
+while the left-to-right direction is proven by induction on definitional equality,
+using the various properties of conversion.
+
+\begin{theorem}
+  $ \ottnt{a}  =  \ottnt{b} $ iff $ \ottnt{a}  \Leftrightarrow  \ottnt{b} $.
+\end{theorem}
+
+\subsubsection{Subject reduction}
+
+\subsubsection{Progress}
 
 \subsection{Consistency and canonicity}
 

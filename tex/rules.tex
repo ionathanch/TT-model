@@ -49,6 +49,15 @@
 \ottprodline{|}{ \ottnt{b} [  \ottmv{x}  \mapsto  \ottnt{a}  ] } {\textsf{S}}{}{}{\ottcom{single substitution}}\ottprodnewline
 \ottprodline{|}{ ( \ottnt{a} ) } {\textsf{S}}{}{}{\ottcom{parentheses}}}
 
+\newcommand{\ottv}{
+\ottrulehead{\ottnt{v}}{::=}{\ottcom{values}}\ottprodnewline
+\ottfirstprodline{|}{ \lambda  \ottmv{x}  \mathpunct{.}  \ottnt{b} }{}{\textsf{bind}\; \ottmv{x}\; \textsf{in}\; \ottnt{b}}{}{}\ottprodnewline
+\ottprodline{|}{ \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B} }{}{\textsf{bind}\; \ottmv{x}\; \textsf{in}\; \ottnt{b}}{}{}\ottprodnewline
+\ottprodline{|}{ \bot }{}{}{}{}\ottprodnewline
+\ottprodline{|}{ \kw{U} \gap  \ottnt{k} }{}{}{}{}\ottprodnewline
+\ottprodline{|}{ \kw{Level}\texttt{<} \gap  \ell }{}{}{}{}\ottprodnewline
+\ottprodline{|}{ \ottmv{i} }{}{}{}{}}
+
 \newcommand{\ottG}{
 \ottrulehead{\Gamma  ,\ \Delta}{::=}{\ottcom{contexts}}\ottprodnewline
 \ottfirstprodline{|}{ \cdot }{}{}{}{\ottcom{empty context}}\ottprodnewline
@@ -67,6 +76,7 @@
 
 \newcommand{\ottgrammar}{\ottgrammartabular{
 \otta\ottinterrule
+\ottv\ottinterrule
 \ottG\ottinterrule
 \ottP\ottinterrule
 \ottR\ottafterlastrule

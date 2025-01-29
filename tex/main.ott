@@ -55,6 +55,19 @@ a, b, c, A, B, C, k, l {{ tex \ell }} :: 'tm_' ::= {{ com terms }}
   | ( a ) :: S :: Parens
     {{ com parentheses }}
     {{ tex ([[a]]) }}
+  | a ^ T :: M :: Taka
+    {{ com Takahashi's complete development }}
+    {{ tex [[a]]^{ \mathsf{T} } }}
+
+v :: 'val_' ::= {{ com values }}
+  | λ x . b :: :: Abs
+    (+ bind x in b +)
+  | Π x : A . B :: :: Pi
+    (+ bind x in b +)
+  | ⊥ :: :: Mty
+  | Type k :: :: Univ
+  | Level< l :: :: Lvl
+  | i :: :: Lof
 
 G {{ tex \Gamma }}, D {{ tex \Delta }} :: 'ctxt_' ::= {{ com contexts }}
   | • :: :: Nil
@@ -128,3 +141,6 @@ formula :: 'formula_' ::=
     {{ tex [[R]]([[x]], [[P]]) }}
   | ( formula ) :: S :: parentheses
     {{ tex ([[formula]]) }}
+
+subrules
+  v <:: a
