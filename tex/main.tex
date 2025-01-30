@@ -308,7 +308,7 @@ The fundamental theorem also gives canonicity results for other types:
 closed terms of the universe reduce to types,
 and closed terms of level types reduce to concrete levels.
 
-All of these results are mechanized in Lean.
+All results are mechanized in Lean.
 While the mechanization uses de Bruijn indexing and simultaneous substitutions,
 we omit the details of manipulating these substitutions,
 continuing to state theorems in nominal form
@@ -411,6 +411,7 @@ which is defined in terms of parallel reduction.
 \end{definition}
 
 \begin{figure}
+\hspace*{-5em}
 \begin{align*}
   \begin{aligned}
       (  \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}  )  ^{ \mathsf{T} }  &\triangleq  \Pi  \ottmv{x}  \mathbin{:}   \ottnt{A} ^{ \mathsf{T} }   \mathpunct{.}   \ottnt{B} ^{ \mathsf{T} }   \\
@@ -433,7 +434,7 @@ which is defined in terms of parallel reduction.
     &
   \end{aligned}
 \end{align*}
-\caption{Definition of complete development}
+\caption{Complete development}
 \label{fig:taka}
 \end{figure}
 
@@ -458,7 +459,7 @@ and is used to join parallel reductions and prove the diamond property.
   then there exists some $d$ such that $ \ottnt{b}  \Rightarrow^\ast  d $ and $ \ottnt{c}  \Rightarrow^\ast  d $.
 \end{theorem}
 
-\begin{corollary}[Properties of conversion]
+\begin{corollary}[Properties of conversion] \label{lem:conv}
   Conversion is reflexive, symmetric, transitive, substitutive, and congruent.
   Transitivity requires \nameref{lem:par:confl};
   the remaining properties are straightforward
@@ -472,7 +473,7 @@ Inversion on parallel reduction gives syntactic consistency and injectivity of c
   then $ \ottnt{v_{{\mathrm{1}}}}  \Leftrightarrow  \ottnt{v_{{\mathrm{2}}}} $ is impossible.
 \end{lemma}
 
-\begin{lemma}[Injectivity] ~
+\begin{lemma}[Injectivity (conv.)] ~
   \begin{enumerate}[topsep=0pt]
     \item If $  \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A_{{\mathrm{1}}}}  \mathpunct{.}  \ottnt{B_{{\mathrm{1}}}}   \Leftrightarrow   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A_{{\mathrm{2}}}}  \mathpunct{.}  \ottnt{B_{{\mathrm{2}}}}  $, then $ \ottnt{A_{{\mathrm{1}}}}  \Leftrightarrow  \ottnt{A_{{\mathrm{2}}}} $ and $ \ottnt{B_{{\mathrm{1}}}}  \Leftrightarrow  \ottnt{B_{{\mathrm{2}}}} $.
     \item If $  \kw{U} \gap  \ottnt{k_{{\mathrm{1}}}}   \Leftrightarrow   \kw{U} \gap  \ottnt{k_{{\mathrm{2}}}}  $, then $ \ottnt{k_{{\mathrm{1}}}}  \Leftrightarrow  \ottnt{k_{{\mathrm{2}}}} $.
@@ -485,11 +486,86 @@ The right-to-left direction is proven using induction on parallel reduction,
 while the left-to-right direction is proven by induction on definitional equality,
 using the various properties of conversion.
 
-\begin{theorem}
+\begin{theorem} \label{lem:eq-conv}
   $ \ottnt{a}  =  \ottnt{b} $ iff $ \ottnt{a}  \Leftrightarrow  \ottnt{b} $.
 \end{theorem}
 
 \subsubsection{Subject reduction}
+
+To prove subject reduction,
+we begin first with some simple inversion properties on typing derivations,
+proven directly by induction.
+
+\begin{lemma}[Context well-formedness] \label{lem:wt:wf}
+  If $ \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $, then $ \mathop{\vdash}  \Gamma $.  
+\end{lemma}
+
+\begin{lemma}[Context well-typedness]
+  If $ \mathop{\vdash}  \Gamma $ and $ \ottmv{x}  \mathrel{:}  \ottnt{A}  \in  \Gamma $,
+  then there exists some $\ottnt{k}$ such that $ \Gamma  \vdash  \ottnt{A}  \mathrel{:}   \kw{U} \gap  \ottnt{k}  $.
+\end{lemma}
+
+\begin{lemma}[Regularity] \label{lem:wt:reg}
+  If $ \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $, then there exists some $\ottnt{k}$ such that
+  $ \Gamma  \vdash  \ottnt{A}  \mathrel{:}   \kw{U} \gap  \ottnt{k}  $.
+\end{lemma}
+
+Next, we require weakening, substitution, and replacement lemmas.
+They follow from stronger forms of these lemmas involving simultaneous renaming and substitution,
+whose details we omit.
+
+\begin{lemma}[Weakening (w.t.)] \label{lem:wt:weak}
+  If $ \mathop{\vdash}  \Gamma $, $ \Gamma  \vdash  \ottnt{B}  \mathrel{:}   \kw{U} \gap  \ottnt{k}  $, and $ \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $,
+  then $  \Gamma ,  \ottmv{x}  \mathbin{:}  \ottnt{B}   \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $, where $\ottmv{x}$ is not in $\ottnt{a}$ or $\ottnt{A}$.
+\end{lemma}
+
+\begin{proof}
+  A renaming lemma is proven by induction on the typing derivation of $\ottnt{a}$,
+  showing that applying well-scoped renamings preserves typing.
+  Weakening is then the special case of a single renaming by $\ottmv{x}$ to avoid capture.
+\end{proof}
+
+\begin{lemma}[Substitution (w.t.)] \label{lem:wt:subst}
+  If $ \Gamma  \vdash  \ottnt{b}  \mathrel{:}  \ottnt{B} $ and $  \Gamma ,  \ottmv{x}  \mathbin{:}  \ottnt{B}   \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $,
+  then $ \Gamma  \vdash   \ottnt{a} [  \ottmv{x}  \mapsto  \ottnt{b}  ]   \mathrel{:}   \ottnt{A} [  \ottmv{x}  \mapsto  \ottnt{b}  ]  $.
+\end{lemma}
+
+\begin{proof}
+  A morphing lemma is proven by induction on the typing derivation of $\ottnt{a}$,
+  showing that applying well-typed substitutions preserves typing.
+  Substitution is then the special case of a single substitution of $\ottmv{x}$.
+\end{proof}
+
+\begin{lemma}[Replacement (w.t.)] \label{lem:wt:replace}
+  If $ \ottnt{A}  =  \ottnt{B} $, $ \Gamma  \vdash  \ottnt{B}  \mathrel{:}   \kw{U} \gap  \ottnt{k}  $, and $  \Gamma ,  \ottmv{x}  \mathbin{:}  \ottnt{A}   \vdash  \ottnt{c}  \mathrel{:}  \ottnt{C} $,
+  then $  \Gamma ,  \ottmv{x}  \mathbin{:}  \ottnt{B}   \vdash  \ottnt{c}  \mathrel{:}  \ottnt{C} $.
+\end{lemma}
+
+\begin{proof}
+  The morphing lemma allows us to change the context from one to the other
+  as long as there is a well-typed substitution between them.
+  We can show that the identity substitution is such a substitution
+  by proving $  \Gamma ,  \ottmv{x}  \mathbin{:}  \ottnt{B}   \vdash  \ottmv{x}  \mathrel{:}  \ottnt{A} $.
+  This follows from \rref{Conv},
+  \nameref{lem:wt:wf} for well-typedness of $\ottnt{A}$,
+  and \nameref{lem:wt:weak} to weaken it.
+\end{proof}
+
+Finally, the proof of subject reduction requires many of the above lemmas.
+
+\begin{theorem}[Subject reduction]
+  If $ \ottnt{a}  \Rightarrow  \ottnt{b} $ and $ \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $, then $ \Gamma  \vdash  \ottnt{b}  \mathrel{:}  \ottnt{A} $.
+\end{theorem}
+
+\begin{proof}
+  By induction on the typing derivation of $\ottnt{a}$.
+  The most complex case is when the reduction is \rref*{P-Beta},
+  requiring \cref{lem:conv}, \nameref{lem:wt:subst},
+  \nameref{lem:wt:replace}, and \nameref{lem:wt:reg}.
+  Even so, the proof is standard,
+  and the cases for the universe and level rules in \cref{fig:typing:univ}
+  follow directly from the induction hypotheses.
+\end{proof}
 
 \subsubsection{Progress}
 

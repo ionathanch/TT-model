@@ -308,7 +308,7 @@ The fundamental theorem also gives canonicity results for other types:
 closed terms of the universe reduce to types,
 and closed terms of level types reduce to concrete levels.
 
-All of these results are mechanized in Lean.
+All results are mechanized in Lean.
 While the mechanization uses de Bruijn indexing and simultaneous substitutions,
 we omit the details of manipulating these substitutions,
 continuing to state theorems in nominal form
@@ -433,7 +433,7 @@ which is defined in terms of parallel reduction.
     &
   \end{aligned}
 \end{align*}
-\caption{Definition of complete development}
+\caption{Complete development}
 \label{fig:taka}
 \end{figure}
 
@@ -458,7 +458,7 @@ and is used to join parallel reductions and prove the diamond property.
   then there exists some $[[d]]$ such that $[[b ⇒* d]]$ and $[[c ⇒* d]]$.
 \end{theorem}
 
-\begin{corollary}[Properties of conversion]
+\begin{corollary}[Properties of conversion] \label{lem:conv}
   Conversion is reflexive, symmetric, transitive, substitutive, and congruent.
   Transitivity requires \nameref{lem:par:confl};
   the remaining properties are straightforward
@@ -472,7 +472,7 @@ Inversion on parallel reduction gives syntactic consistency and injectivity of c
   then $[[v1 ⇔ v2]]$ is impossible.
 \end{lemma}
 
-\begin{lemma}[Injectivity] ~
+\begin{lemma}[Injectivity (conv.)] ~
   \begin{enumerate}[topsep=0pt]
     \item If $[[Πx: A1. B1 ⇔ Πx: A2. B2]]$, then $[[A1 ⇔ A2]]$ and $[[B1 ⇔ B2]]$.
     \item If $[[Type k1 ⇔ Type k2]]$, then $[[k1 ⇔ k2]]$.
@@ -485,11 +485,86 @@ The right-to-left direction is proven using induction on parallel reduction,
 while the left-to-right direction is proven by induction on definitional equality,
 using the various properties of conversion.
 
-\begin{theorem}
+\begin{theorem} \label{lem:eq-conv}
   $[[a = b]]$ iff $[[a ⇔ b]]$.
 \end{theorem}
 
 \subsubsection{Subject reduction}
+
+To prove subject reduction,
+we begin first with some simple inversion properties on typing derivations,
+proven directly by induction.
+
+\begin{lemma}[Context well-formedness] \label{lem:wt:wf}
+  If $[[G ⊢ a : A]]$, then $[[⊢ G]]$.  
+\end{lemma}
+
+\begin{lemma}[Context well-typedness]
+  If $[[⊢ G]]$ and $[[x : A ∈ G]]$,
+  then there exists some $[[k]]$ such that $[[G ⊢ A : Type k]]$.
+\end{lemma}
+
+\begin{lemma}[Regularity] \label{lem:wt:reg}
+  If $[[G ⊢ a : A]]$, then there exists some $[[k]]$ such that
+  $[[G ⊢ A : Type k]]$.
+\end{lemma}
+
+Next, we require weakening, substitution, and replacement lemmas.
+They follow from stronger forms of these lemmas involving simultaneous renaming and substitution,
+whose details we omit.
+
+\begin{lemma}[Weakening (w.t.)] \label{lem:wt:weak}
+  If $[[⊢ G]]$, $[[G ⊢ B : Type k]]$, and $[[G ⊢ a : A]]$,
+  then $[[G, x : B ⊢ a : A]]$, where $[[x]]$ is not in $[[a]]$ or $[[A]]$.
+\end{lemma}
+
+\begin{proof}
+  A renaming lemma is proven by induction on the typing derivation of $[[a]]$,
+  showing that applying well-scoped renamings preserves typing.
+  Weakening is then the special case of a single renaming by $[[x]]$ to avoid capture.
+\end{proof}
+
+\begin{lemma}[Substitution (w.t.)] \label{lem:wt:subst}
+  If $[[G ⊢ b : B]]$ and $[[G, x : B ⊢ a : A]]$,
+  then $[[G ⊢ a{x ↦ b} : A{x ↦ b}]]$.
+\end{lemma}
+
+\begin{proof}
+  A morphing lemma is proven by induction on the typing derivation of $[[a]]$,
+  showing that applying well-typed substitutions preserves typing.
+  Substitution is then the special case of a single substitution of $[[x]]$.
+\end{proof}
+
+\begin{lemma}[Replacement (w.t.)] \label{lem:wt:replace}
+  If $[[A = B]]$, $[[G ⊢ B : Type k]]$, and $[[G, x : A ⊢ c : C]]$,
+  then $[[G, x : B ⊢ c : C]]$.
+\end{lemma}
+
+\begin{proof}
+  The morphing lemma allows us to change the context from one to the other
+  as long as there is a well-typed substitution between them.
+  We can show that the identity substitution is such a substitution
+  by proving $[[G, x : B ⊢ x : A]]$.
+  This follows from \rref{Conv},
+  \nameref{lem:wt:wf} for well-typedness of $[[A]]$,
+  and \nameref{lem:wt:weak} to weaken it.
+\end{proof}
+
+Finally, the proof of subject reduction requires many of the above lemmas.
+
+\begin{theorem}[Subject reduction]
+  If $[[a ⇒ b]]$ and $[[G ⊢ a : A]]$, then $[[G ⊢ b : A]]$.
+\end{theorem}
+
+\begin{proof}
+  By induction on the typing derivation of $[[a]]$.
+  The most complex case is when the reduction is \rref*{P-Beta},
+  requiring \cref{lem:conv}, \nameref{lem:wt:subst},
+  \nameref{lem:wt:replace}, and \nameref{lem:wt:reg}.
+  Even so, the proof is standard,
+  and the cases for the universe and level rules in \cref{fig:typing:univ}
+  follow directly from the induction hypotheses.
+\end{proof}
 
 \subsubsection{Progress}
 
