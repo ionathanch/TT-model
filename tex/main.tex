@@ -301,7 +301,7 @@ The key properties of the type theory that we prove are
 type safety and logical consistency.
 Type safety is proven using standard syntactic methods
 to show progress and preservation (\ie subject reduction).
-Consistency follow from the fundamental soundness theorem
+Consistency follows from the fundamental soundness theorem
 for a logical relation on closed types
 where the empty type is interpreted as the empty set of terms.
 The fundamental theorem also gives canonicity results for other types:
@@ -318,7 +318,7 @@ to focus on the ideas rather than the minutiae.
 
 Our type safety theorem is stated in terms of a call-by-name evaluation strategy,
 which we define shortly.
-Closed, well-typed terms evaluate (if they terminate) to values,
+In essence, closed, well-typed terms evaluate (if they terminate) to values,
 which are type formers and constructors,
 defined as follows.
 $$\ottnt{v} \Coloneqq \ottmv{i} \mid  \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}  \mid  \lambda  \ottmv{x}  \mathpunct{.}  \ottnt{b}  \mid  \bot  \mid  \kw{U} \gap  \ottnt{k}  \mid  \kw{Level}\texttt{<} \gap  \ell $$
@@ -642,28 +642,43 @@ closed, well-typed terms either reduce to a value, or must continue reducing.
 
 \subsection{Consistency and canonicity}
 
+To prove consistency and canonicity,
+we use a logical relation to semantically interpret closed types as sets of closed terms;
+these sets are backward closed under reduction,
+so if a term reduces to something in the set, then it is also in the set.
+The empty type is interpreted as the empty set,
+universes as sets of terms that reduce to types,
+and level types as sets of terms that reduce to concrete levels.
+Consistency and canonicity then follow from the fundamental soundness theorem,
+which states that if a term $\ottnt{a}$ has type $\ottnt{A}$,
+then $\ottnt{a}$ is in the interpretation of $\ottnt{A}$.
+The structure of the logical relation and the soundness proof
+is adapted from the mechanization by Liu~\citep{lr-pearl},
+and we will cover important details here,
+especially as they pertain to universes and levels.
+
+The logical relation is written as $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $,
+where $\ottnt{A}$ is the type, $\ottnt{P}$ is the set of terms,
+and $\ottmv{i}$ is the universe level of the type.
+Because universes are interpreted as sets of types
+which themselves have interpretations at a lower universe level,
+to ensure that the interpretation is well defined,
+the mechanization implements it as an inductive definition
+parametrized by interpretations at lower levels,
+then ties the knot by well-founded induction on levels.
+For clarity and concision, we ignore these mechanization details
+and present the logical relation in \cref{fig:lr:closed}
+without worrying about well-foundedness.
+
 \begin{figure}
 \begin{mathpar}
+  \inferrule[\ottdrulename{I-Mty}]{~}
+    { \mathopen{\llbracket}   \bot   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \varnothing  }
+  \and
   \inferrule[\ottdrulename{I-Univ}]
     { \ottmv{j}  <  \ottmv{i} }
     %---------------------------------------%
   { \mathopen{\llbracket}   \kw{U} \gap   \ottmv{j}    \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \lbrace  \ottmv{z}  \mid   \exists  \ottnt{P}  \mathpunct{.}   \mathopen{\llbracket}  \ottmv{z}  \mathclose{\rrbracket}_{ \ottmv{j} } \searrow  \ottnt{P}    \rbrace  }
-  \and
-  \inferrule[\ottdrulename{I-Pi}]
-    { \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{1}}}}  \and
-       \forall  \ottmv{y}  \mathpunct{.}   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}    \to   \exists  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )    \and
-       \forall  \ottmv{y}  \mathpunct{.}   \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )     \to   \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}  }
-    %--------------------------------------------------------------------------------%
-    { \mathopen{\llbracket}   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \lbrace  \ottmv{f}  \mid   \forall  \ottmv{y}  \mathpunct{.}    \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}    \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )   \to   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}     \to    \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}     \rbrace  }
-  \and
-  \inferrule[\ottdrulename{I-Pi'}]
-    { \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{1}}}}  \and
-       \forall  \ottmv{y}  \mathpunct{.}   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}    \to   \exists  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}   }
-    %--------------------------------------------------------------------------------%
-    { \mathopen{\llbracket}   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \lbrace  \ottmv{f}  \mid   \forall  \ottmv{y}  \mathpunct{.}    \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}    (  \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}  )   \to   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}     \to    \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}     \rbrace  }
-  \and
-  \inferrule[\ottdrulename{I-Mty}]{~}
-    { \mathopen{\llbracket}   \bot   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \varnothing  }
   \and
   \inferrule[\ottdrulename{I-Level<}]{~}
     { \mathopen{\llbracket}   \kw{Level}\texttt{<} \gap   \ottmv{j_{{\mathrm{1}}}}    \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \lbrace  \ottmv{z}  \mid   \exists  \ottmv{j_{{\mathrm{2}}}}  \mathpunct{.}    \ottmv{z}  \Rightarrow^\ast   \ottmv{j_{{\mathrm{2}}}}    \wedge   \ottmv{j_{{\mathrm{1}}}}  <  \ottmv{j_{{\mathrm{2}}}}     \rbrace  }
@@ -673,10 +688,25 @@ closed, well-typed terms either reduce to a value, or must continue reducing.
       \mathopen{\llbracket}  \ottnt{B}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} }
      %--------------%
     { \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} }
+  \and
+  \inferrule[\ottdrulename{I-Pi}]
+    { \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{1}}}}  \and
+       \forall  \ottmv{y}  \mathpunct{.}   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}    \to   \exists  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )    \\\\
+       \forall  \ottmv{y}  \mathpunct{.}   \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )     \to   \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}  }
+    %--------------------------------------------------------------------------------%
+    { \mathopen{\llbracket}   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \lbrace  \ottmv{f}  \mid   \forall  \ottmv{y}  \mathpunct{.}    \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}    \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )   \to   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}     \to    \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}     \rbrace  }
 \end{mathpar}
 \caption{Logical relation for closed types}
 \label{fig:lr:closed}
 \end{figure}
+
+\begin{mathpar}
+  \inferrule[\ottdrulename{I-Pi'}]
+    { \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{1}}}}  \and
+       \forall  \ottmv{y}  \mathpunct{.}   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}    \to   \exists  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}   }
+    %--------------------------------------------------------------------------------%
+    { \mathopen{\llbracket}   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \lbrace  \ottmv{f}  \mid   \forall  \ottmv{y}  \mathpunct{.}    \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}    (  \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}  )   \to   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}     \to    \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}     \rbrace  }
+\end{mathpar}
 
 \subsection{Attempts at proving normalization}
 
