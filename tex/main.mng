@@ -318,7 +318,7 @@ to focus on the ideas rather than the minutiae.
 
 Our type safety theorem is stated in terms of a call-by-name evaluation strategy,
 which we define shortly.
-Closed terms evaluate (if they terminate) to values,
+Closed, well-typed terms evaluate (if they terminate) to values,
 which are type formers and constructors,
 defined as follows.
 $$[[v]] \Coloneqq [[i]] \mid [[Πx: A. B]] \mid [[λx. b]] \mid [[⊥]] \mid [[Type k]] \mid [[Level< l]]$$
@@ -552,7 +552,7 @@ whose details we omit.
 
 Finally, the proof of subject reduction requires many of the above lemmas.
 
-\begin{theorem}[Subject reduction]
+\begin{theorem}[Subject reduction] \label{lem:preservation}
   If $[[a ⇒ b]]$ and $[[G ⊢ a : A]]$, then $[[G ⊢ b : A]]$.
 \end{theorem}
 
@@ -567,6 +567,78 @@ Finally, the proof of subject reduction requires many of the above lemmas.
 \end{proof}
 
 \subsubsection{Progress}
+
+\begin{figure}
+\begin{mathpar}
+  \inferrule[\ottdrulename{N-Beta}]{~}
+    {[[(λx. b) a ⇝ b{x ↦ a}]]}
+  \and
+  \inferrule[\ottdrulename{N-App}]
+    {[[b ⇝ b']]}
+    {[[b a ⇝ b' a]]}
+  \and
+  \inferrule[\ottdrulename{N-Abs}]
+    {[[b ⇝ b']]}
+    {[[abs b ⇝ abs b']]}
+\end{mathpar}
+\caption{Call by name reduction}
+\label{fig:cbn}
+\end{figure}
+
+Our notion of evaluation in the progress and type safety theorems
+is the reflexive, transitive closure  $[[a ⇝* b]]$
+of call-by-name (cbn) reduction $[[a ⇝ b]]$,
+defined in \cref{fig:cbn},
+which reduces $\beta$-redexes and head positions.
+A single step of cbn reduction embeds into
+a single step of parallel reduction by induction.
+
+\begin{lemma}
+  If $[[a ⇝ b]]$ then $[[a ⇒ b]]$.
+\end{lemma}
+
+Because cbn reduces under eliminators for functions and proofs of falsehood,
+we need to know what values of function and empty types are.
+The following lemmas are proven by induction,
+using inversion lemmas on typing derivations as needed.
+
+\begin{lemma}[Canonical function values] \label{lem:canon:fun}
+  If $[[G ⊢ v : Πx: A. B]]$,
+  then $[[v]]$ has the syntactic shape $[[λx. b]]$ for some $[[b]]$.
+\end{lemma}
+
+\begin{lemma}[Canonical false values] \label{lem:canon:false}
+  There is no $[[v]]$ such that $[[G ⊢ v : ⊥]]$.
+\end{lemma}
+
+Finally, we prove progress, which with subject reduction we show type safety:
+closed, well-typed terms either reduce to a value, or must continue reducing.
+
+\begin{theorem}[Progress] \label{lem:progress}
+  If $[[• ⊢ a : A]]$, then either $[[a]]$ is a value
+  or $[[a ⇝ b]]$ for some $[[b]]$.
+\end{theorem}
+
+\begin{proof}
+  By induction on the typing derivation of $[[a]]$,
+  using \cref{lem:canon:fun,lem:canon:false}
+  in the cases for \rref{App,Abs}, respectively.
+\end{proof}
+
+\begin{theorem}[Type safety]
+  If $[[• ⊢ a : A]]$ and $[[a ⇝* b]]$,
+  then either $[[b]]$ is a value,
+  or $[[b ⇝ c]]$ for some $[[c]]$.
+\end{theorem}
+
+\begin{proof}
+  By induction on the reduction $[[a ⇝* c]]$.
+  The reflexive case holds by \nameref{lem:progress}.
+  In the transitive case where $[[a ⇝ b]]$ and $[[b ⇝* c]]$,
+  the goal holds by the induction hypothesis on the latter reduction,
+  using \nameref{lem:preservation} for well typedness of $[[b]]$
+  from the former.
+\end{proof}
 
 \subsection{Consistency and canonicity}
 

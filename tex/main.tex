@@ -318,7 +318,7 @@ to focus on the ideas rather than the minutiae.
 
 Our type safety theorem is stated in terms of a call-by-name evaluation strategy,
 which we define shortly.
-Closed terms evaluate (if they terminate) to values,
+Closed, well-typed terms evaluate (if they terminate) to values,
 which are type formers and constructors,
 defined as follows.
 $$\ottnt{v} \Coloneqq \ottmv{i} \mid  \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}  \mid  \lambda  \ottmv{x}  \mathpunct{.}  \ottnt{b}  \mid  \bot  \mid  \kw{U} \gap  \ottnt{k}  \mid  \kw{Level}\texttt{<} \gap  \ell $$
@@ -411,7 +411,6 @@ which is defined in terms of parallel reduction.
 \end{definition}
 
 \begin{figure}
-\hspace*{-5em}
 \begin{align*}
   \begin{aligned}
       (  \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}  )  ^{ \mathsf{T} }  &\triangleq  \Pi  \ottmv{x}  \mathbin{:}   \ottnt{A} ^{ \mathsf{T} }   \mathpunct{.}   \ottnt{B} ^{ \mathsf{T} }   \\
@@ -553,7 +552,7 @@ whose details we omit.
 
 Finally, the proof of subject reduction requires many of the above lemmas.
 
-\begin{theorem}[Subject reduction]
+\begin{theorem}[Subject reduction] \label{lem:preservation}
   If $ \ottnt{a}  \Rightarrow  \ottnt{b} $ and $ \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $, then $ \Gamma  \vdash  \ottnt{b}  \mathrel{:}  \ottnt{A} $.
 \end{theorem}
 
@@ -568,6 +567,78 @@ Finally, the proof of subject reduction requires many of the above lemmas.
 \end{proof}
 
 \subsubsection{Progress}
+
+\begin{figure}
+\begin{mathpar}
+  \inferrule[\ottdrulename{N-Beta}]{~}
+    {   (  \lambda  \ottmv{x}  \mathpunct{.}  \ottnt{b}  )   \gap  \ottnt{a}   \rightsquigarrow   \ottnt{b} [  \ottmv{x}  \mapsto  \ottnt{a}  ]  }
+  \and
+  \inferrule[\ottdrulename{N-App}]
+    { \ottnt{b}  \rightsquigarrow  \ottnt{b'} }
+    {  \ottnt{b}  \gap  \ottnt{a}   \rightsquigarrow   \ottnt{b'}  \gap  \ottnt{a}  }
+  \and
+  \inferrule[\ottdrulename{N-Abs}]
+    { \ottnt{b}  \rightsquigarrow  \ottnt{b'} }
+    {  \kw{absurd} \gap  \ottnt{b}   \rightsquigarrow   \kw{absurd} \gap  \ottnt{b'}  }
+\end{mathpar}
+\caption{Call by name reduction}
+\label{fig:cbn}
+\end{figure}
+
+Our notion of evaluation in the progress and type safety theorems
+is the reflexive, transitive closure  $ \ottnt{a}  \rightsquigarrow^\ast  \ottnt{b} $
+of call-by-name (cbn) reduction $ \ottnt{a}  \rightsquigarrow  \ottnt{b} $,
+defined in \cref{fig:cbn},
+which reduces $\beta$-redexes and head positions.
+A single step of cbn reduction embeds into
+a single step of parallel reduction by induction.
+
+\begin{lemma}
+  If $ \ottnt{a}  \rightsquigarrow  \ottnt{b} $ then $ \ottnt{a}  \Rightarrow  \ottnt{b} $.
+\end{lemma}
+
+Because cbn reduces under eliminators for functions and proofs of falsehood,
+we need to know what values of function and empty types are.
+The following lemmas are proven by induction,
+using inversion lemmas on typing derivations as needed.
+
+\begin{lemma}[Canonical function values] \label{lem:canon:fun}
+  If $ \Gamma  \vdash  \ottnt{v}  \mathrel{:}   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}  $,
+  then $\ottnt{v}$ has the syntactic shape $ \lambda  \ottmv{x}  \mathpunct{.}  \ottnt{b} $ for some $\ottnt{b}$.
+\end{lemma}
+
+\begin{lemma}[Canonical false values] \label{lem:canon:false}
+  There is no $\ottnt{v}$ such that $ \Gamma  \vdash  \ottnt{v}  \mathrel{:}   \bot  $.
+\end{lemma}
+
+Finally, we prove progress, which with subject reduction we show type safety:
+closed, well-typed terms either reduce to a value, or must continue reducing.
+
+\begin{theorem}[Progress] \label{lem:progress}
+  If $  \cdot   \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $, then either $\ottnt{a}$ is a value
+  or $ \ottnt{a}  \rightsquigarrow  \ottnt{b} $ for some $\ottnt{b}$.
+\end{theorem}
+
+\begin{proof}
+  By induction on the typing derivation of $\ottnt{a}$,
+  using \cref{lem:canon:fun,lem:canon:false}
+  in the cases for \rref{App,Abs}, respectively.
+\end{proof}
+
+\begin{theorem}[Type safety]
+  If $  \cdot   \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $ and $ \ottnt{a}  \rightsquigarrow^\ast  \ottnt{b} $,
+  then either $\ottnt{b}$ is a value,
+  or $ \ottnt{b}  \rightsquigarrow  \ottnt{c} $ for some $\ottnt{c}$.
+\end{theorem}
+
+\begin{proof}
+  By induction on the reduction $ \ottnt{a}  \rightsquigarrow^\ast  \ottnt{c} $.
+  The reflexive case holds by \nameref{lem:progress}.
+  In the transitive case where $ \ottnt{a}  \rightsquigarrow  \ottnt{b} $ and $ \ottnt{b}  \rightsquigarrow^\ast  \ottnt{c} $,
+  the goal holds by the induction hypothesis on the latter reduction,
+  using \nameref{lem:preservation} for well typedness of $\ottnt{b}$
+  from the former.
+\end{proof}
 
 \subsection{Consistency and canonicity}
 

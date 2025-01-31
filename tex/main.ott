@@ -131,6 +131,10 @@ formula :: 'formula_' ::=
     {{ tex [[a]] \Rightarrow^\ast [[b]] }}
   | a ⇔ b :: S :: conv
     {{ tex [[a]] \Leftrightarrow [[b]] }}
+  | a ⇝ b :: S :: cbn
+    {{ tex [[a]] \rightsquigarrow [[b]] }}
+  | a ⇝* b :: S :: cbns
+    {{ tex [[a]] \rightsquigarrow^\ast [[b]] }}
   | ⟦ A ⟧ i , I ↘ P :: S :: interp
     {{ tex \mathopen{\llbracket} [[A]] \mathclose{\rrbracket}_{[[i]]} \gap [[I]] \searrow [[P]] }}
   | ⟦ A ⟧ i ↘ P :: S :: interps
