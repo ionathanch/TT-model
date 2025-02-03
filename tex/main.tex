@@ -901,12 +901,13 @@ which we explicitly state below.
       we know there exists a $\ottnt{P'_{{\mathrm{2}}}}$ such that $  \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P'_{{\mathrm{2}}}} $.
       From \ref{lem:inv-pi:hyp:B}, we also know that $ \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P'_{{\mathrm{2}}}} $.
       Then by \nameref{lem:lr:func}, we have $\ottnt{P_{{\mathrm{2}}}} = \ottnt{P'_{{\mathrm{2}}}}$, so $  \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}} $.
+      \qedhere
   \end{itemize}
 \end{proof}
 
 It is worthwhile to also explicitly state the inversion principle
 asserting that types that have interpretations are indeed one of the four types,
-which is a semantic form of canonicity.
+proven by induction on the logical relation.
 
 \begin{lemma}[Inversion (l.r.)]
   If $ \mathopen{\llbracket}  \ottnt{C}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $, then one of the following holds:
@@ -918,11 +919,11 @@ which is a semantic form of canonicity.
   \end{itemize}
 \end{lemma}
 
-\begin{proof}
-  By induction on the logical relation.
-  The induction hypothesis is only needed for the \rref*{I-Step} case,
-  where $ \ottnt{C}  \Rightarrow  \ottnt{C'} $ and $\ottnt{C'}$ reduces to one of the four cases.
-\end{proof}
+% \begin{proof}
+%   By induction on the logical relation.
+%   The induction hypothesis is only needed for the \rref*{I-Step} case,
+%   where $ \ottnt{C}  \Rightarrow  \ottnt{C'} $ and $\ottnt{C'}$ reduces to one of the four cases.
+% \end{proof}
 
 \subsubsection{Fundamental soundness theorem}
 
