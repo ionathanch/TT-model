@@ -19,6 +19,7 @@
 \newcommand{\eg}{\textit{e.g.}\@\xspace}
 \newcommand{\etal}{\textit{et al.}\@\xspace}
 \newcommand{\vs}{\textit{vs.}\@\xspace}
+\newcommand{\apriori}{\textit{a priori}\@\xspace}
 \newcommand{\welltyped}{well-\hspace{0pt}typed\@\xspace}
 \newcommand{\wellfounded}{well-\hspace{0pt}founded\@\xspace}
 \newcommand{\wellfoundedness}{well-\hspace{0pt}foundedness\@\xspace}
@@ -149,7 +150,7 @@ These metalevel levels are internalized directly in system as terms $\ottmv{i}$.
 
 \begin{figure}
 \begin{mathpar}
-  \fbox{$ \mathop{\vdash}  \Gamma $} \qquad \fbox{$ \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $} \qquad \fbox{$ \ottnt{a}  =  \ottnt{b} $} \hfill \\
+  \fbox{$ \mathop{\vdash}  \Gamma $} \qquad \fbox{$ \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $} \qquad \fbox{$ \ottnt{a}  \equiv  \ottnt{b} $} \hfill \\
   \inferrule[\ottdrulename{Nil}]{~}{ \mathop{\vdash}   \cdot  }
   \and
   \inferrule[\ottdrulename{Cons}]
@@ -196,16 +197,16 @@ These metalevel levels are internalized directly in system as terms $\ottmv{i}$.
   \inferrule[\ottdrulename{Conv}]
     { \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A}  \and
       \Gamma  \vdash  \ottnt{B}  \mathrel{:}   \kw{U} \gap  \ottnt{k}   \and
-      \ottnt{A}  =  \ottnt{B} }
+      \ottnt{A}  \equiv  \ottnt{B} }
     %------------------%
     { \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{B} }
 \end{mathpar}
 %
 \begin{mathpar}
-  \inferrule[\ottdrulename{E-Beta}]{~}{   (  \lambda  \ottmv{x}  \mathpunct{.}  \ottnt{b}  )   \gap  \ottnt{a}   =   \ottnt{b} [  \ottmv{x}  \mapsto  \ottnt{a}  ]  } \and
-  \inferrule[\ottdrulename{E-Refl}]{~}{ \ottnt{a}  =  \ottnt{a} } \and
-  \inferrule[\ottdrulename{E-Sym}]{ \ottnt{a}  =  \ottnt{b} }{ \ottnt{b}  =  \ottnt{a} } \and
-  \inferrule[\ottdrulename{E-Trans}]{ \ottnt{a}  =  \ottnt{b}  \and  \ottnt{b}  =  \ottnt{c} }{ \ottnt{a}  =  \ottnt{c} } \and
+  \inferrule[\ottdrulename{E-Beta}]{~}{   (  \lambda  \ottmv{x}  \mathpunct{.}  \ottnt{b}  )   \gap  \ottnt{a}   \equiv   \ottnt{b} [  \ottmv{x}  \mapsto  \ottnt{a}  ]  } \and
+  \inferrule[\ottdrulename{E-Refl}]{~}{ \ottnt{a}  \equiv  \ottnt{a} } \and
+  \inferrule[\ottdrulename{E-Sym}]{ \ottnt{a}  \equiv  \ottnt{b} }{ \ottnt{b}  \equiv  \ottnt{a} } \and
+  \inferrule[\ottdrulename{E-Trans}]{ \ottnt{a}  \equiv  \ottnt{b}  \and  \ottnt{b}  \equiv  \ottnt{c} }{ \ottnt{a}  \equiv  \ottnt{c} } \and
   \cdots
 \end{mathpar}
 
@@ -215,7 +216,7 @@ These metalevel levels are internalized directly in system as terms $\ottmv{i}$.
 
 We begin first with the basic rules that don't concern universes or levels in \cref{fig:typing:basic},
 consisting of a context well-formedness judgement $ \mathop{\vdash}  \Gamma $,
-a typing judgement $ \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $, and an untyped definitional equality $ \ottnt{a}  =  \ottnt{b} $.
+a typing judgement $ \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $, and an untyped definitional equality $ \ottnt{a}  \equiv  \ottnt{b} $.
 \Rref{Lam} explicitly includes well-typedness of a function's type as a premise
 rather than merely well-typedness of the domain type $\ottnt{A}$
 to guarantee that it lives at the same universe level as the codomain type $\ottnt{B}$,
@@ -446,7 +447,7 @@ and is used to join parallel reductions and prove the diamond property.
   If $ \ottnt{a}  \Rightarrow  \ottnt{b} $, then $ \ottnt{b}  \Rightarrow   \ottnt{a} ^{ \mathsf{T} }  $.
 \end{lemma}
 
-\begin{corollary}[Diamond (p.r.)]
+\begin{corollary}[Diamond (p.r.)] \label{lem:par:diamond}
   If $ \ottnt{a}  \Rightarrow  \ottnt{b} $ and $ \ottnt{a}  \Rightarrow  \ottnt{c} $,
   then there exists some $d$ such that $ \ottnt{b}  \Rightarrow  d $ and $ \ottnt{c}  \Rightarrow  d $.
   In particular, $d$ is $ \ottnt{a} ^{ \mathsf{T} } $,
@@ -486,7 +487,7 @@ while the left-to-right direction is proven by induction on definitional equalit
 using the various properties of conversion.
 
 \begin{theorem} \label{lem:eq-conv}
-  $ \ottnt{a}  =  \ottnt{b} $ iff $ \ottnt{a}  \Leftrightarrow  \ottnt{b} $.
+  $ \ottnt{a}  \equiv  \ottnt{b} $ iff $ \ottnt{a}  \Leftrightarrow  \ottnt{b} $.
 \end{theorem}
 
 \subsubsection{Subject reduction}
@@ -536,7 +537,7 @@ whose details we omit.
 \end{proof}
 
 \begin{lemma}[Replacement (w.t.)] \label{lem:wt:replace}
-  If $ \ottnt{A}  =  \ottnt{B} $, $ \Gamma  \vdash  \ottnt{B}  \mathrel{:}   \kw{U} \gap  \ottnt{k}  $, and $  \Gamma ,  \ottmv{x}  \mathbin{:}  \ottnt{A}   \vdash  \ottnt{c}  \mathrel{:}  \ottnt{C} $,
+  If $ \ottnt{A}  \equiv  \ottnt{B} $, $ \Gamma  \vdash  \ottnt{B}  \mathrel{:}   \kw{U} \gap  \ottnt{k}  $, and $  \Gamma ,  \ottmv{x}  \mathbin{:}  \ottnt{A}   \vdash  \ottnt{c}  \mathrel{:}  \ottnt{C} $,
   then $  \Gamma ,  \ottmv{x}  \mathbin{:}  \ottnt{B}   \vdash  \ottnt{c}  \mathrel{:}  \ottnt{C} $.
 \end{lemma}
 
@@ -654,12 +655,22 @@ which states that if a term $\ottnt{a}$ has type $\ottnt{A}$,
 then $\ottnt{a}$ is in the interpretation of $\ottnt{A}$.
 The structure of the logical relation and the soundness proof
 is adapted from the mechanization by Liu~\citep{lr-pearl},
-and we will cover important details here,
+and we cover important details here,
 especially as they pertain to universes and levels.
+
+\subsubsection{Logical relation for closed types}
 
 The logical relation is written as $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $,
 where $\ottnt{A}$ is the type, $\ottnt{P}$ is the set of terms,
 and $\ottmv{i}$ is the universe level of the type.
+A set of terms $\ottnt{P}$ is mechanized as a predicate on terms,
+though we to write $ \ottnt{a}  \in  \ottnt{P} $ in lieu of $\ottnt{P}(\ottnt{a})$
+to say that $\ottnt{a}$ is in the set,
+and we use set-builder notation in lieu of explicit abstractions.
+When proving properties of the logical relation,
+we require no other axioms than function extensionality and propositional extensionality;
+for transparency, we mark the lemmas in which they are used with $\dagger$.
+
 Because universes are interpreted as sets of types
 which themselves have interpretations at a lower universe level,
 to ensure that the interpretation is well defined,
@@ -700,6 +711,35 @@ without worrying about well-foundedness.
 \label{fig:lr:closed}
 \end{figure}
 
+Let us get the easier cases out of the way.
+\Rref{I-Step} backward closes the interpretation under reduction of the type,
+so a type has an interpretation if it reduces to a type with an interpretation.
+We show shortly that forward closure under reduction of the type also holds,
+as well as backward closure under reduction of the \emph{terms} in the interpretations.%
+\footnote{We will not require forward closure.}
+The interpretation of the empty type as the empty set is given by \rref{I-Mty}.
+
+Because we consider the interpretation of closed types only,
+and we explicitly have a constructor for backward closure,
+the only other constructors we need are those for normal, closed types.
+In particular, we need only consider $ \kw{U} \gap   \ottmv{j}  $ and $ \kw{Level}\texttt{<} \gap   \ottmv{j_{{\mathrm{1}}}}  $
+with concrete levels rather than arbitrary level terms.
+The interpretation of $ \kw{Level}\texttt{<} \gap   \ottmv{j_{{\mathrm{1}}}}  $ given by \rref{I-Level<}
+is the set of level terms strictly less than $\ottmv{j_{{\mathrm{1}}}}$;
+more precisely, it is the set of terms that reduce to such concrete levels.
+The interpretation of $ \kw{U} \gap   \ottmv{j}  $ given by \rref{I-Univ}
+is the set of types that have an interpretation.
+
+The intuition behind \rref{I-Pi} for function types is that a function $\ottmv{f}$
+is in its interpretation if for every argument $\ottmv{y}$ in the interpretation of the domain,
+the application $ \ottmv{f}  \gap  \ottmv{y} $ is in the interpretation of the codomain.
+Because we are dealing with dependent types,
+the interpretation of the codomain varies with the argument,
+so we need to ensure first that the interpretation exists
+for \emph{every} argument in the interpretation of the domain,
+and that $ \ottmv{f}  \gap  \ottmv{y} $ is in the \emph{particular} interpretation of the codomain.
+It then sounds like we would want \rref{I-Pi'} below.
+%
 \begin{mathpar}
   \inferrule[\ottdrulename{I-Pi'}]
     { \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{1}}}}  \and
@@ -707,6 +747,184 @@ without worrying about well-foundedness.
     %--------------------------------------------------------------------------------%
     { \mathopen{\llbracket}   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \lbrace  \ottmv{f}  \mid   \forall  \ottmv{y}  \mathpunct{.}    \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}    (  \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}  )   \to   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}     \to    \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}     \rbrace  }
 \end{mathpar}
+
+The problem is that the interpretation is not strictly positive in the conclusion,
+so \rref*{I-Pi'} as a constructor is not well defined.
+\Rref{I-Pi} therefore uses an auxiliary relation $\ottnt{R}$
+that relates the argument $\ottmv{y}$ to the interpretation of the codomain $ \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ] $.
+\Rref{I-Pi'} then holds by instantiating $ \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} ) $ with $ \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}} $ in \rref{I-Pi}.
+This is the same trick used by Liu~\citep{lr-pearl},
+whose origins are documented by Anand and Rahli~\citep{mech-nuprl}.
+
+We require of the logical relation inversion properties for each constructor,
+along with properties that hold \apriori for syntactic typing:
+conversion and cumulativity.
+A key intermediate lemma is functionality,
+\ie that the interpretation of a type is deterministic.
+We begin with closures over reductions to prove conversion.
+
+\begin{lemma}[Forward and backward closure (l.r.)] \label{lem:lr:pars} ~
+  \begin{enumerate}
+    \item If $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $ and either $ \ottnt{A}  \Rightarrow  \ottnt{B} $ or $ \ottnt{A}  \Rightarrow^\ast  \ottnt{B} $,
+      then $ \mathopen{\llbracket}  \ottnt{B}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $.
+    \item If $ \mathopen{\llbracket}  \ottnt{B}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $ and either $ \ottnt{A}  \Rightarrow  \ottnt{B} $ or $ \ottnt{A}  \Rightarrow^\ast  \ottnt{B} $,
+      then $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $.
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof} ~
+  \begin{enumerate}
+    \item For $ \ottnt{A}  \Rightarrow  \ottnt{B} $, by induction on the logical relation,
+      using \nameref{lem:par:diamond} in the \rref*{I-Step} case.
+      \nameref{lem:pars:subst} is needed in the \rref*{I-Pi} case
+      to manipulate the substitution in the function codomain.
+      For $ \ottnt{A}  \Rightarrow^\ast  \ottnt{B} $, by induction on this reduction.
+    \item For $ \ottnt{A}  \Rightarrow^\ast  \ottnt{B} $, by induction on this reduction,
+      using \rref{I-Step}. \qedhere
+  \end{enumerate}
+\end{proof}
+
+\begin{corollary}[Conversion (l.r.)]
+  If $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $ and $ \ottnt{A}  \Leftrightarrow  \ottnt{B} $,
+  then $ \mathopen{\llbracket}  \ottnt{B}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $,
+  using forward and backward closure.
+\end{corollary}
+
+The final closure lemma we need is backward closure of the terms in the interpretations.
+When proving the fundamental theorem,
+we encounter situations where our goal requires inclusion of a reduced term in an interpretation,
+while induction hypotheses only piece together inclusion of the term before reduction.
+
+\begin{lemma}[Backward closure of interpretation sets]
+  If $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $ and $ \ottnt{a}  \Rightarrow^\ast  \ottnt{b} $,
+  then $ \ottnt{b}  \in  \ottnt{P} $ implies $ \ottnt{a}  \in  \ottnt{P} $.
+\end{lemma}
+
+\begin{proof}
+  By induction on the logical relation.
+  In the \rref*{I-Univ} case, where $\ottnt{a}$ and $\ottnt{b}$ are types,
+  we use backward closure from \cref{lem:lr:pars}.
+\end{proof}
+
+Cumulativity holds directly by induction on the logical relation.
+
+\begin{lemma}[Cumulativity (l.r.)] \label{lem:lr:cumul}
+  Suppose $ \ottmv{i}  <  \ottmv{j} $. If $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $, then $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{j} } \searrow  \ottnt{P} $.
+\end{lemma}
+
+The inversion principles for each constructor of the logical relation
+hold by induction, using properties of parallel reduction as needed.
+However, it is the inversion principle for \rref{I-Pi'} that we want.
+The issue lies in the set of terms of the interpretation:
+if we do not yet know that the sets are unique,
+then inversion on \rref{I-PI} gives \emph{some} interpretation $\ottnt{P_{{\mathrm{1}}}}$ of the codomain,
+but we do not know whether it is \emph{the} interpretation that is required.
+We solve this by proving functionality.
+
+\begin{lemma}[Functionality (l.r.)]$\!\!{\dagger}$ \label{lem:lr:func}
+  If $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $ and $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{Q} $, then $\ottnt{P} = \ottnt{Q}$.
+\end{lemma}
+
+\begin{proof}
+  By induction on the first logical relation,
+  then generally inversion on the second,
+  except for the \rref*{I-Step} case,
+  which holds directly by the induction hypothesis
+  and forward closure on the second logical relation.
+  The complex case is \rref*{I-Pi},
+  where we must prove the two sets of terms equal,
+  knowing by the induction hypotheses
+  that the interpretations of the domain and codomain yield equal sets.
+  Because sets are encoded as predicates,
+  we need to use predicate extensionality,
+  \ie function extensionality followed by propositional extensionality.
+  It then suffices to show that membership in one set implies membership in the other,
+  which holds using the induction hypotheses.
+\end{proof}
+
+Functionality holds even with different universe levels,
+the idea being that the interpretation of a type is independent
+of the level at which it lives.
+
+\begin{lemma}[Level-irrelevant functionality (l.r.)]
+  If $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $ and $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{j} } \searrow  \ottnt{Q} $, then $\ottnt{P} = \ottnt{Q}$.
+\end{lemma}
+
+\begin{proof}
+  By totality of the order on levels,
+  either $\ottmv{i}$ and $\ottmv{j}$ are equal,
+  or one is strictly larger than the other.
+  In the latter case,
+  we use \nameref{lem:lr:cumul} to lift the logical relation at the lower level to the higher level.
+  Then the sets are equal by \nameref{lem:lr:func}.
+\end{proof}
+
+Finally, we are able to prove the inversion property for \rref{I-Pi'},
+which we explicitly state below.
+
+\begin{lemma}[Inversion on function types (l.r.)]$\!\!{\dagger}$
+  If $ \mathopen{\llbracket}   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $,
+  then there exists a $\ottnt{P_{{\mathrm{1}}}}$ such that:
+  \begin{enumerate}
+    \item \label{lem:inv-pi:goal:A} $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{1}}}} $;
+    \item \label{lem:inv-pi:goal:B} $  \forall  \ottmv{y}  \mathpunct{.}   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}    \to   \exists  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}   $; and
+    \item \label{lem:inv-pi:goal:P} $\ottnt{P} =  \lbrace  \ottmv{f}  \mid   \forall  \ottmv{y}  \mathpunct{.}    \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}    (  \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}  )   \to   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}     \to    \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}     \rbrace $.
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  By inversion on the logical relation,
+  which gives $\ottnt{P_{{\mathrm{1}}}}$ and $\ottnt{R}$ such that the following hold:
+  \begin{enumerate}[start=4]
+    \item \label{lem:inv-pi:hyp:A} $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{1}}}} $;
+    \item \label{lem:inv-pi:hyp:R} $  \forall  \ottmv{y}  \mathpunct{.}   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}    \to   \exists  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )   $;
+    \item \label{lem:inv-pi:hyp:B} $  \forall  \ottmv{y}  \mathpunct{.}   \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )     \to   \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}  $; and
+    \item \label{lem:inv-pi:hyp:P} $\ottnt{P} =  \lbrace  \ottmv{f}  \mid   \forall  \ottmv{y}  \mathpunct{.}    \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}    \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )   \to   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}     \to    \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}     \rbrace $.
+  \end{enumerate}
+  \ref{lem:inv-pi:goal:A} holds directly by \ref{lem:inv-pi:hyp:A},
+  and \ref{lem:inv-pi:goal:B} holds by combining \ref{lem:inv-pi:hyp:R} and \ref{lem:inv-pi:hyp:B}.
+  To show that the sets in \ref{lem:inv-pi:goal:P} and \ref{lem:inv-pi:hyp:P} are equal,
+  we again use predicate extensionality.
+  \begin{itemize}
+    \item \textit{\ref{lem:inv-pi:goal:P} implies \ref{lem:inv-pi:hyp:P}.}
+      Supposing $\ottmv{y}$ and $\ottnt{P_{{\mathrm{2}}}}$,
+      we have three hypotheses $   (  \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}  )   \to   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}    \to    \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}  $,
+      $ \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} ) $, and $ \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}} $.
+      From \ref{lem:inv-pi:hyp:B} on the second hypothesis,
+      we have $ \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}} $,
+      so we can apply the first hypothesis to get $  \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}} $.
+    \item \textit{\ref{lem:inv-pi:hyp:P} implies \ref{lem:inv-pi:goal:P}.}
+      Supposing $\ottmv{y}$ and $\ottnt{P_{{\mathrm{2}}}}$,
+      we have three hypotheses $   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )   \to   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}    \to    \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}  $,
+      $ \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}} $, and $ \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}} $.
+      Instantiating the first hypothesis using \ref{lem:inv-pi:hyp:R},
+      we know there exists a $\ottnt{P'_{{\mathrm{2}}}}$ such that $  \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P'_{{\mathrm{2}}}} $.
+      From \ref{lem:inv-pi:hyp:B}, we also know that $ \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P'_{{\mathrm{2}}}} $.
+      Then by \nameref{lem:lr:func}, we have $\ottnt{P_{{\mathrm{2}}}} = \ottnt{P'_{{\mathrm{2}}}}$, so $  \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}} $.
+  \end{itemize}
+\end{proof}
+
+It is worthwhile to also explicitly state the inversion principle
+asserting that types that have interpretations are indeed one of the four types,
+which is a semantic form of canonicity.
+
+\begin{lemma}[Inversion (l.r.)]
+  If $ \mathopen{\llbracket}  \ottnt{C}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $, then one of the following holds:
+  \begin{itemize}
+    \item There exist $\ottnt{A}$ and $\ottnt{B}$ such that $ \ottnt{C}  \Rightarrow^\ast   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}  $;
+    \item There exists $\ottmv{i}$ such that $ \ottnt{C}  \Rightarrow^\ast   \kw{U} \gap   \ottmv{i}   $;
+    \item There exists $\ottmv{i}$ such that $ \ottnt{C}  \Rightarrow^\ast   \kw{Level}\texttt{<} \gap   \ottmv{i}   $; or
+    \item $ \ottnt{C}  \Rightarrow^\ast   \bot  $.
+  \end{itemize}
+\end{lemma}
+
+\begin{proof}
+  By induction on the logical relation.
+  The induction hypothesis is only needed for the \rref*{I-Step} case,
+  where $ \ottnt{C}  \Rightarrow  \ottnt{C'} $ and $\ottnt{C'}$ reduces to one of the four cases.
+\end{proof}
+
+\subsubsection{Fundamental soundness theorem}
 
 \subsection{Attempts at proving normalization}
 

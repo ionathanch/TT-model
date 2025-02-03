@@ -19,6 +19,7 @@
 \newcommand{\eg}{\textit{e.g.}\@\xspace}
 \newcommand{\etal}{\textit{et al.}\@\xspace}
 \newcommand{\vs}{\textit{vs.}\@\xspace}
+\newcommand{\apriori}{\textit{a priori}\@\xspace}
 \newcommand{\welltyped}{well-\hspace{0pt}typed\@\xspace}
 \newcommand{\wellfounded}{well-\hspace{0pt}founded\@\xspace}
 \newcommand{\wellfoundedness}{well-\hspace{0pt}foundedness\@\xspace}
@@ -446,7 +447,7 @@ and is used to join parallel reductions and prove the diamond property.
   If $[[a ⇒ b]]$, then $[[b ⇒ a ^ T]]$.
 \end{lemma}
 
-\begin{corollary}[Diamond (p.r.)]
+\begin{corollary}[Diamond (p.r.)] \label{lem:par:diamond}
   If $[[a ⇒ b]]$ and $[[a ⇒ c]]$,
   then there exists some $[[d]]$ such that $[[b ⇒ d]]$ and $[[c ⇒ d]]$.
   In particular, $[[d]]$ is $[[a ^ T]]$,
@@ -654,12 +655,22 @@ which states that if a term $[[a]]$ has type $[[A]]$,
 then $[[a]]$ is in the interpretation of $[[A]]$.
 The structure of the logical relation and the soundness proof
 is adapted from the mechanization by Liu~\citep{lr-pearl},
-and we will cover important details here,
+and we cover important details here,
 especially as they pertain to universes and levels.
+
+\subsubsection{Logical relation for closed types}
 
 The logical relation is written as $[[⟦ A ⟧ i ↘ P]]$,
 where $[[A]]$ is the type, $[[P]]$ is the set of terms,
 and $[[i]]$ is the universe level of the type.
+A set of terms $[[P]]$ is mechanized as a predicate on terms,
+though we to write $[[a ∈ P]]$ in lieu of $[[P]]([[a]])$
+to say that $[[a]]$ is in the set,
+and we use set-builder notation in lieu of explicit abstractions.
+When proving properties of the logical relation,
+we require no other axioms than function extensionality and propositional extensionality;
+for transparency, we mark the lemmas in which they are used with $\dagger$.
+
 Because universes are interpreted as sets of types
 which themselves have interpretations at a lower universe level,
 to ensure that the interpretation is well defined,
@@ -700,6 +711,35 @@ without worrying about well-foundedness.
 \label{fig:lr:closed}
 \end{figure}
 
+Let us get the easier cases out of the way.
+\Rref{I-Step} backward closes the interpretation under reduction of the type,
+so a type has an interpretation if it reduces to a type with an interpretation.
+We show shortly that forward closure under reduction of the type also holds,
+as well as backward closure under reduction of the \emph{terms} in the interpretations.%
+\footnote{We will not require forward closure.}
+The interpretation of the empty type as the empty set is given by \rref{I-Mty}.
+
+Because we consider the interpretation of closed types only,
+and we explicitly have a constructor for backward closure,
+the only other constructors we need are those for normal, closed types.
+In particular, we need only consider $[[Type j]]$ and $[[Level< j1]]$
+with concrete levels rather than arbitrary level terms.
+The interpretation of $[[Level< j1]]$ given by \rref{I-Level<}
+is the set of level terms strictly less than $[[j1]]$;
+more precisely, it is the set of terms that reduce to such concrete levels.
+The interpretation of $[[Type j]]$ given by \rref{I-Univ}
+is the set of types that have an interpretation.
+
+The intuition behind \rref{I-Pi} for function types is that a function $[[f]]$
+is in its interpretation if for every argument $[[y]]$ in the interpretation of the domain,
+the application $[[f y]]$ is in the interpretation of the codomain.
+Because we are dealing with dependent types,
+the interpretation of the codomain varies with the argument,
+so we need to ensure first that the interpretation exists
+for \emph{every} argument in the interpretation of the domain,
+and that $[[f y]]$ is in the \emph{particular} interpretation of the codomain.
+It then sounds like we would want \rref{I-Pi'} below.
+%
 \begin{mathpar}
   \inferrule[\ottdrulename{I-Pi'}]
     {[[⟦ A ⟧ i ↘ P1]] \and
@@ -707,6 +747,184 @@ without worrying about well-foundedness.
     %--------------------------------------------------------------------------------%
     {[[⟦ Πx : A. B ⟧ i ↘ {f | ∀ y. ∀ P2. (⟦ B{x ↦ y} ⟧ i ↘ P2) → y ∈ P1 → f y ∈ P2}]]}
 \end{mathpar}
+
+The problem is that the interpretation is not strictly positive in the conclusion,
+so \rref*{I-Pi'} as a constructor is not well defined.
+\Rref{I-Pi} therefore uses an auxiliary relation $[[R]]$
+that relates the argument $[[y]]$ to the interpretation of the codomain $[[B{x ↦ y}]]$.
+\Rref{I-Pi'} then holds by instantiating $[[R(y, P2)]]$ with $[[⟦B{x ↦ y}⟧ i ↘ P2]]$ in \rref{I-Pi}.
+This is the same trick used by Liu~\citep{lr-pearl},
+whose origins are documented by Anand and Rahli~\citep{mech-nuprl}.
+
+We require of the logical relation inversion properties for each constructor,
+along with properties that hold \apriori for syntactic typing:
+conversion and cumulativity.
+A key intermediate lemma is functionality,
+\ie that the interpretation of a type is deterministic.
+We begin with closures over reductions to prove conversion.
+
+\begin{lemma}[Forward and backward closure (l.r.)] \label{lem:lr:pars} ~
+  \begin{enumerate}
+    \item If $[[⟦A⟧ i ↘ P]]$ and either $[[A ⇒ B]]$ or $[[A ⇒* B]]$,
+      then $[[⟦B⟧ i ↘ P]]$.
+    \item If $[[⟦B⟧ i ↘ P]]$ and either $[[A ⇒ B]]$ or $[[A ⇒* B]]$,
+      then $[[⟦A⟧ i ↘ P]]$.
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof} ~
+  \begin{enumerate}
+    \item For $[[A ⇒ B]]$, by induction on the logical relation,
+      using \nameref{lem:par:diamond} in the \rref*{I-Step} case.
+      \nameref{lem:pars:subst} is needed in the \rref*{I-Pi} case
+      to manipulate the substitution in the function codomain.
+      For $[[A ⇒* B]]$, by induction on this reduction.
+    \item For $[[A ⇒* B]]$, by induction on this reduction,
+      using \rref{I-Step}. \qedhere
+  \end{enumerate}
+\end{proof}
+
+\begin{corollary}[Conversion (l.r.)]
+  If $[[⟦A⟧ i ↘ P]]$ and $[[A ⇔ B]]$,
+  then $[[⟦B⟧ i ↘ P]]$,
+  using forward and backward closure.
+\end{corollary}
+
+The final closure lemma we need is backward closure of the terms in the interpretations.
+When proving the fundamental theorem,
+we encounter situations where our goal requires inclusion of a reduced term in an interpretation,
+while induction hypotheses only piece together inclusion of the term before reduction.
+
+\begin{lemma}[Backward closure of interpretation sets]
+  If $[[⟦A⟧ i ↘ P]]$ and $[[a ⇒* b]]$,
+  then $[[b ∈ P]]$ implies $[[a ∈ P]]$.
+\end{lemma}
+
+\begin{proof}
+  By induction on the logical relation.
+  In the \rref*{I-Univ} case, where $[[a]]$ and $[[b]]$ are types,
+  we use backward closure from \cref{lem:lr:pars}.
+\end{proof}
+
+Cumulativity holds directly by induction on the logical relation.
+
+\begin{lemma}[Cumulativity (l.r.)] \label{lem:lr:cumul}
+  Suppose $[[i < j]]$. If $[[⟦A⟧ i ↘ P]]$, then $[[⟦A⟧ j ↘ P]]$.
+\end{lemma}
+
+The inversion principles for each constructor of the logical relation
+hold by induction, using properties of parallel reduction as needed.
+However, it is the inversion principle for \rref{I-Pi'} that we want.
+The issue lies in the set of terms of the interpretation:
+if we do not yet know that the sets are unique,
+then inversion on \rref{I-PI} gives \emph{some} interpretation $[[P1]]$ of the codomain,
+but we do not know whether it is \emph{the} interpretation that is required.
+We solve this by proving functionality.
+
+\begin{lemma}[Functionality (l.r.)]$\!\!{\dagger}$ \label{lem:lr:func}
+  If $[[⟦A⟧ i ↘ P]]$ and $[[⟦A⟧ i ↘ Q]]$, then $[[P]] = [[Q]]$.
+\end{lemma}
+
+\begin{proof}
+  By induction on the first logical relation,
+  then generally inversion on the second,
+  except for the \rref*{I-Step} case,
+  which holds directly by the induction hypothesis
+  and forward closure on the second logical relation.
+  The complex case is \rref*{I-Pi},
+  where we must prove the two sets of terms equal,
+  knowing by the induction hypotheses
+  that the interpretations of the domain and codomain yield equal sets.
+  Because sets are encoded as predicates,
+  we need to use predicate extensionality,
+  \ie function extensionality followed by propositional extensionality.
+  It then suffices to show that membership in one set implies membership in the other,
+  which holds using the induction hypotheses.
+\end{proof}
+
+Functionality holds even with different universe levels,
+the idea being that the interpretation of a type is independent
+of the level at which it lives.
+
+\begin{lemma}[Level-irrelevant functionality (l.r.)]
+  If $[[⟦A⟧ i ↘ P]]$ and $[[⟦A⟧ j ↘ Q]]$, then $[[P]] = [[Q]]$.
+\end{lemma}
+
+\begin{proof}
+  By totality of the order on levels,
+  either $[[i]]$ and $[[j]]$ are equal,
+  or one is strictly larger than the other.
+  In the latter case,
+  we use \nameref{lem:lr:cumul} to lift the logical relation at the lower level to the higher level.
+  Then the sets are equal by \nameref{lem:lr:func}.
+\end{proof}
+
+Finally, we are able to prove the inversion property for \rref{I-Pi'},
+which we explicitly state below.
+
+\begin{lemma}[Inversion on function types (l.r.)]$\!\!{\dagger}$
+  If $[[⟦Πx: A. B⟧ i ↘ P]]$,
+  then there exists a $[[P1]]$ such that:
+  \begin{enumerate}
+    \item \label{lem:inv-pi:goal:A} $[[⟦ A ⟧ i ↘ P1]]$;
+    \item \label{lem:inv-pi:goal:B} $[[∀ y. y ∈ P1 → ∃ P2. ⟦ B{x ↦ y} ⟧ i ↘ P2]]$; and
+    \item \label{lem:inv-pi:goal:P} $[[P]] = [[{f | ∀ y. ∀ P2. (⟦ B{x ↦ y} ⟧ i ↘ P2) → y ∈ P1 → f y ∈ P2}]]$.
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  By inversion on the logical relation,
+  which gives $[[P1]]$ and $[[R]]$ such that the following hold:
+  \begin{enumerate}[start=4]
+    \item \label{lem:inv-pi:hyp:A} $[[⟦ A ⟧ i ↘ P1]]$;
+    \item \label{lem:inv-pi:hyp:R} $[[∀ y. y ∈ P1 → ∃ P2. R(y, P2)]]$;
+    \item \label{lem:inv-pi:hyp:B} $[[∀ y. ∀ P2. R(y, P2) → ⟦ B{x ↦ y} ⟧ i ↘ P2]]$; and
+    \item \label{lem:inv-pi:hyp:P} $[[P]] = [[{f | ∀ y. ∀ P2. R(y, P2) → y ∈ P1 → f y ∈ P2}]]$.
+  \end{enumerate}
+  \ref{lem:inv-pi:goal:A} holds directly by \ref{lem:inv-pi:hyp:A},
+  and \ref{lem:inv-pi:goal:B} holds by combining \ref{lem:inv-pi:hyp:R} and \ref{lem:inv-pi:hyp:B}.
+  To show that the sets in \ref{lem:inv-pi:goal:P} and \ref{lem:inv-pi:hyp:P} are equal,
+  we again use predicate extensionality.
+  \begin{itemize}
+    \item \textit{\ref{lem:inv-pi:goal:P} implies \ref{lem:inv-pi:hyp:P}.}
+      Supposing $[[y]]$ and $[[P2]]$,
+      we have three hypotheses $[[(⟦ B{x ↦ y} ⟧ i ↘ P2) → y ∈ P1 → f y ∈ P2]]$,
+      $[[R(y, P2)]]$, and $[[y ∈ P1]]$.
+      From \ref{lem:inv-pi:hyp:B} on the second hypothesis,
+      we have $[[⟦ B{x ↦ y} ⟧ i ↘ P2]]$,
+      so we can apply the first hypothesis to get $[[f y ∈ P2]]$.
+    \item \textit{\ref{lem:inv-pi:hyp:P} implies \ref{lem:inv-pi:goal:P}.}
+      Supposing $[[y]]$ and $[[P2]]$,
+      we have three hypotheses $[[R(y, P2) → y ∈ P1 → f y ∈ P2]]$,
+      $[[⟦ B{x ↦ y} ⟧ i ↘ P2]]$, and $[[y ∈ P1]]$.
+      Instantiating the first hypothesis using \ref{lem:inv-pi:hyp:R},
+      we know there exists a $[[P2']]$ such that $[[f y ∈ P2']]$.
+      From \ref{lem:inv-pi:hyp:B}, we also know that $[[⟦ B{x ↦ y} ⟧ i ↘ P2']]$.
+      Then by \nameref{lem:lr:func}, we have $[[P2]] = [[P2']]$, so $[[f y ∈ P2]]$.
+  \end{itemize}
+\end{proof}
+
+It is worthwhile to also explicitly state the inversion principle
+asserting that types that have interpretations are indeed one of the four types,
+which is a semantic form of canonicity.
+
+\begin{lemma}[Inversion (l.r.)]
+  If $[[⟦C⟧ i ↘ P]]$, then one of the following holds:
+  \begin{itemize}
+    \item There exist $[[A]]$ and $[[B]]$ such that $[[C ⇒* Πx: A. B]]$;
+    \item There exists $[[i]]$ such that $[[C ⇒* Type i]]$;
+    \item There exists $[[i]]$ such that $[[C ⇒* Level< i]]$; or
+    \item $[[C ⇒* ⊥]]$.
+  \end{itemize}
+\end{lemma}
+
+\begin{proof}
+  By induction on the logical relation.
+  The induction hypothesis is only needed for the \rref*{I-Step} case,
+  where $[[C ⇒ C']]$ and $[[C']]$ reduces to one of the four cases.
+\end{proof}
+
+\subsubsection{Fundamental soundness theorem}
 
 \subsection{Attempts at proving normalization}
 

@@ -124,7 +124,7 @@ formula :: 'formula_' ::=
   | G ⊢ a : A :: S :: typing
     {{ tex [[G]] \vdash [[a]] \mathrel{:} [[A]] }}
   | A = B :: S :: defeq
-    {{ tex [[A]] = [[B]] }}
+    {{ tex [[A]] \equiv [[B]] }}
   | a ⇒ b :: S :: par
     {{ tex [[a]] \Rightarrow [[b]] }}
   | a ⇒* b :: S :: pars
