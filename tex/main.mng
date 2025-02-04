@@ -468,7 +468,7 @@ and is used to join parallel reductions and prove the diamond property.
 
 Inversion on parallel reduction gives syntactic consistency and injectivity of conversion.
 
-\begin{lemma}[Syntactic consistency]
+\begin{lemma}[Syntactic consistency] \label{lem:par:consistency}
   If $[[v1]]$ and $[[v2]]$ have different syntactic shapes,
   then $[[v1 ⇔ v2]]$ is impossible.
 \end{lemma}
@@ -795,7 +795,7 @@ When proving the fundamental theorem,
 we encounter situations where our goal requires inclusion of a reduced term in an interpretation,
 while induction hypotheses only piece together inclusion of the term before reduction.
 
-\begin{lemma}[Backward closure of interpretation sets]
+\begin{lemma}[Backward closure] \label{lem:lr:back}
   If $[[⟦A⟧ i ↘ P]]$ and $[[a ⇒* b]]$,
   then $[[b ∈ P]]$ implies $[[a ∈ P]]$.
 \end{lemma}
@@ -821,7 +821,7 @@ then inversion on \rref{I-PI} gives \emph{some} interpretation $[[P1]]$ of the c
 but we do not know whether it is \emph{the} interpretation that is required.
 We solve this by proving functionality.
 
-\begin{lemma}[Functionality (l.r.)]$\!\!{\dagger}$ \label{lem:lr:func}
+\begin{lemma}[Fixed-level functionality (l.r.)]$\!\!{\dagger}$ \label{lem:lr:fixed-func}
   If $[[⟦A⟧ i ↘ P]]$ and $[[⟦A⟧ i ↘ Q]]$, then $[[P]] = [[Q]]$.
 \end{lemma}
 
@@ -846,7 +846,7 @@ Functionality holds even with different universe levels,
 the idea being that the interpretation of a type is independent
 of the level at which it lives.
 
-\begin{lemma}[Level-irrelevant functionality (l.r.)]
+\begin{lemma}[Functionality (l.r.)] \label{lem:lr:func}
   If $[[⟦A⟧ i ↘ P]]$ and $[[⟦A⟧ j ↘ Q]]$, then $[[P]] = [[Q]]$.
 \end{lemma}
 
@@ -856,13 +856,13 @@ of the level at which it lives.
   or one is strictly larger than the other.
   In the latter case,
   we use \nameref{lem:lr:cumul} to lift the logical relation at the lower level to the higher level.
-  Then the sets are equal by \nameref{lem:lr:func}.
+  Then the sets are equal by \nameref{lem:lr:fixed-func}.
 \end{proof}
 
 Finally, we are able to prove the inversion property for \rref{I-Pi'},
 which we explicitly state below.
 
-\begin{lemma}[Inversion on function types (l.r.)]$\!\!{\dagger}$
+\begin{lemma}[Inversion on function types (l.r.)]$\!\!{\dagger}$ \label{lem:lr:inv-pi}
   If $[[⟦Πx: A. B⟧ i ↘ P]]$,
   then there exists a $[[P1]]$ such that:
   \begin{enumerate}
@@ -919,13 +919,126 @@ proven by induction on the logical relation.
   \end{itemize}
 \end{lemma}
 
-% \begin{proof}
-%   By induction on the logical relation.
-%   The induction hypothesis is only needed for the \rref*{I-Step} case,
-%   where $[[C ⇒ C']]$ and $[[C']]$ reduces to one of the four cases.
-% \end{proof}
-
 \subsubsection{Fundamental soundness theorem}
+
+Although the logical relation relates closed types to sets of closed terms,
+the fundamental theorem is proven over syntactic typing of open terms,
+so we need a notion of semantic typing that handles closing over the terms
+in a given typing context with a simultaneous substitution.
+Semantic typing is then elementhood of a term in the interpretation of its type
+for any substitution that closes them both.
+
+At this point, talking about simultaneous substitutions is inevitable.
+We denote them as $[[s]]$, and write $[[s, x ↦ a]]$
+for its extension by a single substitution of $[[x]]$ by $[[a]]$.
+In the mechanization, semantic well-typedness of a substitution $[[s ⊧ G]]$
+is defined in terms of semantic typing,
+but it is more convenient use the admissible rules defined in \cref{fig:sem:subst}.
+
+\begin{definition}
+  A substitution $[[s]]$ is semantically well typed
+  with respect to a context $[[G]]$ iff for every $[[x : A ∈ G]]$,
+  there exist $[[i]], [[P]]$ such that
+  $[[⟦A{s}⟧ i ↘ P]]$ and $[[x{s} ∈ P]]$.
+\end{definition}
+
+\begin{figure}
+\begin{mathpar}
+  \mprset{fraction={\cdot\cdots\cdot}}
+  \inferrule[\ottdrulename{S-Nil}]{~}{[[s ⊧ •]]}
+  \and
+  \inferrule[\ottdrulename{S-Cons}]
+    {[[s ⊧ G]] \and
+     [[⟦A{s}⟧ i ↘ P]] \and
+     [[a ∈ P]]}
+    % --------------------- %
+    {[[s, x ↦ a ⊧ G, x : A]]}
+\end{mathpar}
+\caption{Semantically well-typed substitutions}
+\label{fig:sem:subst}
+\end{figure}
+
+\begin{definition}[Semantic typing]
+  A term $[[a]]$ is semantically well typed with type $[[A]]$ under context $[[G]]$,
+  written $[[G ⊧ a : A]]$, iff for every $[[s]]$ such that $[[s ⊧ G]]$,
+  there exist $[[i]], [[P]]$ such that
+  $[[⟦A{s}⟧ i ↘ P]]$ and $[[a{s} ∈ P]]$.
+\end{definition}
+
+The fundamental soundness theorem of syntactic typing with respect to semantic typing
+states that syntactic typing implies semantic typing.
+The cases corresponding to the rules in \cref{fig:typing:basic} are routine
+by construction and inversion of \rref{I-Pi,I-Mty}~\citep{lr-pearl},
+so we do not cover them all here.
+Instead, we detail only the \rref*{I-Lam} case to highlight
+where some of the above lemmas are used,
+followed by the cases for the rules in \cref{fig:typing:univ}
+that are unique to our system.
+For concision, we skip steps involving massaging substitutions into the right shape.
+
+\begin{theorem}[Soundness]
+  If $[[G ⊢ a : A]]$, then $[[G ⊧ a : A]]$.
+\end{theorem}
+
+\begin{proof}
+  By induction on the typing derivation.
+  In each case, we suppose that $[[s ⊧ G]]$.
+  \begin{itemize}
+    \item \textit{\Rref{Lam}.}
+      The premises are $[[G ⊢ Πx: A. B : Type k]]$ and $[[G, x : A ⊢ b : B]]$,
+      concluding with $[[G ⊢ λx. b : Πx: A. B]]$.
+      By the induction hypothesis on the first premise,
+      the function type is in the interpretation of a universe,
+      so it also has an interpretation by inversion,
+      allowing us to apply \nameref{lem:lr:inv-pi}.
+      This gives $[[⟦A{s}⟧ i ↘ P1]]$, $[[⟦ B{s, x ↦ a} ⟧ i ↘ P2]]$, and $[[a ∈ P1]]$,
+      where the goal is now to show that $[[(λx. b) a ∈ P2]]$.
+      By \rref{S-Cons} and the induction hypothesis on the second premise,
+      we have $[[⟦B{s, x ↦ a}⟧ i' ↘ P2']]$ and $[[b{x ↦ a} ∈ P2']]$ for some $[[i']], [[P2']]$.
+      By \nameref{lem:lr:func}, we have that $[[P2]] = [[P2']]$.
+      Finally, by \nameref{lem:lr:back} on \rref{P-Beta} and $[[b{x ↦ a} ∈ P2]]$,
+      we obtain $[[(λx. b) a ∈ P2]]$.
+    \item \textit{\Rref{Univ}.}
+      The premise is $[[G ⊢ k : Level< l]]$,
+      concluding with $[[G ⊢ Type k : Type l]]$.
+      By the induction hypothesis on the premise,
+      followed by inversion on the interpretation of level types,
+      we know that $[[k{s} ⇒* i1]]$ and $[[l{s} ⇒* i2]]$ such that $[[i1 < i2]]$.
+      By cofinality, we also know that there must exist a $[[j]]$ such that $[[i2 < j]]$.
+      The goal is now to show that $[[⟦Type (l{s})⟧ j ↘ {z | ∃ P. ⟦ z ⟧ i2 ↘ P}]]$
+      and $[[⟦Type (k{s})⟧ i2 ↘ {z | ∃ P. ⟦ z ⟧ i1 ↘ P}]]$.
+      These are both constructed using \rref{I-Univ} and \cref{lem:lr:pars}.
+    \item \textit{\Rref{Level<}.}
+      The premises are $[[G ⊢ Type k1 : Type l1]]$ and $[[G ⊢ k0 : Level< l0]]$,
+      concluding with $[[G ⊢ Level< k0 : Type k1]]$.
+      By the induction hypothesis on the first premises,
+      $[[U (k1{s})]]$ is in the interpretation of a universe.
+      By inversion, we know that it too has an interpretation as a universe
+      such that our remaining goal is now $[[⟦Level< (k0{s})⟧ j ↘ P]]$ for some $[[P]]$,
+      where $[[k1{s} ⇒* j]]$.
+      By the induction on the second premise,
+      followed by inversion on the interpretation of level types,
+      we know that $[[k0{s} ⇒* i]]$ for some $[[i]]$.
+      Then the goal is constructed using \rref{I-Level<} and \cref{lem:lr:pars}.
+    \item \textit{\Rref{Lvl}.} Straightforward by construction using \rref{I-Level<}.
+    \item \textit{\Rref{Trans}.}
+    \item \textit{\Rref{Sub}.}
+      The premises are $[[G ⊢ A : Type k]]$ and $[[G ⊢ k : Level< l]]$,
+      concluding with $[[G ⊢ A : Type l]]$.
+      By induction on the first premise,
+      followed by inversion on the interpretation of universes,
+      we know that $[[k{s} ⇒* i]]$ and $[[⟦A{s}⟧ i ↘ P]]$ for some $[[P]]$.
+      By induction on the second premise,
+      followed by inversion on the interpretation of levels,
+      we know that $[[k{s} ⇒* i']]$ and $[[l{s} ⇒* j]]$ such that $[[i' < j]]$.
+      By \nameref{lem:par:confl} and \nameref{lem:par:consistency},
+      it must be that $[[i]] = [[i']]$.
+      Similar to the \rref{Univ} case,
+      we can show that $[[Type (l{s})]]$ has an interpretation as a universe.
+      The final goal is then to show that $[[⟦A{s}⟧ j ↘ P]]$,
+      which holds by \nameref{lem:lr:cumul}.
+  \end{itemize}
+\end{proof}
 
 \subsection{Attempts at proving normalization}
 

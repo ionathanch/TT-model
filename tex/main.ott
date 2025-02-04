@@ -49,6 +49,9 @@ a, b, c, A, B, C, k, l {{ tex \ell }} :: 'tm_' ::= {{ com terms }}
   | b { x ↦ a } :: S :: Subst
     {{ com single substitution }}
     {{ tex [[b]][ [[x]] \mapsto [[a]] ]}}
+  | b { s } :: S :: Substs
+    {{ com simultaneous substitution }}
+    {{ tex [[b]][ [[s]] ]}}
   | _ :: M :: Hole
     {{ com hole }}
     {{ tex \relax }}
@@ -59,6 +62,13 @@ a, b, c, A, B, C, k, l {{ tex \ell }} :: 'tm_' ::= {{ com terms }}
     {{ com Takahashi's complete development }}
     {{ tex [[a]]^{ \mathsf{T} } }}
 
+s {{ tex \sigma }} :: 'subst_' ::= {{ com substitutions }}
+  | • :: :: Nil
+    {{ com identity substitution }}
+    {{ tex \cdot }}
+  | s , x ↦ a :: :: Cons
+    {{ com substitution extension }}
+    {{ tex [[s]], [[x]] \mapsto [[a]] }}
 v :: 'val_' ::= {{ com values }}
   | λ x . b :: :: Abs
     (+ bind x in b +)
@@ -123,6 +133,10 @@ formula :: 'formula_' ::=
     {{ tex \mathop{\vdash} [[G]] }}
   | G ⊢ a : A :: S :: typing
     {{ tex [[G]] \vdash [[a]] \mathrel{:} [[A]] }}
+  | s ⊧ G :: S :: wsubst
+    {{ tex [[s]] \vDash [[G]] }}
+  | G ⊧ a : A :: S :: wtyping
+    {{ tex [[G]] \vDash [[a]] : [[A]] }}
   | A = B :: S :: defeq
     {{ tex [[A]] \equiv [[B]] }}
   | a ⇒ b :: S :: par

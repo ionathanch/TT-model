@@ -47,7 +47,13 @@
 \ottprodline{|}{ \kw{Level}\texttt{<} \gap  \ell }{}{}{}{\ottcom{level type}}\ottprodnewline
 \ottprodline{|}{ \ottmv{i} }{}{}{}{\ottcom{concrete level}}\ottprodnewline
 \ottprodline{|}{ \ottnt{b} [  \ottmv{x}  \mapsto  \ottnt{a}  ] } {\textsf{S}}{}{}{\ottcom{single substitution}}\ottprodnewline
+\ottprodline{|}{ \ottnt{b} [  \sigma  ] } {\textsf{S}}{}{}{\ottcom{simultaneous substitution}}\ottprodnewline
 \ottprodline{|}{ ( \ottnt{a} ) } {\textsf{S}}{}{}{\ottcom{parentheses}}}
+
+\newcommand{\otts}{
+\ottrulehead{\sigma}{::=}{\ottcom{substitutions}}\ottprodnewline
+\ottfirstprodline{|}{ \cdot }{}{}{}{\ottcom{identity substitution}}\ottprodnewline
+\ottprodline{|}{ \sigma ,  \ottmv{x}  \mapsto  \ottnt{a} }{}{}{}{\ottcom{substitution extension}}}
 
 \newcommand{\ottv}{
 \ottrulehead{\ottnt{v}}{::=}{\ottcom{values}}\ottprodnewline
@@ -76,6 +82,7 @@
 
 \newcommand{\ottgrammar}{\ottgrammartabular{
 \otta\ottinterrule
+\otts\ottinterrule
 \ottv\ottinterrule
 \ottG\ottinterrule
 \ottP\ottinterrule

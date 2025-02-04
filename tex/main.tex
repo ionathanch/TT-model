@@ -468,7 +468,7 @@ and is used to join parallel reductions and prove the diamond property.
 
 Inversion on parallel reduction gives syntactic consistency and injectivity of conversion.
 
-\begin{lemma}[Syntactic consistency]
+\begin{lemma}[Syntactic consistency] \label{lem:par:consistency}
   If $\ottnt{v_{{\mathrm{1}}}}$ and $\ottnt{v_{{\mathrm{2}}}}$ have different syntactic shapes,
   then $ \ottnt{v_{{\mathrm{1}}}}  \Leftrightarrow  \ottnt{v_{{\mathrm{2}}}} $ is impossible.
 \end{lemma}
@@ -795,7 +795,7 @@ When proving the fundamental theorem,
 we encounter situations where our goal requires inclusion of a reduced term in an interpretation,
 while induction hypotheses only piece together inclusion of the term before reduction.
 
-\begin{lemma}[Backward closure of interpretation sets]
+\begin{lemma}[Backward closure] \label{lem:lr:back}
   If $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $ and $ \ottnt{a}  \Rightarrow^\ast  \ottnt{b} $,
   then $ \ottnt{b}  \in  \ottnt{P} $ implies $ \ottnt{a}  \in  \ottnt{P} $.
 \end{lemma}
@@ -821,7 +821,7 @@ then inversion on \rref{I-PI} gives \emph{some} interpretation $\ottnt{P_{{\math
 but we do not know whether it is \emph{the} interpretation that is required.
 We solve this by proving functionality.
 
-\begin{lemma}[Functionality (l.r.)]$\!\!{\dagger}$ \label{lem:lr:func}
+\begin{lemma}[Fixed-level functionality (l.r.)]$\!\!{\dagger}$ \label{lem:lr:fixed-func}
   If $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $ and $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{Q} $, then $\ottnt{P} = \ottnt{Q}$.
 \end{lemma}
 
@@ -846,7 +846,7 @@ Functionality holds even with different universe levels,
 the idea being that the interpretation of a type is independent
 of the level at which it lives.
 
-\begin{lemma}[Level-irrelevant functionality (l.r.)]
+\begin{lemma}[Functionality (l.r.)] \label{lem:lr:func}
   If $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $ and $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{j} } \searrow  \ottnt{Q} $, then $\ottnt{P} = \ottnt{Q}$.
 \end{lemma}
 
@@ -856,13 +856,13 @@ of the level at which it lives.
   or one is strictly larger than the other.
   In the latter case,
   we use \nameref{lem:lr:cumul} to lift the logical relation at the lower level to the higher level.
-  Then the sets are equal by \nameref{lem:lr:func}.
+  Then the sets are equal by \nameref{lem:lr:fixed-func}.
 \end{proof}
 
 Finally, we are able to prove the inversion property for \rref{I-Pi'},
 which we explicitly state below.
 
-\begin{lemma}[Inversion on function types (l.r.)]$\!\!{\dagger}$
+\begin{lemma}[Inversion on function types (l.r.)]$\!\!{\dagger}$ \label{lem:lr:inv-pi}
   If $ \mathopen{\llbracket}   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $,
   then there exists a $\ottnt{P_{{\mathrm{1}}}}$ such that:
   \begin{enumerate}
@@ -919,13 +919,126 @@ proven by induction on the logical relation.
   \end{itemize}
 \end{lemma}
 
-% \begin{proof}
-%   By induction on the logical relation.
-%   The induction hypothesis is only needed for the \rref*{I-Step} case,
-%   where $ \ottnt{C}  \Rightarrow  \ottnt{C'} $ and $\ottnt{C'}$ reduces to one of the four cases.
-% \end{proof}
-
 \subsubsection{Fundamental soundness theorem}
+
+Although the logical relation relates closed types to sets of closed terms,
+the fundamental theorem is proven over syntactic typing of open terms,
+so we need a notion of semantic typing that handles closing over the terms
+in a given typing context with a simultaneous substitution.
+Semantic typing is then elementhood of a term in the interpretation of its type
+for any substitution that closes them both.
+
+At this point, talking about simultaneous substitutions is inevitable.
+We denote them as $\sigma$, and write $ \sigma ,  \ottmv{x}  \mapsto  \ottnt{a} $
+for its extension by a single substitution of $\ottmv{x}$ by $\ottnt{a}$.
+In the mechanization, semantic well-typedness of a substitution $ \sigma  \vDash  \Gamma $
+is defined in terms of semantic typing,
+but it is more convenient use the admissible rules defined in \cref{fig:sem:subst}.
+
+\begin{definition}
+  A substitution $\sigma$ is semantically well typed
+  with respect to a context $\Gamma$ iff for every $ \ottmv{x}  \mathrel{:}  \ottnt{A}  \in  \Gamma $,
+  there exist $\ottmv{i}, \ottnt{P}$ such that
+  $ \mathopen{\llbracket}   \ottnt{A} [  \sigma  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $ and $  \ottmv{x} [  \sigma  ]   \in  \ottnt{P} $.
+\end{definition}
+
+\begin{figure}
+\begin{mathpar}
+  \mprset{fraction={\cdot\cdots\cdot}}
+  \inferrule[\ottdrulename{S-Nil}]{~}{ \sigma  \vDash   \cdot  }
+  \and
+  \inferrule[\ottdrulename{S-Cons}]
+    { \sigma  \vDash  \Gamma  \and
+      \mathopen{\llbracket}   \ottnt{A} [  \sigma  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P}  \and
+      \ottnt{a}  \in  \ottnt{P} }
+    % --------------------- %
+    {  \sigma ,  \ottmv{x}  \mapsto  \ottnt{a}   \vDash   \Gamma ,  \ottmv{x}  \mathbin{:}  \ottnt{A}  }
+\end{mathpar}
+\caption{Semantically well-typed substitutions}
+\label{fig:sem:subst}
+\end{figure}
+
+\begin{definition}[Semantic typing]
+  A term $\ottnt{a}$ is semantically well typed with type $\ottnt{A}$ under context $\Gamma$,
+  written $ \Gamma  \vDash  \ottnt{a}  :  \ottnt{A} $, iff for every $\sigma$ such that $ \sigma  \vDash  \Gamma $,
+  there exist $\ottmv{i}, \ottnt{P}$ such that
+  $ \mathopen{\llbracket}   \ottnt{A} [  \sigma  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $ and $  \ottnt{a} [  \sigma  ]   \in  \ottnt{P} $.
+\end{definition}
+
+The fundamental soundness theorem of syntactic typing with respect to semantic typing
+states that syntactic typing implies semantic typing.
+The cases corresponding to the rules in \cref{fig:typing:basic} are routine
+by construction and inversion of \rref{I-Pi,I-Mty}~\citep{lr-pearl},
+so we do not cover them all here.
+Instead, we detail only the \rref*{I-Lam} case to highlight
+where some of the above lemmas are used,
+followed by the cases for the rules in \cref{fig:typing:univ}
+that are unique to our system.
+For concision, we skip steps involving massaging substitutions into the right shape.
+
+\begin{theorem}[Soundness]
+  If $ \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $, then $ \Gamma  \vDash  \ottnt{a}  :  \ottnt{A} $.
+\end{theorem}
+
+\begin{proof}
+  By induction on the typing derivation.
+  In each case, we suppose that $ \sigma  \vDash  \Gamma $.
+  \begin{itemize}
+    \item \textit{\Rref{Lam}.}
+      The premises are $ \Gamma  \vdash   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \mathrel{:}   \kw{U} \gap  \ottnt{k}  $ and $  \Gamma ,  \ottmv{x}  \mathbin{:}  \ottnt{A}   \vdash  \ottnt{b}  \mathrel{:}  \ottnt{B} $,
+      concluding with $ \Gamma  \vdash   \lambda  \ottmv{x}  \mathpunct{.}  \ottnt{b}   \mathrel{:}   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}  $.
+      By the induction hypothesis on the first premise,
+      the function type is in the interpretation of a universe,
+      so it also has an interpretation by inversion,
+      allowing us to apply \nameref{lem:lr:inv-pi}.
+      This gives $ \mathopen{\llbracket}   \ottnt{A} [  \sigma  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{1}}}} $, $ \mathopen{\llbracket}   \ottnt{B} [   \sigma ,  \ottmv{x}  \mapsto  \ottnt{a}   ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}} $, and $ \ottnt{a}  \in  \ottnt{P_{{\mathrm{1}}}} $,
+      where the goal is now to show that $   (  \lambda  \ottmv{x}  \mathpunct{.}  \ottnt{b}  )   \gap  \ottnt{a}   \in  \ottnt{P_{{\mathrm{2}}}} $.
+      By \rref{S-Cons} and the induction hypothesis on the second premise,
+      we have $ \mathopen{\llbracket}   \ottnt{B} [   \sigma ,  \ottmv{x}  \mapsto  \ottnt{a}   ]   \mathclose{\rrbracket}_{ \ottmv{i'} } \searrow  \ottnt{P'_{{\mathrm{2}}}} $ and $  \ottnt{b} [  \ottmv{x}  \mapsto  \ottnt{a}  ]   \in  \ottnt{P'_{{\mathrm{2}}}} $ for some $\ottmv{i'}, \ottnt{P'_{{\mathrm{2}}}}$.
+      By \nameref{lem:lr:func}, we have that $\ottnt{P_{{\mathrm{2}}}} = \ottnt{P'_{{\mathrm{2}}}}$.
+      Finally, by \nameref{lem:lr:back} on \rref{P-Beta} and $  \ottnt{b} [  \ottmv{x}  \mapsto  \ottnt{a}  ]   \in  \ottnt{P_{{\mathrm{2}}}} $,
+      we obtain $   (  \lambda  \ottmv{x}  \mathpunct{.}  \ottnt{b}  )   \gap  \ottnt{a}   \in  \ottnt{P_{{\mathrm{2}}}} $.
+    \item \textit{\Rref{Univ}.}
+      The premise is $ \Gamma  \vdash  \ottnt{k}  \mathrel{:}   \kw{Level}\texttt{<} \gap  \ell  $,
+      concluding with $ \Gamma  \vdash   \kw{U} \gap  \ottnt{k}   \mathrel{:}   \kw{U} \gap  \ell  $.
+      By the induction hypothesis on the premise,
+      followed by inversion on the interpretation of level types,
+      we know that $  \ottnt{k} [  \sigma  ]   \Rightarrow^\ast   \ottmv{i_{{\mathrm{1}}}}  $ and $  \ell [  \sigma  ]   \Rightarrow^\ast   \ottmv{i_{{\mathrm{2}}}}  $ such that $ \ottmv{i_{{\mathrm{1}}}}  <  \ottmv{i_{{\mathrm{2}}}} $.
+      By cofinality, we also know that there must exist a $\ottmv{j}$ such that $ \ottmv{i_{{\mathrm{2}}}}  <  \ottmv{j} $.
+      The goal is now to show that $ \mathopen{\llbracket}   \kw{U} \gap   (  \ell [  \sigma  ]  )    \mathclose{\rrbracket}_{ \ottmv{j} } \searrow   \lbrace  \ottmv{z}  \mid   \exists  \ottnt{P}  \mathpunct{.}   \mathopen{\llbracket}  \ottmv{z}  \mathclose{\rrbracket}_{ \ottmv{i_{{\mathrm{2}}}} } \searrow  \ottnt{P}    \rbrace  $
+      and $ \mathopen{\llbracket}   \kw{U} \gap   (  \ottnt{k} [  \sigma  ]  )    \mathclose{\rrbracket}_{ \ottmv{i_{{\mathrm{2}}}} } \searrow   \lbrace  \ottmv{z}  \mid   \exists  \ottnt{P}  \mathpunct{.}   \mathopen{\llbracket}  \ottmv{z}  \mathclose{\rrbracket}_{ \ottmv{i_{{\mathrm{1}}}} } \searrow  \ottnt{P}    \rbrace  $.
+      These are both constructed using \rref{I-Univ} and \cref{lem:lr:pars}.
+    \item \textit{\Rref{Level<}.}
+      The premises are $ \Gamma  \vdash   \kw{U} \gap  \ottnt{k_{{\mathrm{1}}}}   \mathrel{:}   \kw{U} \gap  \ell_{{\mathrm{1}}}  $ and $ \Gamma  \vdash  \ottnt{k_{{\mathrm{0}}}}  \mathrel{:}   \kw{Level}\texttt{<} \gap  \ell_{{\mathrm{0}}}  $,
+      concluding with $ \Gamma  \vdash   \kw{Level}\texttt{<} \gap  \ottnt{k_{{\mathrm{0}}}}   \mathrel{:}   \kw{U} \gap  \ottnt{k_{{\mathrm{1}}}}  $.
+      By the induction hypothesis on the first premises,
+      $ U  \gap   (  \ottnt{k_{{\mathrm{1}}}} [  \sigma  ]  )  $ is in the interpretation of a universe.
+      By inversion, we know that it too has an interpretation as a universe
+      such that our remaining goal is now $ \mathopen{\llbracket}   \kw{Level}\texttt{<} \gap   (  \ottnt{k_{{\mathrm{0}}}} [  \sigma  ]  )    \mathclose{\rrbracket}_{ \ottmv{j} } \searrow  \ottnt{P} $ for some $\ottnt{P}$,
+      where $  \ottnt{k_{{\mathrm{1}}}} [  \sigma  ]   \Rightarrow^\ast   \ottmv{j}  $.
+      By the induction on the second premise,
+      followed by inversion on the interpretation of level types,
+      we know that $  \ottnt{k_{{\mathrm{0}}}} [  \sigma  ]   \Rightarrow^\ast   \ottmv{i}  $ for some $\ottmv{i}$.
+      Then the goal is constructed using \rref{I-Level<} and \cref{lem:lr:pars}.
+    \item \textit{\Rref{Lvl}.} Straightforward by construction using \rref{I-Level<}.
+    \item \textit{\Rref{Trans}.}
+    \item \textit{\Rref{Sub}.}
+      The premises are $ \Gamma  \vdash  \ottnt{A}  \mathrel{:}   \kw{U} \gap  \ottnt{k}  $ and $ \Gamma  \vdash  \ottnt{k}  \mathrel{:}   \kw{Level}\texttt{<} \gap  \ell  $,
+      concluding with $ \Gamma  \vdash  \ottnt{A}  \mathrel{:}   \kw{U} \gap  \ell  $.
+      By induction on the first premise,
+      followed by inversion on the interpretation of universes,
+      we know that $  \ottnt{k} [  \sigma  ]   \Rightarrow^\ast   \ottmv{i}  $ and $ \mathopen{\llbracket}   \ottnt{A} [  \sigma  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $ for some $\ottnt{P}$.
+      By induction on the second premise,
+      followed by inversion on the interpretation of levels,
+      we know that $  \ottnt{k} [  \sigma  ]   \Rightarrow^\ast   \ottmv{i'}  $ and $  \ell [  \sigma  ]   \Rightarrow^\ast   \ottmv{j}  $ such that $ \ottmv{i'}  <  \ottmv{j} $.
+      By \nameref{lem:par:confl} and \nameref{lem:par:consistency},
+      it must be that $\ottmv{i} = \ottmv{i'}$.
+      Similar to the \rref{Univ} case,
+      we can show that $ \kw{U} \gap   (  \ell [  \sigma  ]  )  $ has an interpretation as a universe.
+      The final goal is then to show that $ \mathopen{\llbracket}   \ottnt{A} [  \sigma  ]   \mathclose{\rrbracket}_{ \ottmv{j} } \searrow  \ottnt{P} $,
+      which holds by \nameref{lem:lr:cumul}.
+  \end{itemize}
+\end{proof}
 
 \subsection{Attempts at proving normalization}
 
