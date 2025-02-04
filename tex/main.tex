@@ -265,7 +265,7 @@ By \rref{Lvl}, we can view the type constructor $ \kw{Level}\texttt{<} \gap   \r
 as the internalization of the order on levels.
 As the level type is combined with level bounding,
 it is impossible to declare a level variable strictly less than itself.
-The level type itself can be typed at any universe
+The level type itself can be typed at any universe by \rref{Level<}
 regardless of what the bounding level is.
 For example, we can construct a derivation for $  \cdot   \vdash   \kw{Level}\texttt{<} \gap   2    \mathrel{:}   \kw{U} \gap   0   $
 solely knowing that $  \cdot   \vdash   2   \mathrel{:}   \kw{Level}\texttt{<} \gap   3   $ and $  \cdot   \vdash   \kw{U} \gap   0    \mathrel{:}   \kw{U} \gap   1   $.
@@ -909,7 +909,7 @@ It is worthwhile to also explicitly state the inversion principle
 asserting that types that have interpretations are indeed one of the four types,
 proven by induction on the logical relation.
 
-\begin{lemma}[Inversion (l.r.)]
+\begin{lemma}[Inversion (l.r.)] \label{lem:lr:inv}
   If $ \mathopen{\llbracket}  \ottnt{C}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $, then one of the following holds:
   \begin{itemize}
     \item There exist $\ottnt{A}$ and $\ottnt{B}$ such that $ \ottnt{C}  \Rightarrow^\ast   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}  $;
@@ -928,12 +928,12 @@ in a given typing context with a simultaneous substitution.
 Semantic typing is then elementhood of a term in the interpretation of its type
 for any substitution that closes them both.
 
-At this point, talking about simultaneous substitutions is inevitable.
+At this point, referring to simultaneous substitutions is inevitable.
 We denote them as $\sigma$, and write $ \sigma ,  \ottmv{x}  \mapsto  \ottnt{a} $
 for its extension by a single substitution of $\ottmv{x}$ by $\ottnt{a}$.
 In the mechanization, semantic well-typedness of a substitution $ \sigma  \vDash  \Gamma $
-is defined in terms of semantic typing,
-but it is more convenient use the admissible rules defined in \cref{fig:sem:subst}.
+is defined similarly to semantic typing,
+but the admissible rules defined in \cref{fig:sem:subst} are more convenient.
 
 \begin{definition}
   A substitution $\sigma$ is semantically well typed
@@ -976,7 +976,7 @@ followed by the cases for the rules in \cref{fig:typing:univ}
 that are unique to our system.
 For concision, we skip steps involving massaging substitutions into the right shape.
 
-\begin{theorem}[Soundness]
+\begin{theorem}[Soundness] \label{thm:soundness}
   If $ \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $, then $ \Gamma  \vDash  \ottnt{a}  :  \ottnt{A} $.
 \end{theorem}
 
@@ -1012,9 +1012,9 @@ For concision, we skip steps involving massaging substitutions into the right sh
       The premises are $ \Gamma  \vdash   \kw{U} \gap  \ottnt{k_{{\mathrm{1}}}}   \mathrel{:}   \kw{U} \gap  \ell_{{\mathrm{1}}}  $ and $ \Gamma  \vdash  \ottnt{k_{{\mathrm{0}}}}  \mathrel{:}   \kw{Level}\texttt{<} \gap  \ell_{{\mathrm{0}}}  $,
       concluding with $ \Gamma  \vdash   \kw{Level}\texttt{<} \gap  \ottnt{k_{{\mathrm{0}}}}   \mathrel{:}   \kw{U} \gap  \ottnt{k_{{\mathrm{1}}}}  $.
       By the induction hypothesis on the first premises,
-      $ U  \gap   (  \ottnt{k_{{\mathrm{1}}}} [  \sigma  ]  )  $ is in the interpretation of a universe.
-      By inversion, we know that it too has an interpretation as a universe
-      such that our remaining goal is now $ \mathopen{\llbracket}   \kw{Level}\texttt{<} \gap   (  \ottnt{k_{{\mathrm{0}}}} [  \sigma  ]  )    \mathclose{\rrbracket}_{ \ottmv{j} } \searrow  \ottnt{P} $ for some $\ottnt{P}$,
+      $ \kw{U} \gap   (  \ottnt{k_{{\mathrm{1}}}} [  \sigma  ]  )  $ is in the interpretation of a universe.
+      By inversion, we know that it too has an interpretation as a universe,
+      so it remains to show that $ \mathopen{\llbracket}   \kw{Level}\texttt{<} \gap   (  \ottnt{k_{{\mathrm{0}}}} [  \sigma  ]  )    \mathclose{\rrbracket}_{ \ottmv{j} } \searrow  \ottnt{P} $ for some $\ottnt{P}$,
       where $  \ottnt{k_{{\mathrm{1}}}} [  \sigma  ]   \Rightarrow^\ast   \ottmv{j}  $.
       By the induction on the second premise,
       followed by inversion on the interpretation of level types,
@@ -1022,6 +1022,17 @@ For concision, we skip steps involving massaging substitutions into the right sh
       Then the goal is constructed using \rref{I-Level<} and \cref{lem:lr:pars}.
     \item \textit{\Rref{Lvl}.} Straightforward by construction using \rref{I-Level<}.
     \item \textit{\Rref{Trans}.}
+      The premises are $ \Gamma  \vdash  \ottnt{k_{{\mathrm{1}}}}  \mathrel{:}   \kw{Level}\texttt{<} \gap  \ottnt{k_{{\mathrm{2}}}}  $ and $ \Gamma  \vdash  \ottnt{k_{{\mathrm{2}}}}  \mathrel{:}   \kw{Level}\texttt{<} \gap  \ottnt{k_{{\mathrm{3}}}}  $,
+      concluding with $ \Gamma  \vdash  \ottnt{k_{{\mathrm{1}}}}  \mathrel{:}   \kw{Level}\texttt{<} \gap  \ottnt{k_{{\mathrm{3}}}}  $.
+      By the induction hypotheses on the two premises,
+      followed by inversion on the interpretation of level types,
+      we know that $  \ottnt{k_{{\mathrm{1}}}} [  \sigma  ]   \Rightarrow^\ast   \ottmv{i_{{\mathrm{1}}}}  $, $  \ottnt{k_{{\mathrm{2}}}} [  \sigma  ]   \Rightarrow^\ast   \ottmv{i_{{\mathrm{2}}}}  $, $  \ottnt{k_{{\mathrm{2}}}} [  \sigma  ]   \Rightarrow^\ast   \ottmv{i'_{{\mathrm{2}}}}  $, and $  \ottnt{k_{{\mathrm{3}}}} [  \sigma  ]   \Rightarrow^\ast   \ottmv{i_{{\mathrm{3}}}}  $
+      such that $ \ottmv{i_{{\mathrm{1}}}}  <  \ottmv{i_{{\mathrm{2}}}} $ and $ \ottmv{i'_{{\mathrm{2}}}}  <  \ottmv{i_{{\mathrm{3}}}} $.
+      By \nameref{lem:par:confl} and \nameref{lem:par:consistency},
+      it must be that $\ottmv{i_{{\mathrm{2}}}} = \ottmv{i'_{{\mathrm{2}}}}$.
+      From the second inversion, we already know that $ \kw{Level}\texttt{<} \gap   (  \ottnt{k_{{\mathrm{3}}}} [  \sigma  ]  )  $ has an interpretation,
+      so it remains to show that $  \ottnt{k_{{\mathrm{1}}}} [  \sigma  ]   \Rightarrow^\ast   \ottmv{i_{{\mathrm{1}}}}  $ and $  \ottnt{k_{{\mathrm{3}}}} [  \sigma  ]   \Rightarrow^\ast   \ottmv{i_{{\mathrm{3}}}}  $ such that $ \ottmv{i_{{\mathrm{1}}}}  <  \ottmv{i_{{\mathrm{3}}}} $,
+      which holds by transitivity.
     \item \textit{\Rref{Sub}.}
       The premises are $ \Gamma  \vdash  \ottnt{A}  \mathrel{:}   \kw{U} \gap  \ottnt{k}  $ and $ \Gamma  \vdash  \ottnt{k}  \mathrel{:}   \kw{Level}\texttt{<} \gap  \ell  $,
       concluding with $ \Gamma  \vdash  \ottnt{A}  \mathrel{:}   \kw{U} \gap  \ell  $.
@@ -1036,11 +1047,104 @@ For concision, we skip steps involving massaging substitutions into the right sh
       Similar to the \rref{Univ} case,
       we can show that $ \kw{U} \gap   (  \ell [  \sigma  ]  )  $ has an interpretation as a universe.
       The final goal is then to show that $ \mathopen{\llbracket}   \ottnt{A} [  \sigma  ]   \mathclose{\rrbracket}_{ \ottmv{j} } \searrow  \ottnt{P} $,
-      which holds by \nameref{lem:lr:cumul}.
+      which holds by \nameref{lem:lr:cumul} on $ \ottmv{i}  <  \ottmv{j} $.
+      \qedhere
   \end{itemize}
 \end{proof}
 
-\subsection{Attempts at proving normalization}
+Consistency and various canonicity results then follow from the fundamental theorem as corollaries.
+
+\begin{corollary}[Consistency]
+  There is no $\ottnt{b}$ such that $  \cdot   \vdash  \ottnt{b}  \mathrel{:}   \bot  $ holds.
+  If there were, by \nameref{thm:soundness},
+  we would have $  \cdot   \vDash  \ottnt{b}  :   \bot  $.
+  Instantiating with the identity substitution,
+  then inverting on the interpretation of $ \bot $,
+  we would have that $ \ottnt{b}  \in   \varnothing  $, which is a contradiction.
+\end{corollary}
+
+\begin{corollary}[Canonicity of types]
+  If $  \cdot   \vdash  \ottnt{C}  \mathrel{:}   \kw{U} \gap  \ottnt{k}  $,
+  then either $ \ottnt{C}  \Rightarrow^\ast   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}  $, $ \ottnt{C}  \Rightarrow^\ast   \kw{U} \gap   \ottmv{i}   $, $ \ottnt{C}  \Rightarrow^\ast   \kw{Level}\texttt{<} \gap   \ottmv{i}   $, or $ \ottnt{C}  \Rightarrow^\ast   \bot  $.
+  By \nameref{thm:soundness},
+  instantiating with the identity substitution,
+  we have some $\ottmv{j}, \ottnt{Q}$ such that $ \mathopen{\llbracket}   \kw{U} \gap  \ottnt{k}   \mathclose{\rrbracket}_{ \ottmv{j} } \searrow  \ottnt{Q} $ and $ \ottnt{C}  \in  \ottnt{Q} $.
+  By inversion on the former,
+  we then have some $\ottmv{i}, \ottnt{P}$ such that $ \ottnt{k}  \Rightarrow^\ast   \ottmv{i}  $ and $ \mathopen{\llbracket}  \ottnt{C}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $.
+  Then the goal holds by \nameref{lem:lr:inv}.
+\end{corollary}
+
+\begin{corollary}[Canonicity of levels]
+  If $  \cdot   \vdash  \ottnt{k}  \mathrel{:}   \kw{Level}\texttt{<} \gap  \ell  $,
+  then $ \ottnt{k}  \Rightarrow^\ast   \ottmv{i}  $ for some concrete level $\ottmv{i}$.
+  By \nameref{thm:soundness},
+  instantiating with the identity substitution,
+  we have some $\ottmv{j}, \ottnt{P}$ such that $ \mathopen{\llbracket}   \kw{Level}\texttt{<} \gap  \ell   \mathclose{\rrbracket}_{ \ottmv{j} } \searrow  \ottnt{P} $ and $ \ottnt{k}  \in  \ottnt{P} $.
+  By inversion on the former,
+  we then have that $ \ell  \Rightarrow^\ast   \ottmv{i_{{\mathrm{2}}}}  $ and $ \ottnt{k}  \Rightarrow^\ast   \ottmv{i_{{\mathrm{1}}}}  $ such that $ \ottmv{i_{{\mathrm{1}}}}  <  \ottmv{i_{{\mathrm{2}}}} $.
+\end{corollary}
+
+\subsection{Counterexample to normalization}
+
+Our type theory is not normalizing.
+While directly declaring an ill-founded level $ \ottmv{x}  \mathbin{:}   \kw{Level}\texttt{<} \gap  \ottmv{x}  $ is impossible,
+we can construct such a level in an inconsistent context.
+Then it becomes possible to type the universe at this level as its own type.
+\Cref{fig:type-in-type} explicitly constructs the key part of the typing derivation
+for $ \kw{U} \gap   (  \kw{absurd} \gap  \ottmv{x}  )   :  \kw{U} \gap   (  \kw{absurd} \gap  \ottmv{x}  )  $ where $\ottmv{x} :  \bot $.
+With an instance of type-in-type,
+it is possible to construct a nonnormalizing lambda term,
+for instance via Hurkens' paradox~\citep{hurkens}.
+
+\begin{figure}
+\begin{mathpar}
+  \inferrule*[Left=\rref*{Univ}]{
+  \inferrule*[Left=\rref*{Abs}]{
+    \inferrule*[Left=\rref*{Level<}]{
+      \inferrule*[Left=\rref*{Univ}]{
+      \inferrule*[Left=\rref*{Lvl}]{0 < 1}{  \ottmv{x}  \mathbin{:}   \bot    \vdash   0   \mathrel{:}   \kw{Level}\texttt{<} \gap   1   }}
+      {  \ottmv{x}  \mathbin{:}   \bot    \vdash   \kw{U} \gap   0    \mathrel{:}   \kw{U} \gap   1   }
+      \and
+      \inferrule*[Right=\rref*{Abs}]{
+      \inferrule*[]{\dots}{  \ottmv{x}  \mathbin{:}   \bot    \vdash   \kw{Level}\texttt{<} \gap   0    \mathrel{:}   \kw{U} \gap   0   }
+      \and
+      \inferrule*[Right=\rref*{Var}]{ \ottmv{x}  \mathrel{:}   \bot   \in   \ottmv{x}  \mathbin{:}   \bot   }{  \ottmv{x}  \mathbin{:}   \bot    \vdash  \ottmv{x}  \mathrel{:}   \bot  }}
+      {  \ottmv{x}  \mathbin{:}   \bot    \vdash   \kw{absurd} \gap  \ottmv{x}   \mathrel{:}   \kw{Level}\texttt{<} \gap   0   }}
+      {  \ottmv{x}  \mathbin{:}   \bot    \vdash   \kw{Level}\texttt{<} \gap   (  \kw{absurd} \gap  \ottmv{x}  )    \mathrel{:}   \kw{U} \gap   0   }
+    \and
+    \inferrule*[Right=\rref*{Var}]{ \ottmv{x}  \mathrel{:}   \bot   \in   \ottmv{x}  \mathbin{:}   \bot   }{  \ottmv{x}  \mathbin{:}   \bot    \vdash  \ottmv{x}  \mathrel{:}   \bot  }}
+    {  \ottmv{x}  \mathbin{:}   \bot    \vdash   \kw{absurd} \gap  \ottmv{x}   \mathrel{:}   \kw{Level}\texttt{<} \gap   (  \kw{absurd} \gap  \ottmv{x}  )   }}
+  {  \ottmv{x}  \mathbin{:}   \bot    \vdash   \kw{U} \gap   (  \kw{absurd} \gap  \ottmv{x}  )    \mathrel{:}   \kw{U} \gap   (  \kw{absurd} \gap  \ottmv{x}  )   }
+\end{mathpar}
+\caption{Type-in-type in an inconsistent context}
+\label{fig:type-in-type}
+\end{figure}
+
+The ability to assign different types to the term $ \kw{absurd} \gap  \ottmv{x} $ is key to constructing this derivation.
+If the eliminator for falsehood required a type annotation,
+and more importantly if type annotations required comparison in definitional equality,
+we could only construct a derivation for
+$ \kw{U} \gap   (  \kw{absurd}_{  (  \kw{Level}\texttt{<} \gap   (  \kw{absurd}_{  (  \kw{Level}\texttt{<} \gap   0   )  } \gap  \ottmv{x}  )   )  } \gap  \ottmv{x}  )   :  \kw{U} \gap   (  \kw{absurd}_{  (  \kw{Level}\texttt{<} \gap   0   )  } \gap  \ottmv{x}  )  $,
+which can no longer be used as type-in-type.
+For similar reasons, we cannot use $\ottmv{x} :  \Pi  A  \mathbin{:}   \kw{U} \gap  i   \mathpunct{.}  A $
+to construct the ill-founded level, as the type arguments will be incomparable.
+
+It is unclear whether adding a type annotation to $ \kw{absurd} \gap   \relax  $
+(or removing the empty type entirely) would resolve the issue of nonnormalization,
+as we have not found a counterexample without eliminating falsehoods.
+Conversely, it is also unclear how to define extend the logical relation to prove normalization
+by generalizing it to open types and terms.
+The issue lies in the interpretation of a universe at a level that is a neutral term.
+
+Consider for example $   \ottmv{x}  \mathbin{:}   \kw{Level}\texttt{<} \gap   \omega    ,  \ottmv{y}  \mathbin{:}   \kw{Level}\texttt{<} \gap  \ottmv{x}    \vdash   \kw{U} \gap  \ottmv{y}   \mathrel{:}   \kw{U} \gap  \ottmv{x}  $.
+What types live in $ \kw{U} \gap  \ottmv{y} $?
+If $\ottmv{x}$ is $0$, then there is no possible $\ottmv{y}$,
+and $ \kw{U} \gap  \ottmv{y} $ has no interpretation as a universe;
+otherwise, it \emph{could} have an interpretation.
+Without assuming that $\ottmv{x}$ reduces to a canonical, concrete level,
+we have no way of interpreting $ \kw{U} \gap  \ottmv{y} $.
+We cannot simply say that universes with neutral levels only contain neutral terms, either,
+as $ \kw{U} \gap  \ottmv{x} $ is such a universe that clearly contains the normal term $ \kw{U} \gap  \ottmv{y} $.
 
 \section{Conclusion and future work}
 

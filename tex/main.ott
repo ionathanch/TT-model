@@ -35,8 +35,11 @@ a, b, c, A, B, C, k, l {{ tex \ell }} :: 'tm_' ::= {{ com terms }}
     {{ com empty type }}
     {{ tex \bot }}
   | abs b :: :: Exf
-    {{ com ex false quodlibet }}
+    {{ com ex falso quodlibet }}
     {{ tex \kw{absurd} \gap [[b]] }}
+  | abs' A b :: S :: Exf'
+    {{ com explicitly annotated ex falso }}
+    {{ tex \kw{absurd}_{[[A]]} \gap [[b]] }}
   | Type k :: :: Univ
     {{ com type universe }}
     {{ tex \kw{U} \gap [[k]] }}

@@ -265,7 +265,7 @@ By \rref{Lvl}, we can view the type constructor $[[Level< _]]$
 as the internalization of the order on levels.
 As the level type is combined with level bounding,
 it is impossible to declare a level variable strictly less than itself.
-The level type itself can be typed at any universe
+The level type itself can be typed at any universe by \rref{Level<}
 regardless of what the bounding level is.
 For example, we can construct a derivation for $[[• ⊢ Level< 2 : Type 0]]$
 solely knowing that $[[• ⊢ 2 : Level< 3]]$ and $[[• ⊢ Type 0 : Type 1]]$.
@@ -909,7 +909,7 @@ It is worthwhile to also explicitly state the inversion principle
 asserting that types that have interpretations are indeed one of the four types,
 proven by induction on the logical relation.
 
-\begin{lemma}[Inversion (l.r.)]
+\begin{lemma}[Inversion (l.r.)] \label{lem:lr:inv}
   If $[[⟦C⟧ i ↘ P]]$, then one of the following holds:
   \begin{itemize}
     \item There exist $[[A]]$ and $[[B]]$ such that $[[C ⇒* Πx: A. B]]$;
@@ -928,12 +928,12 @@ in a given typing context with a simultaneous substitution.
 Semantic typing is then elementhood of a term in the interpretation of its type
 for any substitution that closes them both.
 
-At this point, talking about simultaneous substitutions is inevitable.
+At this point, referring to simultaneous substitutions is inevitable.
 We denote them as $[[s]]$, and write $[[s, x ↦ a]]$
 for its extension by a single substitution of $[[x]]$ by $[[a]]$.
 In the mechanization, semantic well-typedness of a substitution $[[s ⊧ G]]$
-is defined in terms of semantic typing,
-but it is more convenient use the admissible rules defined in \cref{fig:sem:subst}.
+is defined similarly to semantic typing,
+but the admissible rules defined in \cref{fig:sem:subst} are more convenient.
 
 \begin{definition}
   A substitution $[[s]]$ is semantically well typed
@@ -976,7 +976,7 @@ followed by the cases for the rules in \cref{fig:typing:univ}
 that are unique to our system.
 For concision, we skip steps involving massaging substitutions into the right shape.
 
-\begin{theorem}[Soundness]
+\begin{theorem}[Soundness] \label{thm:soundness}
   If $[[G ⊢ a : A]]$, then $[[G ⊧ a : A]]$.
 \end{theorem}
 
@@ -1012,9 +1012,9 @@ For concision, we skip steps involving massaging substitutions into the right sh
       The premises are $[[G ⊢ Type k1 : Type l1]]$ and $[[G ⊢ k0 : Level< l0]]$,
       concluding with $[[G ⊢ Level< k0 : Type k1]]$.
       By the induction hypothesis on the first premises,
-      $[[U (k1{s})]]$ is in the interpretation of a universe.
-      By inversion, we know that it too has an interpretation as a universe
-      such that our remaining goal is now $[[⟦Level< (k0{s})⟧ j ↘ P]]$ for some $[[P]]$,
+      $[[Type (k1{s})]]$ is in the interpretation of a universe.
+      By inversion, we know that it too has an interpretation as a universe,
+      so it remains to show that $[[⟦Level< (k0{s})⟧ j ↘ P]]$ for some $[[P]]$,
       where $[[k1{s} ⇒* j]]$.
       By the induction on the second premise,
       followed by inversion on the interpretation of level types,
@@ -1022,6 +1022,17 @@ For concision, we skip steps involving massaging substitutions into the right sh
       Then the goal is constructed using \rref{I-Level<} and \cref{lem:lr:pars}.
     \item \textit{\Rref{Lvl}.} Straightforward by construction using \rref{I-Level<}.
     \item \textit{\Rref{Trans}.}
+      The premises are $[[G ⊢ k1 : Level< k2]]$ and $[[G ⊢ k2 : Level< k3]]$,
+      concluding with $[[G ⊢ k1 : Level< k3]]$.
+      By the induction hypotheses on the two premises,
+      followed by inversion on the interpretation of level types,
+      we know that $[[k1{s} ⇒* i1]]$, $[[k2{s} ⇒* i2]]$, $[[k2{s} ⇒* i2']]$, and $[[k3{s} ⇒* i3]]$
+      such that $[[i1 < i2]]$ and $[[i2' < i3]]$.
+      By \nameref{lem:par:confl} and \nameref{lem:par:consistency},
+      it must be that $[[i2]] = [[i2']]$.
+      From the second inversion, we already know that $[[Level< (k3{s})]]$ has an interpretation,
+      so it remains to show that $[[k1{s} ⇒* i1]]$ and $[[k3{s} ⇒* i3]]$ such that $[[i1 < i3]]$,
+      which holds by transitivity.
     \item \textit{\Rref{Sub}.}
       The premises are $[[G ⊢ A : Type k]]$ and $[[G ⊢ k : Level< l]]$,
       concluding with $[[G ⊢ A : Type l]]$.
@@ -1036,11 +1047,104 @@ For concision, we skip steps involving massaging substitutions into the right sh
       Similar to the \rref{Univ} case,
       we can show that $[[Type (l{s})]]$ has an interpretation as a universe.
       The final goal is then to show that $[[⟦A{s}⟧ j ↘ P]]$,
-      which holds by \nameref{lem:lr:cumul}.
+      which holds by \nameref{lem:lr:cumul} on $[[i < j]]$.
+      \qedhere
   \end{itemize}
 \end{proof}
 
-\subsection{Attempts at proving normalization}
+Consistency and various canonicity results then follow from the fundamental theorem as corollaries.
+
+\begin{corollary}[Consistency]
+  There is no $[[b]]$ such that $[[• ⊢ b : ⊥]]$ holds.
+  If there were, by \nameref{thm:soundness},
+  we would have $[[• ⊧ b : ⊥]]$.
+  Instantiating with the identity substitution,
+  then inverting on the interpretation of $[[⊥]]$,
+  we would have that $[[b ∈ ∅]]$, which is a contradiction.
+\end{corollary}
+
+\begin{corollary}[Canonicity of types]
+  If $[[• ⊢ C : Type k]]$,
+  then either $[[C ⇒* Πx: A. B]]$, $[[C ⇒* Type i]]$, $[[C ⇒* Level< i]]$, or $[[C ⇒* ⊥]]$.
+  By \nameref{thm:soundness},
+  instantiating with the identity substitution,
+  we have some $[[j]], [[Q]]$ such that $[[⟦Type k⟧ j ↘ Q]]$ and $[[C ∈ Q]]$.
+  By inversion on the former,
+  we then have some $[[i]], [[P]]$ such that $[[k ⇒* i]]$ and $[[⟦C⟧ i ↘ P]]$.
+  Then the goal holds by \nameref{lem:lr:inv}.
+\end{corollary}
+
+\begin{corollary}[Canonicity of levels]
+  If $[[• ⊢ k : Level< l]]$,
+  then $[[k ⇒* i]]$ for some concrete level $[[i]]$.
+  By \nameref{thm:soundness},
+  instantiating with the identity substitution,
+  we have some $[[j]], [[P]]$ such that $[[⟦Level< l⟧ j ↘ P]]$ and $[[k ∈ P]]$.
+  By inversion on the former,
+  we then have that $[[l ⇒* i2]]$ and $[[k ⇒* i1]]$ such that $[[i1 < i2]]$.
+\end{corollary}
+
+\subsection{Counterexample to normalization}
+
+Our type theory is not normalizing.
+While directly declaring an ill-founded level $[[x : Level< x]]$ is impossible,
+we can construct such a level in an inconsistent context.
+Then it becomes possible to type the universe at this level as its own type.
+\Cref{fig:type-in-type} explicitly constructs the key part of the typing derivation
+for $[[Type (abs x)]] : [[Type (abs x)]]$ where $[[x]] : [[⊥]]$.
+With an instance of type-in-type,
+it is possible to construct a nonnormalizing lambda term,
+for instance via Hurkens' paradox~\citep{hurkens}.
+
+\begin{figure}
+\begin{mathpar}
+  \inferrule*[Left=\rref*{Univ}]{
+  \inferrule*[Left=\rref*{Abs}]{
+    \inferrule*[Left=\rref*{Level<}]{
+      \inferrule*[Left=\rref*{Univ}]{
+      \inferrule*[Left=\rref*{Lvl}]{0 < 1}{[[x : ⊥ ⊢ 0 : Level< 1]]}}
+      {[[x : ⊥ ⊢ Type 0 : Type 1]]}
+      \and
+      \inferrule*[Right=\rref*{Abs}]{
+      \inferrule*[]{\dots}{[[x : ⊥ ⊢ Level< 0 : Type 0]]}
+      \and
+      \inferrule*[Right=\rref*{Var}]{[[x : ⊥ ∈ x : ⊥]]}{[[x : ⊥ ⊢ x : ⊥]]}}
+      {[[x : ⊥ ⊢ abs x : Level< 0]]}}
+      {[[x : ⊥ ⊢ Level< (abs x) : Type 0]]}
+    \and
+    \inferrule*[Right=\rref*{Var}]{[[x : ⊥ ∈ x : ⊥]]}{[[x : ⊥ ⊢ x : ⊥]]}}
+    {[[x : ⊥ ⊢ abs x : Level< (abs x)]]}}
+  {[[x : ⊥ ⊢ Type (abs x) : Type (abs x)]]}
+\end{mathpar}
+\caption{Type-in-type in an inconsistent context}
+\label{fig:type-in-type}
+\end{figure}
+
+The ability to assign different types to the term $[[abs x]]$ is key to constructing this derivation.
+If the eliminator for falsehood required a type annotation,
+and more importantly if type annotations required comparison in definitional equality,
+we could only construct a derivation for
+$[[Type (abs' (Level< (abs' (Level< 0) x)) x)]] : [[Type (abs' (Level< 0) x)]]$,
+which can no longer be used as type-in-type.
+For similar reasons, we cannot use $[[x]] : [[:concrete: ΠA: Type i. A]]$
+to construct the ill-founded level, as the type arguments will be incomparable.
+
+It is unclear whether adding a type annotation to $[[abs _]]$
+(or removing the empty type entirely) would resolve the issue of nonnormalization,
+as we have not found a counterexample without eliminating falsehoods.
+Conversely, it is also unclear how to define extend the logical relation to prove normalization
+by generalizing it to open types and terms.
+The issue lies in the interpretation of a universe at a level that is a neutral term.
+
+Consider for example $[[x : Level< o, y : Level< x ⊢ Type y : Type x]]$.
+What types live in $[[Type y]]$?
+If $[[x]]$ is $[[0]]$, then there is no possible $[[y]]$,
+and $[[Type y]]$ has no interpretation as a universe;
+otherwise, it \emph{could} have an interpretation.
+Without assuming that $[[x]]$ reduces to a canonical, concrete level,
+we have no way of interpreting $[[Type y]]$.
+We cannot simply say that universes with neutral levels only contain neutral terms, either,
+as $[[Type x]]$ is such a universe that clearly contains the normal term $[[Type y]]$.
 
 \section{Conclusion and future work}
 
