@@ -250,7 +250,7 @@ and omit the usual congruence rules.
     %----------------------%
     {[[G ⊢ k1 : Level< k3]]}
   \and
-  \inferrule[\ottdrulename{Sub}]
+  \inferrule[\ottdrulename{Cumul}]
     {[[G ⊢ A : Type k]] \and
      [[G ⊢ k : Level< l]]}
     %--------------------%
@@ -275,12 +275,12 @@ which is now required since levels are terms in general and not only concrete le
 For example, we can construct a derivation for $[[x : Level< o, y : Level< x ⊢ x : Level< o]]$,
 where the levels $[[x]], [[y]]$ are variables.
 
-\Rref{Sub} is a subsumption rule that permits lifting a type
+\Rref{Cumul} is a cumulativity rule that permits lifting a type
 from one universe to a higher universe.
-This rule is weaker than a full cumulativity rule that accounts for
+This rule is weaker than a full subtyping rule that accounts for
 contravariance in the domain and covariance in the codomain of function types.
 Therefore, for instance, $[[f : Type 2 → Type 0 ⊢ f : Type 1 → Type 1]]$ does \emph{not} hold.
-Nonetheless, subsumption allows us to instead type the $\eta$-expansion
+Nonetheless, cumulativity allows us to instead type the $\eta$-expansion
 $[[f : Type 2 → Type 0 ⊢ λx. f x : Type 1 → Type 1]]$.
 
 Finally, \rref{Univ} asserts that a universe at level $[[k]]$
@@ -1042,7 +1042,7 @@ For concision, we skip steps involving massaging substitutions into the right sh
       From the second inversion, we already know that $[[Level< (k3{s})]]$ has an interpretation,
       so it remains to show that $[[k1{s} ⇒* i1]]$ and $[[k3{s} ⇒* i3]]$ such that $[[i1 < i3]]$,
       which holds by transitivity.
-    \item \textit{\Rref{Sub}.}
+    \item \textit{\Rref{Cumul}.}
       The premises are $[[G ⊢ A : Type k]]$ and $[[G ⊢ k : Level< l]]$,
       concluding with $[[G ⊢ A : Type l]]$.
       By induction on the first premise,
@@ -1165,13 +1165,9 @@ Because levels are now terms,
 subtyping necessarily involves typing to compare two levels.
 In particular, a universe at a smaller level is a subtype of a universe at a larger level,
 while a level type bounded by a smaller level is a subtype of a level bounded by a larger level.
-The former is expressed by \rref{Sub}, the latter by \rref{Trans}.
+The former is expressed by \rref{Cumul}, the latter by \rref{Trans}.
 In this sense, the sole benefit of subtyping is being able to subtype function types,
 making function domains contravariant and codomains covariant with respect to subtyping.
-This does not hold by \rref{Sub} alone:
-for instance, a function $[[f]]$ of type $[[Type 7 → Type 8]]$ in the context
-cannot be assigned type $[[Type 6 → Type 9]]$,
-although its $\eta$-expansion $[[λx. f x]]$ can.
 A number of these subtyping rules are given in \cref{fig:subtyping},
 along with an updated \rref{Conv'} rule.
 

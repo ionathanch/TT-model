@@ -250,7 +250,7 @@ and omit the usual congruence rules.
     %----------------------%
     { \Gamma  \vdash  \ottnt{k_{{\mathrm{1}}}}  \mathrel{:}   \kw{Level}\texttt{<} \gap  \ottnt{k_{{\mathrm{3}}}}  }
   \and
-  \inferrule[\ottdrulename{Sub}]
+  \inferrule[\ottdrulename{Cumul}]
     { \Gamma  \vdash  \ottnt{A}  \mathrel{:}   \kw{U} \gap  \ottnt{k}   \and
       \Gamma  \vdash  \ottnt{k}  \mathrel{:}   \kw{Level}\texttt{<} \gap  \ell  }
     %--------------------%
@@ -275,12 +275,12 @@ which is now required since levels are terms in general and not only concrete le
 For example, we can construct a derivation for $   \ottmv{x}  \mathbin{:}   \kw{Level}\texttt{<} \gap   \omega    ,  \ottmv{y}  \mathbin{:}   \kw{Level}\texttt{<} \gap  \ottmv{x}    \vdash  \ottmv{x}  \mathrel{:}   \kw{Level}\texttt{<} \gap   \omega   $,
 where the levels $\ottmv{x}, \ottmv{y}$ are variables.
 
-\Rref{Sub} is a subsumption rule that permits lifting a type
+\Rref{Cumul} is a cumulativity rule that permits lifting a type
 from one universe to a higher universe.
-This rule is weaker than a full cumulativity rule that accounts for
+This rule is weaker than a full subtyping rule that accounts for
 contravariance in the domain and covariance in the codomain of function types.
 Therefore, for instance, $  \ottmv{f}  \mathbin{:}    \kw{U} \gap   2    \to   \kw{U} \gap   0      \vdash  \ottmv{f}  \mathrel{:}    \kw{U} \gap   1    \to   \kw{U} \gap   1    $ does \emph{not} hold.
-Nonetheless, subsumption allows us to instead type the $\eta$-expansion
+Nonetheless, cumulativity allows us to instead type the $\eta$-expansion
 $  \ottmv{f}  \mathbin{:}    \kw{U} \gap   2    \to   \kw{U} \gap   0      \vdash    \lambda  \ottmv{x}  \mathpunct{.}  \ottmv{f}   \gap  \ottmv{x}   \mathrel{:}    \kw{U} \gap   1    \to   \kw{U} \gap   1    $.
 
 Finally, \rref{Univ} asserts that a universe at level $\ottnt{k}$
@@ -1042,7 +1042,7 @@ For concision, we skip steps involving massaging substitutions into the right sh
       From the second inversion, we already know that $ \kw{Level}\texttt{<} \gap   (  \ottnt{k_{{\mathrm{3}}}} [  \sigma  ]  )  $ has an interpretation,
       so it remains to show that $  \ottnt{k_{{\mathrm{1}}}} [  \sigma  ]   \Rightarrow^\ast   \ottmv{i_{{\mathrm{1}}}}  $ and $  \ottnt{k_{{\mathrm{3}}}} [  \sigma  ]   \Rightarrow^\ast   \ottmv{i_{{\mathrm{3}}}}  $ such that $ \ottmv{i_{{\mathrm{1}}}}  <  \ottmv{i_{{\mathrm{3}}}} $,
       which holds by transitivity.
-    \item \textit{\Rref{Sub}.}
+    \item \textit{\Rref{Cumul}.}
       The premises are $ \Gamma  \vdash  \ottnt{A}  \mathrel{:}   \kw{U} \gap  \ottnt{k}  $ and $ \Gamma  \vdash  \ottnt{k}  \mathrel{:}   \kw{Level}\texttt{<} \gap  \ell  $,
       concluding with $ \Gamma  \vdash  \ottnt{A}  \mathrel{:}   \kw{U} \gap  \ell  $.
       By induction on the first premise,
@@ -1165,13 +1165,9 @@ Because levels are now terms,
 subtyping necessarily involves typing to compare two levels.
 In particular, a universe at a smaller level is a subtype of a universe at a larger level,
 while a level type bounded by a smaller level is a subtype of a level bounded by a larger level.
-The former is expressed by \rref{Sub}, the latter by \rref{Trans}.
+The former is expressed by \rref{Cumul}, the latter by \rref{Trans}.
 In this sense, the sole benefit of subtyping is being able to subtype function types,
 making function domains contravariant and codomains covariant with respect to subtyping.
-This does not hold by \rref{Sub} alone:
-for instance, a function $\ottmv{f}$ of type $ \kw{U} \gap    7   \to   \kw{U} \gap   8    $ in the context
-cannot be assigned type $ \kw{U} \gap    6   \to   \kw{U} \gap   9    $,
-although its $\eta$-expansion $ \lambda  \ottmv{x}  \mathpunct{.}   \ottmv{f}  \gap  \ottmv{x}  $ can.
 A number of these subtyping rules are given in \cref{fig:subtyping},
 along with an updated \rref{Conv'} rule.
 
@@ -1215,6 +1211,8 @@ along with an updated \rref{Conv'} rule.
 \label{fig:subtyping}
 \end{figure}
 
+Although all of this subtyping behaviour holds semantically in our current model,
+proving logical consistency is not so easy.
 The simplicity of our logical relation relies on
 the independence of definitional equality from typing,
 along with its equivalence to conversion.
