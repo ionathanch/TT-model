@@ -160,6 +160,8 @@ formula :: 'formula_' ::=
     {{ tex [[a]] \in [[P]] }}
   | R ( x , P ) :: S :: rel
     {{ tex [[R]]([[x]], [[P]]) }}
+  | G ⊢ A ≤ B :: S :: subtyping
+    {{ tex [[G]] \vdash [[A]] \preccurlyeq [[B]] }}
   | ( formula ) :: S :: parentheses
     {{ tex ([[formula]]) }}
 

@@ -331,6 +331,7 @@ $$\ottnt{v} \Coloneqq \ottmv{i} \mid  \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \m
   \inferrule[\ottdrulename{P-Beta}]
     { \ottnt{b}  \Rightarrow  \ottnt{b'}  \and
       \ottnt{a}  \Rightarrow  \ottnt{a'} }
+    %--------------------------%
     {   (  \lambda  \ottmv{x}  \mathpunct{.}  \ottnt{b}  )   \gap  \ottnt{a}   \Rightarrow   \ottnt{b'} [  \ottmv{x}  \mapsto  \ottnt{a'}  ]  }
   \and
   \inferrule[\ottdrulename{P-Var}]{~}{ \ottmv{x}  \Rightarrow  \ottmv{x} }
@@ -340,27 +341,33 @@ $$\ottnt{v} \Coloneqq \ottmv{i} \mid  \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \m
   \inferrule[\ottdrulename{P-Pi}]
     { \ottnt{A}  \Rightarrow  \ottnt{A'}  \and
       \ottnt{B}  \Rightarrow  \ottnt{B'} }
+    %-------------------------%
     {  \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \Rightarrow   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A'}  \mathpunct{.}  \ottnt{B'}  }
   \and
   \inferrule[\ottdrulename{P-Lam}]
     { \ottnt{b}  \Rightarrow  \ottnt{b'} }
+    %------------------%
     {  \lambda  \ottmv{x}  \mathpunct{.}  \ottnt{b}   \Rightarrow   \lambda  \ottmv{x}  \mathpunct{.}  \ottnt{b'}  }
   \and
   \inferrule[\ottdrulename{P-App}]
     { \ottnt{b}  \Rightarrow  \ottnt{b'}  \and
       \ottnt{a}  \Rightarrow  \ottnt{a'} }
+    %---------------%
     {  \ottnt{b}  \gap  \ottnt{a}   \Rightarrow   \ottnt{b'}  \gap  \ottnt{a'}  }
   \and
   \inferrule[\ottdrulename{P-Abs}]
     { \ottnt{b}  \Rightarrow  \ottnt{b'} }
+    %------------------%
     {  \kw{absurd} \gap  \ottnt{b}   \Rightarrow   \kw{absurd} \gap  \ottnt{b'}  }
   \and
   \inferrule[\ottdrulename{P-Univ}]
     { \ottnt{k}  \Rightarrow  \ottnt{k'} }
+    %--------------------%
     {  \kw{U} \gap  \ottnt{k}   \Rightarrow   \kw{U} \gap  \ottnt{k'}  }
   \and
   \inferrule[\ottdrulename{P-Level<}]
     { \ell  \Rightarrow  \ell' }
+    %------------------------%
     {  \kw{Level}\texttt{<} \gap  \ell   \Rightarrow   \kw{Level}\texttt{<} \gap  \ell'  }
   \quad
   \inferrule[\ottdrulename{P-Lvl}]{~}{  \ottmv{i}   \Rightarrow   \ottmv{i}  }
@@ -576,10 +583,12 @@ Finally, the proof of subject reduction requires many of the above lemmas.
   \and
   \inferrule[\ottdrulename{N-App}]
     { \ottnt{b}  \rightsquigarrow  \ottnt{b'} }
+    %--------------%
     {  \ottnt{b}  \gap  \ottnt{a}   \rightsquigarrow   \ottnt{b'}  \gap  \ottnt{a}  }
   \and
   \inferrule[\ottdrulename{N-Abs}]
     { \ottnt{b}  \rightsquigarrow  \ottnt{b'} }
+    %------------------%
     {  \kw{absurd} \gap  \ottnt{b}   \rightsquigarrow   \kw{absurd} \gap  \ottnt{b'}  }
 \end{mathpar}
 \caption{Call by name reduction}
@@ -704,7 +713,7 @@ without worrying about well-foundedness.
     { \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{1}}}}  \and
        \forall  \ottmv{y}  \mathpunct{.}   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}    \to   \exists  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )    \\\\
        \forall  \ottmv{y}  \mathpunct{.}   \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )     \to   \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}  }
-    %--------------------------------------------------------------------------------%
+    %-------------------------------------------------------------------%
     { \mathopen{\llbracket}   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \lbrace  \ottmv{f}  \mid   \forall  \ottmv{y}  \mathpunct{.}    \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}    \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )   \to   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}     \to    \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}     \rbrace  }
 \end{mathpar}
 \caption{Logical relation for closed types}
@@ -945,13 +954,13 @@ but the admissible rules defined in \cref{fig:sem:subst} are more convenient.
 \begin{figure}
 \begin{mathpar}
   \mprset{fraction={\cdot\cdots\cdot}}
-  \inferrule[\ottdrulename{S-Nil}]{~}{ \sigma  \vDash   \cdot  }
+  \inferrule[\ottdrulename{I-Nil}]{~}{ \sigma  \vDash   \cdot  }
   \and
-  \inferrule[\ottdrulename{S-Cons}]
+  \inferrule[\ottdrulename{I-Cons}]
     { \sigma  \vDash  \Gamma  \and
       \mathopen{\llbracket}   \ottnt{A} [  \sigma  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P}  \and
       \ottnt{a}  \in  \ottnt{P} }
-    % --------------------- %
+    %-----------------------%
     {  \sigma ,  \ottmv{x}  \mapsto  \ottnt{a}   \vDash   \Gamma ,  \ottmv{x}  \mathbin{:}  \ottnt{A}  }
 \end{mathpar}
 \caption{Semantically well-typed substitutions}
@@ -993,7 +1002,7 @@ For concision, we skip steps involving massaging substitutions into the right sh
       allowing us to apply \nameref{lem:lr:inv-pi}.
       This gives $ \mathopen{\llbracket}   \ottnt{A} [  \sigma  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{1}}}} $, $ \mathopen{\llbracket}   \ottnt{B} [   \sigma ,  \ottmv{x}  \mapsto  \ottnt{a}   ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}} $, and $ \ottnt{a}  \in  \ottnt{P_{{\mathrm{1}}}} $,
       where the goal is now to show that $   (  \lambda  \ottmv{x}  \mathpunct{.}  \ottnt{b}  )   \gap  \ottnt{a}   \in  \ottnt{P_{{\mathrm{2}}}} $.
-      By \rref{S-Cons} and the induction hypothesis on the second premise,
+      By \rref{I-Cons} and the induction hypothesis on the second premise,
       we have $ \mathopen{\llbracket}   \ottnt{B} [   \sigma ,  \ottmv{x}  \mapsto  \ottnt{a}   ]   \mathclose{\rrbracket}_{ \ottmv{i'} } \searrow  \ottnt{P'_{{\mathrm{2}}}} $ and $  \ottnt{b} [  \ottmv{x}  \mapsto  \ottnt{a}  ]   \in  \ottnt{P'_{{\mathrm{2}}}} $ for some $\ottmv{i'}, \ottnt{P'_{{\mathrm{2}}}}$.
       By \nameref{lem:lr:func}, we have that $\ottnt{P_{{\mathrm{2}}}} = \ottnt{P'_{{\mathrm{2}}}}$.
       Finally, by \nameref{lem:lr:back} on \rref{P-Beta} and $  \ottnt{b} [  \ottmv{x}  \mapsto  \ottnt{a}  ]   \in  \ottnt{P_{{\mathrm{2}}}} $,
@@ -1150,7 +1159,69 @@ as $ \kw{U} \gap  \ottmv{x} $ is such a universe that clearly contains the norma
 
 \subsection{Extensions}
 
-\citet{gen-univ,univ-poly}
+\subsubsection{Subtyping}
+
+Because levels are now terms,
+subtyping necessarily involves typing to compare two levels.
+In particular, a universe at a smaller level is a subtype of a universe at a larger level,
+while a level type bounded by a smaller level is a subtype of a level bounded by a larger level.
+The former is expressed by \rref{Sub}, the latter by \rref{Trans}.
+In this sense, the sole benefit of subtyping is being able to subtype function types,
+making function domains contravariant and codomains covariant with respect to subtyping.
+This does not hold by \rref{Sub} alone:
+for instance, a function $\ottmv{f}$ of type $ \kw{U} \gap    7   \to   \kw{U} \gap   8    $ in the context
+cannot be assigned type $ \kw{U} \gap    6   \to   \kw{U} \gap   9    $,
+although its $\eta$-expansion $ \lambda  \ottmv{x}  \mathpunct{.}   \ottmv{f}  \gap  \ottmv{x}  $ can.
+A number of these subtyping rules are given in \cref{fig:subtyping},
+along with an updated \rref{Conv'} rule.
+
+\begin{figure}
+\begin{mathpar}
+  \inferrule[\ottdrulename{S-Univ}]
+    { \Gamma  \vdash  \ottnt{k}  \mathrel{:}   \kw{Level}\texttt{<} \gap  \ell  }
+    %-----------------------%
+    { \Gamma  \vdash   \kw{U} \gap  \ottnt{k}   \preccurlyeq   \kw{U} \gap  \ell  }
+  \and
+  \inferrule[\ottdrulename{S-Level<}]
+    { \Gamma  \vdash  \ottnt{k}  \mathrel{:}   \kw{Level}\texttt{<} \gap  \ell  }
+    %---------------------------%
+    { \Gamma  \vdash   \kw{Level}\texttt{<} \gap  \ottnt{k}   \preccurlyeq   \kw{Level}\texttt{<} \gap  \ell  }
+  \and
+  \inferrule[\ottdrulename{S-Pi}]
+    { \Gamma  \vdash  \ottnt{A_{{\mathrm{2}}}}  \preccurlyeq  \ottnt{A_{{\mathrm{1}}}}  \and
+       \Gamma ,  \ottmv{x}  \mathbin{:}  \ottnt{A_{{\mathrm{1}}}}   \vdash  \ottnt{B_{{\mathrm{1}}}}  \preccurlyeq  \ottnt{B_{{\mathrm{2}}}} }
+    %-------------------------------%
+    { \Gamma  \vdash   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A_{{\mathrm{1}}}}  \mathpunct{.}  \ottnt{B_{{\mathrm{1}}}}   \preccurlyeq   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A_{{\mathrm{2}}}}  \mathpunct{.}  \ottnt{B_{{\mathrm{2}}}}  }
+  \and
+  \inferrule[\ottdrulename{S-Trans}]
+    { \Gamma  \vdash  \ottnt{A}  \preccurlyeq  \ottnt{B}  \and
+      \Gamma  \vdash  \ottnt{B}  \preccurlyeq  \ottnt{C} }
+    %-------------%
+    { \Gamma  \vdash  \ottnt{A}  \preccurlyeq  \ottnt{C} }
+  \and
+  \inferrule[\ottdrulename{S-Conv}]
+    { \ottnt{A}  \equiv  \ottnt{B} }
+    %-------------%
+    { \Gamma  \vdash  \ottnt{A}  \preccurlyeq  \ottnt{B} }
+  \and
+  \inferrule[\ottdrulename{Conv'}]
+    { \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A}  \and
+      \Gamma  \vdash  \ottnt{B}  \mathrel{:}   \kw{U} \gap  \ottnt{k}   \and
+      \Gamma  \vdash  \ottnt{A}  \preccurlyeq  \ottnt{B} }
+    %-------------%
+    { \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{B} }
+\end{mathpar}
+\caption{Select subtyping rules}
+\label{fig:subtyping}
+\end{figure}
+
+The simplicity of our logical relation relies on
+the independence of definitional equality from typing,
+along with its equivalence to conversion.
+By introducing a subtyping judgement that depends on typing,
+which in turn depends on subtyping, to prove consistency,
+the logical relation would have to be extended to include a semantic notion of equality,
+similar to the reducibility judgements used by Abel, \"Ohman, and Vezzosi~\citep{dec-conv}.
 
 \bibliographystyle{plainurl}
 \bibliography{main.bib}

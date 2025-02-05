@@ -331,6 +331,7 @@ $$[[v]] \Coloneqq [[i]] \mid [[Πx: A. B]] \mid [[λx. b]] \mid [[⊥]] \mid [[T
   \inferrule[\ottdrulename{P-Beta}]
     {[[b ⇒ b']] \and
      [[a ⇒ a']]}
+    %--------------------------%
     {[[(λx. b) a ⇒ b'{x ↦ a'}]]}
   \and
   \inferrule[\ottdrulename{P-Var}]{~}{[[x ⇒ x]]}
@@ -340,27 +341,33 @@ $$[[v]] \Coloneqq [[i]] \mid [[Πx: A. B]] \mid [[λx. b]] \mid [[⊥]] \mid [[T
   \inferrule[\ottdrulename{P-Pi}]
     {[[A ⇒ A']] \and
      [[B ⇒ B']]}
+    %-------------------------%
     {[[Πx: A. B ⇒ Πx: A'. B']]}
   \and
   \inferrule[\ottdrulename{P-Lam}]
     {[[b ⇒ b']]}
+    %------------------%
     {[[λx. b ⇒ λx. b']]}
   \and
   \inferrule[\ottdrulename{P-App}]
     {[[b ⇒ b']] \and
      [[a ⇒ a']]}
+    %---------------%
     {[[b a ⇒ b' a']]}
   \and
   \inferrule[\ottdrulename{P-Abs}]
     {[[b ⇒ b']]}
+    %------------------%
     {[[abs b ⇒ abs b']]}
   \and
   \inferrule[\ottdrulename{P-Univ}]
     {[[k ⇒ k']]}
+    %--------------------%
     {[[Type k ⇒ Type k']]}
   \and
   \inferrule[\ottdrulename{P-Level<}]
     {[[l ⇒ l']]}
+    %------------------------%
     {[[Level< l ⇒ Level< l']]}
   \quad
   \inferrule[\ottdrulename{P-Lvl}]{~}{[[i ⇒ i]]}
@@ -576,10 +583,12 @@ Finally, the proof of subject reduction requires many of the above lemmas.
   \and
   \inferrule[\ottdrulename{N-App}]
     {[[b ⇝ b']]}
+    %--------------%
     {[[b a ⇝ b' a]]}
   \and
   \inferrule[\ottdrulename{N-Abs}]
     {[[b ⇝ b']]}
+    %------------------%
     {[[abs b ⇝ abs b']]}
 \end{mathpar}
 \caption{Call by name reduction}
@@ -704,7 +713,7 @@ without worrying about well-foundedness.
     {[[⟦ A ⟧ i ↘ P1]] \and
      [[∀ y. y ∈ P1 → ∃ P2. R(y, P2)]] \\\\
      [[∀ y. ∀ P2. R(y, P2) → ⟦ B{x ↦ y} ⟧ i ↘ P2]]}
-    %--------------------------------------------------------------------------------%
+    %-------------------------------------------------------------------%
     {[[⟦ Πx : A. B ⟧ i ↘ {f | ∀ y. ∀ P2. R(y, P2) → y ∈ P1 → f y ∈ P2}]]}
 \end{mathpar}
 \caption{Logical relation for closed types}
@@ -945,13 +954,13 @@ but the admissible rules defined in \cref{fig:sem:subst} are more convenient.
 \begin{figure}
 \begin{mathpar}
   \mprset{fraction={\cdot\cdots\cdot}}
-  \inferrule[\ottdrulename{S-Nil}]{~}{[[s ⊧ •]]}
+  \inferrule[\ottdrulename{I-Nil}]{~}{[[s ⊧ •]]}
   \and
-  \inferrule[\ottdrulename{S-Cons}]
+  \inferrule[\ottdrulename{I-Cons}]
     {[[s ⊧ G]] \and
      [[⟦A{s}⟧ i ↘ P]] \and
      [[a ∈ P]]}
-    % --------------------- %
+    %-----------------------%
     {[[s, x ↦ a ⊧ G, x : A]]}
 \end{mathpar}
 \caption{Semantically well-typed substitutions}
@@ -993,7 +1002,7 @@ For concision, we skip steps involving massaging substitutions into the right sh
       allowing us to apply \nameref{lem:lr:inv-pi}.
       This gives $[[⟦A{s}⟧ i ↘ P1]]$, $[[⟦ B{s, x ↦ a} ⟧ i ↘ P2]]$, and $[[a ∈ P1]]$,
       where the goal is now to show that $[[(λx. b) a ∈ P2]]$.
-      By \rref{S-Cons} and the induction hypothesis on the second premise,
+      By \rref{I-Cons} and the induction hypothesis on the second premise,
       we have $[[⟦B{s, x ↦ a}⟧ i' ↘ P2']]$ and $[[b{x ↦ a} ∈ P2']]$ for some $[[i']], [[P2']]$.
       By \nameref{lem:lr:func}, we have that $[[P2]] = [[P2']]$.
       Finally, by \nameref{lem:lr:back} on \rref{P-Beta} and $[[b{x ↦ a} ∈ P2]]$,
@@ -1150,7 +1159,71 @@ as $[[Type x]]$ is such a universe that clearly contains the normal term $[[Type
 
 \subsection{Extensions}
 
-\citet{gen-univ,univ-poly}
+\subsubsection{Subtyping}
+
+Because levels are now terms,
+subtyping necessarily involves typing to compare two levels.
+In particular, a universe at a smaller level is a subtype of a universe at a larger level,
+while a level type bounded by a smaller level is a subtype of a level bounded by a larger level.
+The former is expressed by \rref{Sub}, the latter by \rref{Trans}.
+In this sense, the sole benefit of subtyping is being able to subtype function types,
+making function domains contravariant and codomains covariant with respect to subtyping.
+This does not hold by \rref{Sub} alone:
+for instance, a function $[[f]]$ of type $[[Type 7 → Type 8]]$ in the context
+cannot be assigned type $[[Type 6 → Type 9]]$,
+although its $\eta$-expansion $[[λx. f x]]$ can.
+A number of these subtyping rules are given in \cref{fig:subtyping},
+along with an updated \rref{Conv'} rule.
+
+\begin{figure}
+\begin{mathpar}
+  \inferrule[\ottdrulename{S-Univ}]
+    {[[G ⊢ k : Level< l]]}
+    %-----------------------%
+    {[[G ⊢ Type k ≤ Type l]]}
+  \and
+  \inferrule[\ottdrulename{S-Level<}]
+    {[[G ⊢ k : Level< l]]}
+    %---------------------------%
+    {[[G ⊢ Level< k ≤ Level< l]]}
+  \and
+  \inferrule[\ottdrulename{S-Pi}]
+    {[[G ⊢ A2 ≤ A1]] \and
+     [[G, x: A1 ⊢ B1 ≤ B2]]}
+    %-------------------------------%
+    {[[G ⊢ Πx: A1. B1 ≤ Πx: A2. B2]]}
+  \and
+  \inferrule[\ottdrulename{S-Trans}]
+    {[[G ⊢ A ≤ B]] \and
+     [[G ⊢ B ≤ C]]}
+    %-------------%
+    {[[G ⊢ A ≤ C]]}
+  \and
+  \inferrule[\ottdrulename{S-Conv}]
+    {[[A = B]]}
+    %-------------%
+    {[[G ⊢ A ≤ B]]}
+  \and
+  \inferrule[\ottdrulename{Conv'}]
+    {[[G ⊢ a : A]] \and
+     [[G ⊢ B : Type k]] \and
+     [[G ⊢ A ≤ B]]}
+    %-------------%
+    {[[G ⊢ a : B]]}
+\end{mathpar}
+\caption{Select subtyping rules}
+\label{fig:subtyping}
+\end{figure}
+
+Although all of this subtyping behaviour holds semantically in our current model,
+proving logical consistency is not so easy.
+The simplicity of our logical relation relies on
+the independence of definitional equality from typing,
+along with its equivalence to conversion.
+By introducing a subtyping judgement that depends on typing,
+which in turn depends on subtyping, to prove consistency,
+the logical relation would have to be extended to include a semantic notion of equality,
+similar to the reducibility judgements used by Abel, \"Ohman, and Vezzosi~\citep{dec-conv}.
 
 \bibliographystyle{plainurl}
 \bibliography{main.bib}
