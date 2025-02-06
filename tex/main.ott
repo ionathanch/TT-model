@@ -49,6 +49,15 @@ a, b, c, A, B, C, k, l {{ tex \ell }} :: 'tm_' ::= {{ com terms }}
   | i :: :: Lof
     {{ com concrete level }}
     {{ tex [[i]] }}
+  | ↑ k :: :: Succ
+    {{ com level successor }}
+    {{ tex \mathop{\uparrow} [[k]] }}
+  | k ⊔ l :: :: Sup
+    {{ com level maximum }}
+    {{ tex [[k]] \sqcup [[l]] }}
+  | wf c :: :: Wf
+    {{ com well-founded level induction }}
+    {{ tex \kw{wf} \gap [[c]] }}
   | b { x ↦ a } :: S :: Subst
     {{ com single substitution }}
     {{ tex [[b]][ [[x]] \mapsto [[a]] ]}}

@@ -1130,7 +1130,7 @@ Consistency and various canonicity results then follow from the fundamental theo
   we would have that $[[b ∈ ∅]]$, which is a contradiction.
 \end{corollary}
 
-\begin{corollary}[Canonicity of types]
+\begin{corollary}[Canonicity of types] \label{lem:canon:univ}
   If $[[• ⊢ C : Type k]]$,
   then either $[[C ⇒* Πx: A. B]]$, $[[C ⇒* Type i]]$, $[[C ⇒* Level< i]]$, or $[[C ⇒* ⊥]]$.
   By \nameref{thm:soundness},
@@ -1217,6 +1217,85 @@ as $[[Type x]]$ is such a universe that clearly contains the normal term $[[Type
 
 \subsection{Extensions}
 
+Our type theory is intentionally minimal to focus only on the core necessities
+of first-class levels and to keep the proof development small and uncluttered.
+Some reasonable extensions include the remaining missing types from MLTT,
+\ie dependent pairs, sums, naturals, propositional equality, and W types,
+or general inductive types as in CIC~\citep{pcuic}.
+However, these features and their difficulties are orthogonal from universes and levels.
+Here, we instead look at extensions that augment how universes and levels behave,
+some of which are validated by our current semantics,
+and others which present additional challenges.
+
+\subsubsection{Level operators}
+
+The only features that we do not have but Agda does are a zeroth level,
+a level successor operator, and a level maximum operator.
+To justify them semantically,
+we would impose the first two as additional existence conditions on the metalevel levels;
+the third follows from the total ordering, which lets us pick the larger of two levels.
+Their typing rules are straightforward, given below. % in \cref{fig:lvl-ops}.
+%
+% \begin{figure}
+\begin{mathpar}
+  \inferrule[\ottdrulename{Zero}]
+    {[[G ⊢ k : Level< l]]}
+    %------------------------%
+    {[[G ⊢ 0 : Level< (↑ k)]]}
+  \and
+  \inferrule[\ottdrulename{Succ}]
+    {[[G ⊢ k : Level< l]]}
+    %--------------------------%
+    {[[G ⊢ ↑ k : Level< (↑ l)]]}
+  \and
+  \inferrule[\ottdrulename{Max}]
+    {[[G ⊢ k1 : Level< l1]] \and
+     [[G ⊢ k2 : Level< l2]]}
+    %----------------------------------%
+    {[[G ⊢ k1 ⊔ k2 : Level< (l1 ⊔ l2)]]}
+\end{mathpar}
+% \caption{Typing rules for level operators}
+% \label{fig:lvl-ops}
+% \end{figure}
+
+What complicates matters are the additional definitional equalities that need to be added
+to ensure that the maximum operator is idempotent, associative, commutative,
+distributive with respect to successors,
+and that $[[0]]$ is its identity element.
+While these properties hold automatically at the metalevel for concrete levels,
+they do not for arbitrary level expressions,
+\eg $[[0 ⊔ ↑ (x ⊔ ↑ x) = ↑ ↑ x]]$.
+Our notions of reduction then need to pick a direction for each equality
+to reduce levels to some chosen canonical form.
+We believe the mechanization to be doable, but tedious and uninteresting.
+
+\subsubsection{Level and universe eliminators}
+
+Levels and universes can at the moment only be constructed, but not eliminated.
+Even so, well-founded induction on levels holds at the metalevel,
+which we need to define our logical relation in the first place.
+We can internalize it by syntactically introducing an eliminator,
+which states that a predicate $[[B]]$ holds on arbitrary levels
+if we can show that it holds for a given level
+when we know it holds for all smaller levels.
+However, it is unclear whether this eliminator would be useful.
+%
+\begin{mathpar}
+  \inferrule[ElimLvl]
+    {[[G, z : Level< k ⊢ B : Type l]] \\\\
+     [[G ⊢ b : Πx: Level< k. (Πy: Level< x. B{z ↦ y}) → B{z ↦ x}]]}
+    %-------------------------------%
+    {[[G ⊢ wf b : Πz : Level< k. B]]}
+  \and
+  \inferrule[E-ElimLvl]{~}{[[wf b k = b k (λy. wf b y)]]}
+\end{mathpar}
+
+For universes, the simplest form of an eliminator is a typecase operator,
+matching on a type as a function type, the empty type, a universe, or a level type.
+Such an operator is justified by \nameref{lem:canon:univ}.
+TODO: Expound on the utility of typecase,
+and write down an explicit typing rule if possible.
+
 \subsubsection{Subtyping}
 
 Because levels are now terms,
@@ -1226,10 +1305,10 @@ while a level type bounded by a smaller level is a subtype of a level bounded by
 The former is expressed by \rref{Cumul}, the latter by \rref{Trans}.
 In this sense, the sole benefit of subtyping is being able to subtype function types,
 making function domains contravariant and codomains covariant with respect to subtyping.
-A number of these subtyping rules are given in \cref{fig:subtyping},
+A number of these subtyping rules are given below, % in \cref{fig:subtyping},
 along with an updated \rref{Conv'} rule.
-
-\begin{figure}
+%
+%\begin{figure}
 \begin{mathpar}
   \inferrule[\ottdrulename{S-Univ}]
     {[[G ⊢ k : Level< l]]}
@@ -1265,9 +1344,9 @@ along with an updated \rref{Conv'} rule.
     %-------------%
     {[[G ⊢ a : B]]}
 \end{mathpar}
-\caption{Select subtyping rules}
-\label{fig:subtyping}
-\end{figure}
+% \caption{Select subtyping rules}
+% \label{fig:subtyping}
+% \end{figure}
 
 Although all of this subtyping behaviour holds semantically in our current model,
 proving logical consistency is not so easy.

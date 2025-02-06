@@ -210,8 +210,8 @@ since the meta-level elements are already well founded.
 ───────────────────────────────────────────────────────────
 Γ ⊢ wf f : Πz : Level< k. B
 
-───────────────
-wf f k ≃ f k wf
+─────────────────────────
+wf f k ≃ f k (λy. wf f y)
 ```
 
 Aside from level operations, it should also be possible to add a typecase operator,
