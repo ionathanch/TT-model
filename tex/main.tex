@@ -6,13 +6,13 @@
 \usepackage[supertabular]{ottalt}
 \let\newlist\relax
 \let\renewlist\relax
-\usepackage{enumitem,xspace,doi}
+\usepackage{enumitem,booktabs,xspace,doi}
 \usepackage{mathpartir,mathtools,stmaryrd}
 \usepackage[flushmargin,multiple,para]{footmisc} % para spacing is weird and ugly
 
 \newcommand{\citep}[1]{\cite{#1}}
 \newcommand{\citet}[1]{\cite{#1}}
-\newcommand{\publicrepo}{\url{https://github.com/ionathanch/TT-model}}
+\newcommand{\repo}{\url{https://github.com/ionathanch/TT-model}}
 \newcommand{\lang}{\textsf{TT}\@\xspace}
 \newcommand{\titlebreak}{\texorpdfstring{\\}{}}
 \newcommand{\ie}{\textit{i.e.}\@\xspace}
@@ -29,11 +29,11 @@
 
 \newcommand{\footfile}[1]{%
   \raggedright
-  \href{\publicrepo{}/tree/main/TT-model/#1}{\texttt{#1}}
+  \href{\repo{}/tree/main/TT-model/#1}{\texttt{#1}}
 }
 \newcommand{\footfilethm}[2]{%
   \raggedright
-  \href{\publicrepo{}/tree/main/TT-model/#1}{\texttt{#1}}\texttt{:#2}
+  \href{\repo{}/tree/main/TT-model/#1}{\texttt{#1}}\texttt{:#2}
 }
 
 \setlength{\fboxsep}{1.5pt}
@@ -105,7 +105,65 @@
 
 \section{Introduction}
 
-\subsection{Comparison to other work}
+TODO: explain ``bounded'', ``first class'', ``level polymorphism''
+
+First-class universe levels are known to be logically consistent.
+In particular, Kov\'{a}cs~\citep{gen-univ} gives a semantic model for a type theory TTFL,
+which features first-class levels and an ordering relation $<$ on them.
+The model is given as categories with families (cwfs)~\citep{cwf},
+mostly mechanized in Agda using induction--recursion,
+and supports features such as bounded level polymorphism,
+least upper bounds on levels, and induction on levels,
+which subsumes the predicative universe features in Agda, Rocq, and Lean.
+
+The syntax of TTFL is considered to be the initial model in the category of cwfs,
+but a concrete syntax and typing rules are not given,
+and proving initiality even for MLTT is a colossal task~\citep{initiality}.
+Furthermore, while a syntax may satisfy semantic properties such as logical consistency,
+it may not necessarily satisfy desirable syntactic properties.
+For instance, Bezem, Coquand, Dybjer, and Escard\'o~\citep{univ-poly}
+introduce a concrete type theory with higher-order universe level polymorphism and level constraints,
+whose semantics can conceivably be viewed as that of TTFL without making levels first class.
+However, as they note, their type theory fails to satisfy substitution properties
+and therefore violates subject reduction.
+
+In this work, we give an end-to-end account of universe levels in type theory,
+mechanized entirely in Lean.
+Our contributions are as follows:
+
+\begin{itemize}
+  \item We state a concrete syntax and typing rules for a dependent type theory with
+    bounded, first-class universe levels.
+    Our bounds differ from level constraints in previous work in that
+    they are inherent to the type of a level,
+    rather than a separate predicate on them.
+  \item We prove the syntactic properties of subject reduction (\ie preservation),
+    progress, and type safety.
+  \item Using a syntactic logical relation, we prove logical consistency and canonicity.
+    However, normalization remains an open problem.
+\end{itemize}
+
+The development consists of just under 1600 lines of Lean code,
+which can be found in the supplementary materials at \repo{}.
+The definitions, lemmas, and theorems in this paper
+are hyperlinked to the corresponding Lean files.
+
+\section{Examples}
+
+\begin{table}
+\begin{tabular}{lllll}
+  \toprule
+  System & Levels & Polymorphism & Operators & Subsumption \\
+  \midrule
+  Agda & $\omega + \omega$ & first class & $\mathrm{max}, {} + 1$ & cumulativity (optional) \\
+  Lean & $\omega$ & prenex & $\mathrm{max}, {} + i$ & none \\
+  Rocq & anonymous & prenex & $<, \le, =$ & subtyping \\
+  this work & --- & first class & $<$ & cumulativity \\
+  \bottomrule \\
+\end{tabular}
+\caption{Comparison of proof assistants and universe level features}
+\label{tab:comparison}
+\end{table}
 
 \section{A basic type theory with bounded first-class universe levels}
 
@@ -625,7 +683,7 @@ Finally, we prove progress, which with subject reduction we show type safety:
 closed, well-typed terms either reduce to a value, or must continue reducing.
 
 \begin{theorem}[Progress] \label{lem:progress}
-  If $  \cdot   \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $, then either $\ottnt{a}$ is a value
+  If $  \cdot   \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $, then either $\ottnt{a}$ is a value,
   or $ \ottnt{a}  \rightsquigarrow  \ottnt{b} $ for some $\ottnt{b}$.
 \end{theorem}
 
