@@ -8,7 +8,7 @@ metavar x, y, z, f, g ::=
   {{ com term variables }}
   {{ lex alphanum }}
 
-metavar i, j, o {{ tex \omega }} ::=
+metavar i, j ::=
   {{ com level variables }}
   {{ lex numeral }}
 
@@ -49,6 +49,9 @@ a, b, c, A, B, C, k, l {{ tex \ell }} :: 'tm_' ::= {{ com terms }}
   | i :: :: Lof
     {{ com concrete level }}
     {{ tex [[i]] }}
+  | o :: :: Omega
+    {{ com omega level }}
+    {{ tex \omega }}
   | ↑ k :: :: Succ
     {{ com level successor }}
     {{ tex \mathop{\uparrow} [[k]] }}

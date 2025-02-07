@@ -4,7 +4,7 @@ OLD := old
 DIFF := diff
 
 LATEX_FLAGS := -jobname=$(MAIN) -shell-escape
-LATEXRUN := ./latexrun -Wall --latex-args "$(LATEX_FLAGS)"
+LATEXRUN := ./latexrun -Wall --latex-cmd lualatex --latex-args "$(LATEX_FLAGS)"
 LATEXDIFF := latexdiff
 BIBTEX := bibtex
 

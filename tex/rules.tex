@@ -31,7 +31,7 @@
 \newcommand{\ottmetavars}{
 \ottmetavartabular{
  $ \ottmv{x} ,\, \ottmv{y} ,\, \ottmv{z} ,\, \ottmv{f} ,\, \ottmv{g} $ & \ottcom{term variables} \\
- $ \ottmv{i} ,\, \ottmv{j} ,\, \omega $ & \ottcom{level variables} \\
+ $ \ottmv{i} ,\, \ottmv{j} $ & \ottcom{level variables} \\
 }}
 
 \newcommand{\otta}{
@@ -47,6 +47,7 @@
 \ottprodline{|}{ \kw{U} \gap  \ottnt{k} }{}{}{}{\ottcom{type universe}}\ottprodnewline
 \ottprodline{|}{ \kw{Level}\texttt{<} \gap  \ell }{}{}{}{\ottcom{level type}}\ottprodnewline
 \ottprodline{|}{ \ottmv{i} }{}{}{}{\ottcom{concrete level}}\ottprodnewline
+\ottprodline{|}{ \omega }{}{}{}{\ottcom{omega level}}\ottprodnewline
 \ottprodline{|}{ \mathop{\uparrow}  \ottnt{k} }{}{}{}{\ottcom{level successor}}\ottprodnewline
 \ottprodline{|}{ \ottnt{k}  \sqcup  \ell }{}{}{}{\ottcom{level maximum}}\ottprodnewline
 \ottprodline{|}{ \kw{wf} \gap  \ottnt{c} }{}{}{}{\ottcom{well-founded level induction}}\ottprodnewline

@@ -9,17 +9,21 @@
 \usepackage{enumitem,booktabs,xspace,doi}
 \usepackage{mathpartir,mathtools,stmaryrd}
 \usepackage[flushmargin,multiple,para]{footmisc} % para spacing is weird and ugly
+\usepackage[outputdir=latex.out]{minted}
+\usepackage{fontspec}
+\setmonofont[Scale=MatchUppercase]{sgr-iosevka-fixed-regular.ttc}
 
 \newcommand{\citep}[1]{\cite{#1}}
 \newcommand{\citet}[1]{\cite{#1}}
 \newcommand{\repo}{\url{https://github.com/ionathanch/TT-model}}
-\newcommand{\lang}{\textsf{TT}\@\xspace}
+\newcommand{\lang}{\textsf{TTBFL}\@\xspace}
 \newcommand{\titlebreak}{\texorpdfstring{\\}{}}
 \newcommand{\ie}{\textit{i.e.}\@\xspace}
 \newcommand{\eg}{\textit{e.g.}\@\xspace}
 \newcommand{\etal}{\textit{et al.}\@\xspace}
 \newcommand{\vs}{\textit{vs.}\@\xspace}
 \newcommand{\apriori}{\textit{a priori}\@\xspace}
+\newcommand{\fstar}{F$^\star$\@\xspace}
 \newcommand{\welltyped}{well-\hspace{0pt}typed\@\xspace}
 \newcommand{\wellfounded}{well-\hspace{0pt}founded\@\xspace}
 \newcommand{\wellfoundedness}{well-\hspace{0pt}foundedness\@\xspace}
@@ -75,7 +79,7 @@
 \keywords{type theory, universes, universe polymorphism}
 \hideLIPIcs
 
-\author{Jonathan Chan}
+\author{ionchy}
   {University of Pennsylvania, Philadelphia, USA}
   {jcxz@seas.upenn.edu}
   {0000-0003-0830-3180}
@@ -105,7 +109,7 @@
 
 \section{Introduction}
 
-TODO: explain ``bounded'', ``first class'', ``level polymorphism''
+TODO: explain ``universe'', ``bounded'', ``first class'', ``level polymorphism''
 
 First-class universe levels are known to be logically consistent.
 In particular, Kov\'{a}cs~\citep{gen-univ} gives a semantic model for a type theory TTFL,
@@ -148,22 +152,179 @@ which can be found in the supplementary materials at \repo{}.
 The definitions, lemmas, and theorems in this paper
 are hyperlinked to the corresponding Lean files.
 
-\section{Examples}
+\section{Overview}
+
+To see where bounded first-class universe levels situates itself among existing work,
+we compare it against three of the most common proof assistants with level polymorphism:
+Rocq, Lean, and Agda.%
+\footnote{\fstar's universe polymorphism works the same as Lean's.}
+An initial simple application is the level-polymorphic identity function.
+
+\begin{table}[H]
+\begin{tabular}{rp{0.54\textwidth}}
+  \textsf{Rocq} &
+  \begin{minipage}[t]{0.54\textwidth}
+  \begin{minted}{coq}
+Definition id@{u} (A : Type@{u}) (a : A) := a.
+  \end{minted}
+  \end{minipage}
+  \\
+  \midrule
+  \textsf{Lean} &
+  \begin{minipage}[t]{0.54\textwidth}
+  \begin{minted}{lean}
+def id.{u} (A : Type u) (a : A) : A := a
+  \end{minted}
+  \end{minipage}
+  \\
+  \midrule
+  \textsf{Agda} &
+  \begin{minipage}[t]{0.54\textwidth}
+  \begin{minted}{agda}
+id : ∀ (ℓ : Level) (A : Set ℓ) → A → A
+id ℓ A a = a
+  \end{minted}
+  \end{minipage}
+  \\
+  \midrule
+  \lang & $\kw{id} : [[:concrete: Πk: Level< o. ΠA: Type k. A → A]] \coloneq [[:concrete: λk. λA. λa. a]]$
+\end{tabular}
+\end{table}
+
+In Rocq and Lean, a definition can be level polymorphic
+by declaring a level variable \texttt{u}.
+Here, levels are in a syntactic category independent of terms,
+and only top-level definitions can be level polymorphic;
+lambda functions cannot otherwise be assigned level-polymorphic types.
+In Agda, levels are terms, and level polymorphism is universal quantification over a level type.
+The concrete levels in this level type are \texttt{0}, \texttt{1}, \dots,
+and universes in these levels live in a limit universe \mintinline{agda}{Setω}.
+In our system, assuming we also have levels $[[0]], [[1]], \dots, [[o]]$,
+we explicitly say which levels are quantified over by specifying the bound.
+
+The expressive power of higher-order level quantification
+afforded by its first-classness as compared to mere prenex quantification
+becomes evident when we consider the universe in which the types of identity functions live.
+
+\begin{table}[H]
+\begin{tabular}{rp{0.7\textwidth}}
+  \textsf{Rocq} &
+  \begin{minipage}[t]{0.7\textwidth}
+  \begin{minted}{coq}
+Definition Id@{u v | u < v} : Type@{v} := ∀ (A : Type@{u}), A → A.
+  \end{minted}
+  \end{minipage}
+  \\
+  \midrule
+  \textsf{Lean} &
+  \begin{minipage}[t]{0.7\textwidth}
+  \begin{minted}{lean}
+def Id.{u} : Type (u + 1) := ∀ (A : Type u), A → A
+  \end{minted}
+  \end{minipage}
+  \\
+  \midrule
+  \textsf{Agda} &
+  \begin{minipage}[t]{0.7\textwidth}
+  \begin{minted}{agda}
+Id : Setω
+Id = ∀ (ℓ : Level) (A : Set ℓ) → A → A
+  \end{minted}
+  \end{minipage}
+  \\
+  \midrule
+  \lang & $\kw{Id} : [[Type o]] \coloneq [[:concrete: Πk: Level< o. ΠA: Type k. A → A]]$
+\end{tabular}
+\end{table}
+
+Universe levels being second-class in Rocq and Lean means we cannot talk about level polymorphism itself;
+the best we can do is assign a universe to the type of an identity function at a \emph{particular} level.
+Because Rocq has cumulativity, a type that lives in a smaller universe also lives in a larger one,
+so to type an identity function type over types at level \texttt{u},
+it suffices to assign it a universe at an arbitrary larger level \texttt{v}
+by declaring an inequality constraint between the two.
+In Lean, which does not have cumulativity,
+we instead assign it the precise successor level.
+Meanwhile, in Agda, we are able to consider the type of level polymorphism itself.
+Because the universe in which the return type could be at any level within \mintinline{agda}{ω},
+the overall universe must be \mintinline{agda}{Setω},
+and the same principle applies to our system.
+
+Although Agda has optional and rudimentary support for cumulativity,
+idiomatic code typically does not use this feature,
+instead opting for precise levels using a successor operator \mintinline{agda}{suc}
+and a maximum operator \mintinline{agda}{_⊔_} on two levels,
+and similarly in Lean.
+Without cumulativity, we need to take the maximum of two levels
+when working with a type composed of types in different universes.
+With cumulativity, we instead specify an upper bound.
+A type constructor for the type of constant functions demonstrates this use case.
+
+\begin{table}[H]
+\begin{tabular}{rp{0.86\textwidth}}
+  \textsf{Rocq} &
+  \begin{minipage}[t]{0.86\textwidth}
+  \begin{minted}{coq}
+Definition Const@{u v w | u < w, v < w} (A : Type@{u}) (B : Type@{v}) : Type@{w} :=
+  A → B → A
+  \end{minted}
+  \end{minipage}
+  \\
+  \midrule
+  \textsf{Lean} &
+  \begin{minipage}[t]{0.86\textwidth}
+  \begin{minted}{lean}
+def Const.{u, v} (A : Type u) (B : Type v) : Type (max u v) := A → B → A
+  \end{minted}
+  \end{minipage}
+  \\
+  \midrule
+  \textsf{Agda} &
+  \begin{minipage}[t]{0.86\textwidth}
+  \begin{minted}{agda}
+Const : ∀ (ℓ₁ ℓ₂ : Level) → Set ℓ₁ → Set ℓ₂ → Set (ℓ₁ ⊔ ℓ₂)
+Const ℓ₁ ℓ₂ A B = A → B → A
+  \end{minted}
+  \end{minipage}
+  \\
+  \midrule
+  \lang &
+  \begin{minipage}[t]{0.86\textwidth}
+  $\kw{Const} : [[:concrete: Πl: Level< o. Πj: Level< l. Πk: Level< l. Type j → Type k → Type l]]$ \\
+  \phantom{$\kw{Const}$} $\coloneq [[:concrete: λl. λj. λk. λA. λB. A → B → A]]$
+  \end{minipage}
+\end{tabular}
+\end{table}
+
+In Lean and Agda, the level of the output universe is the maximum of that of the two input universes.
+In Rocq and our system, which has cumulativity,
+we achieve the same effect by abstracting over a third universe that bounds the other two.
+The novel feature of combining bounding and first-classness
+is the ability to bound levels not just by constant levels,
+but also by arbitrary level terms, as is the case for $[[j]], [[k]]$ bounded by $[[l]]$.
+Our system therefore encompasses both the cumulativity of Rocq via bounding
+and the uniformity of Agda by treating levels as ordinary terms.
+
+TODO: talk about bounding vs constraints, higher-rank level quantification, functions returning levels
 
 \begin{table}
 \begin{tabular}{lllll}
   \toprule
   System & Levels & Polymorphism & Operators & Subsumption \\
   \midrule
-  Agda & $\omega + \omega$ & first class & $\mathrm{max}, {} + 1$ & cumulativity (optional) \\
-  Lean & $\omega$ & prenex & $\mathrm{max}, {} + i$ & none \\
   Rocq & anonymous & prenex & $<, \le, =$ & subtyping \\
+  Lean, \fstar & $\omega$ & prenex & $\mathrm{max}, {} + i$ & none \\
+  Agda & $\omega + \omega$ & first class & $\mathrm{max}, {} + 1$ & cumulativity (optional) \\
   this work & --- & first class & $<$ & cumulativity \\
   \bottomrule \\
 \end{tabular}
 \caption{Comparison of proof assistants and universe level features}
 \label{tab:comparison}
 \end{table}
+
+We summarize our comparison of this work to existing proof assistants in \cref{tab:comparison}.
+To be more accurate, Rocq has a subtyping system that is more expressive than cumulativity,
+which we discuss as an extension in \cref{sec:subtyping}.
 
 \section{A basic type theory with bounded first-class universe levels}
 
@@ -1296,7 +1457,7 @@ Such an operator is justified by \nameref{lem:canon:univ}.
 TODO: Expound on the utility of typecase,
 and write down an explicit typing rule if possible.
 
-\subsubsection{Subtyping}
+\subsubsection{Subtyping} \label{sec:subtyping}
 
 Because levels are now terms,
 subtyping necessarily involves typing to compare two levels.
