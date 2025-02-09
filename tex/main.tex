@@ -160,9 +160,9 @@ Rocq, Lean, and Agda.%
 A simple application is the level-polymorphic identity function.
 
 \begin{table}[H]
-\begin{tabular}{rp{0.54\textwidth}}
+\begin{tabular}{rp{0.51\textwidth}}
   \textsf{Rocq} &
-  \begin{minipage}[t]{0.54\textwidth}
+  \begin{minipage}[t]{0.51\textwidth}
   \begin{minted}{coq}
 Definition id@{u} (A : Type@{u}) (a : A) := a.
   \end{minted}
@@ -170,7 +170,7 @@ Definition id@{u} (A : Type@{u}) (a : A) := a.
   \\
   \midrule
   \textsf{Lean} &
-  \begin{minipage}[t]{0.54\textwidth}
+  \begin{minipage}[t]{0.51\textwidth}
   \begin{minted}{lean}
 def id.{u} (A : Type u) (a : A) : A := a
   \end{minted}
@@ -178,7 +178,7 @@ def id.{u} (A : Type u) (a : A) : A := a
   \\
   \midrule
   \textsf{Agda} &
-  \begin{minipage}[t]{0.54\textwidth}
+  \begin{minipage}[t]{0.51\textwidth}
   \begin{minted}{agda}
 id : ∀ (ℓ : Level) (A : Set ℓ) → A → A
 id ℓ A a = a
@@ -206,9 +206,9 @@ afforded by its first-classness as compared to mere prenex quantification
 becomes evident when we consider the universe in which the types of identity functions live.
 
 \begin{table}[H]
-\begin{tabular}{rp{0.7\textwidth}}
+\begin{tabular}{rp{0.69\textwidth}}
   \textsf{Rocq} &
-  \begin{minipage}[t]{0.7\textwidth}
+  \begin{minipage}[t]{0.69\textwidth}
   \begin{minted}{coq}
 Definition Id@{u v | u < v} : Type@{v} := ∀ (A : Type@{u}), A → A.
   \end{minted}
@@ -216,7 +216,7 @@ Definition Id@{u v | u < v} : Type@{v} := ∀ (A : Type@{u}), A → A.
   \\
   \midrule
   \textsf{Lean} &
-  \begin{minipage}[t]{0.7\textwidth}
+  \begin{minipage}[t]{0.69\textwidth}
   \begin{minted}{lean}
 def Id.{u} : Type (u + 1) := ∀ (A : Type u), A → A
   \end{minted}
@@ -224,7 +224,7 @@ def Id.{u} : Type (u + 1) := ∀ (A : Type u), A → A
   \\
   \midrule
   \textsf{Agda} &
-  \begin{minipage}[t]{0.7\textwidth}
+  \begin{minipage}[t]{0.69\textwidth}
   \begin{minted}{agda}
 Id : Setω
 Id = ∀ (ℓ : Level) (A : Set ℓ) → A → A
@@ -260,9 +260,9 @@ With cumulativity, we instead specify an upper bound.
 A type constructor for the type of constant functions at fixed levels demonstrates this use case.
 
 \begin{table}[H]
-\begin{tabular}{rp{0.86\textwidth}}
+\begin{tabular}{rp{0.83\textwidth}}
   \textsf{Rocq} &
-  \begin{minipage}[t]{0.86\textwidth}
+  \begin{minipage}[t]{0.83\textwidth}
   \begin{minted}{coq}
 Definition Const@{u v w | u < w, v < w} : Type@{w} :=
   ∀ (A : Type@{u}) (B : Type@{v}), A → B → A.
@@ -271,7 +271,7 @@ Definition Const@{u v w | u < w, v < w} : Type@{w} :=
   \\
   \midrule
   \textsf{Lean} &
-  \begin{minipage}[t]{0.86\textwidth}
+  \begin{minipage}[t]{0.83\textwidth}
   \begin{minted}{lean}
 def Const.{u, v} : Type (max u v + 1) := ∀ (A : Type u) (B : Type v), A → B → A
   \end{minted}
@@ -279,7 +279,7 @@ def Const.{u, v} : Type (max u v + 1) := ∀ (A : Type u) (B : Type v), A → B 
   \\
   \midrule
   \textsf{Agda} &
-  \begin{minipage}[t]{0.86\textwidth}
+  \begin{minipage}[t]{0.83\textwidth}
   \begin{minted}{agda}
 Const : ∀ (ℓ₁ ℓ₂ : Level) → Set (suc (ℓ₁ ⊔ ℓ₂))
 Const ℓ₁ ℓ₂ = ∀ (A : Set ℓ₁) (B : Set ℓ₂) → A → B → A
@@ -288,7 +288,7 @@ Const ℓ₁ ℓ₂ = ∀ (A : Set ℓ₁) (B : Set ℓ₂) → A → B → A
   \\
   \midrule
   \lang &
-  \begin{minipage}[t]{0.86\textwidth}
+  \begin{minipage}[t]{0.83\textwidth}
   $\kw{Const} :  \Pi  l  \mathbin{:}   \kw{Level}\texttt{<} \gap   \omega    \mathpunct{.}   \Pi  j  \mathbin{:}   \kw{Level}\texttt{<} \gap  l   \mathpunct{.}   \Pi  k  \mathbin{:}   \kw{Level}\texttt{<} \gap  l   \mathpunct{.}   \kw{U} \gap  l    $ \\
   \phantom{$\kw{Const}$} $\coloneq    \lambda  l  \mathpunct{.}   \lambda  j  \mathpunct{.}   \lambda  k  \mathpunct{.}   \Pi  A  \mathbin{:}   \kw{U} \gap  j   \mathpunct{.}   \Pi  B  \mathbin{:}   \kw{U} \gap  k   \mathpunct{.}  A       \to  \ottnt{B}   \to  \ottnt{A} $
   \end{minipage}
