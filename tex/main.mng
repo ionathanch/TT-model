@@ -40,8 +40,6 @@
   \href{\repo{}/tree/main/TT-model/#1}{\texttt{#1}}\texttt{:#2}
 }
 
-\setlength{\fboxsep}{1.5pt}
-
 \newlength{\punctwidth}
 % \nspace{<punct>} is a negative space the size of <punct>
 \newcommand{\nspace}[1]{%
@@ -369,7 +367,6 @@ These metalevel levels are internalized directly in system as terms $[[i]]$.
 
 \begin{figure}
 \begin{mathpar}
-  \fbox{$[[⊢ G]]$} \qquad \fbox{$[[G ⊢ a : A]]$} \qquad \fbox{$[[a = b]]$} \hfill \\
   \inferrule[\ottdrulename{Nil}]{~}{[[⊢ •]]}
   \and
   \inferrule[\ottdrulename{Cons}]
@@ -434,8 +431,9 @@ These metalevel levels are internalized directly in system as terms $[[i]]$.
 \end{figure}
 
 We begin first with the basic rules that don't concern universes or levels in \cref{fig:typing:basic},
-consisting of a context well-formedness judgement $[[⊢ G]]$,
-a typing judgement $[[G ⊢ a : A]]$, and an untyped definitional equality $[[a = b]]$.
+consisting of a context well-formedness judgement \fbox{$[[⊢ G]]$},
+a typing judgement \fbox{$[[G ⊢ a : A]]$},
+and an untyped definitional equality \fbox{$[[a = b]]$}.
 \Rref{Lam} explicitly includes well-typedness of a function's type as a premise
 rather than merely well-typedness of the domain type $[[A]]$
 to guarantee that it lives at the same universe level as the codomain type $[[B]]$,
@@ -596,9 +594,9 @@ $$[[v]] \Coloneqq [[i]] \mid [[Πx: A. B]] \mid [[λx. b]] \mid [[⊥]] \mid [[T
 \end{figure}
 
 Rather than working directly with $\beta$-reduction,
-we use parallel reduction $[[a ⇒ b]]$,
+we use parallel reduction \fbox{$[[a ⇒ b]]$},
 defined in \cref{fig:par},
-and its reflexive, transitive closure $[[a ⇒* b]]$,
+and its reflexive, transitive closure \fbox{$[[a ⇒* b]]$},
 into which call-by-name evaluation embeds.
 We begin with simple lemmas about parallel reduction, stated without proof.
 
@@ -629,7 +627,7 @@ We begin with simple lemmas about parallel reduction, stated without proof.
 \end{lemma}
 
 Similarly, rather than working directly with definitional equality,
-we use conversion $[[a ⇔ b]]$,
+we use conversion \fbox{$[[a ⇔ b]]$},
 which is defined in terms of parallel reduction.
 
 \begin{definition}[Conversion]
@@ -666,7 +664,7 @@ which is defined in terms of parallel reduction.
 
 Proving that conversion is transitive requires proving confluence for parallel reduction,
 which we prove using the notion of complete development by Takahashi~\citep{takahashi}.
-Complete development $[[a ^ T]]$ is defined in \cref{fig:taka},
+Complete development \fbox{$[[a ^ T]]$} is defined in \cref{fig:taka},
 and is used to join parallel reductions and prove the diamond property.
 
 \begin{lemma}[Completion (p.r.)] \label{lem:par:compl}
@@ -815,8 +813,8 @@ Finally, the proof of subject reduction requires many of the above lemmas.
 \end{figure}
 
 Our notion of evaluation in the progress and type safety theorems
-is the reflexive, transitive closure  $[[a ⇝* b]]$
-of call-by-name (cbn) reduction $[[a ⇝ b]]$,
+is the reflexive, transitive closure \fbox{$[[a ⇝* b]]$}
+of call-by-name (cbn) reduction \fbox{$[[a ⇝ b]]$},
 defined in \cref{fig:cbn},
 which reduces $\beta$-redexes and head positions.
 A single step of cbn reduction embeds into
@@ -888,7 +886,7 @@ especially as they pertain to universes and levels.
 
 \subsubsection{Logical relation for closed types}
 
-The logical relation is written as $[[⟦ A ⟧ i ↘ P]]$,
+The logical relation is written as \fbox{$[[⟦ A ⟧ i ↘ P]]$},
 where $[[A]]$ is the type, $[[P]]$ is the set of terms,
 and $[[i]]$ is the universe level of the type.
 A set of terms $[[P]]$ is mechanized as a predicate on terms,
@@ -1159,8 +1157,8 @@ for any substitution that closes them both.
 At this point, referring to simultaneous substitutions is inevitable.
 We denote them as $[[s]]$, and write $[[s, x ↦ a]]$
 for its extension by a single substitution of $[[x]]$ by $[[a]]$.
-In the mechanization, semantic well-typedness of a substitution $[[s ⊧ G]]$
-is defined similarly to semantic typing,
+In the mechanization, semantic well-typedness of a substitution \fbox{$[[s ⊧ G]]$}
+is defined similarly to semantic typing \fbox{$[[G ⊢ a : A]]$},
 but the admissible rules defined in \cref{fig:sem:subst} are more convenient.
 
 \begin{definition}
@@ -1280,7 +1278,7 @@ For concision, we skip steps involving massaging substitutions into the right sh
   \end{itemize}
 \end{proof}
 
-Consistency and various canonicity results then follow from the fundamental theorem as corollaries.
+Consistency and canonicity results then follow from the fundamental theorem as corollaries.
 
 \begin{corollary}[Consistency]
   There is no $[[b]]$ such that $[[• ⊢ b : ⊥]]$ holds.
@@ -1395,9 +1393,8 @@ a level successor operator, and a level maximum operator.
 To justify them semantically,
 we would impose the first two as additional existence conditions on the metalevel levels;
 the third follows from the total ordering, which lets us pick the larger of two levels.
-Their typing rules are straightforward, given below. % in \cref{fig:lvl-ops}.
+Their typing rules are straightforward, given below.
 %
-% \begin{figure}
 \begin{mathpar}
   \inferrule[\ottdrulename{Zero}]
     {[[G ⊢ k : Level< l]]}
@@ -1415,9 +1412,6 @@ Their typing rules are straightforward, given below. % in \cref{fig:lvl-ops}.
     %----------------------------------%
     {[[G ⊢ k1 ⊔ k2 : Level< (l1 ⊔ l2)]]}
 \end{mathpar}
-% \caption{Typing rules for level operators}
-% \label{fig:lvl-ops}
-% \end{figure}
 
 What complicates matters are the additional definitional equalities that need to be added
 to ensure that the maximum operator is idempotent, associative, commutative,
@@ -1463,13 +1457,12 @@ Because levels are now terms,
 subtyping necessarily involves typing to compare two levels.
 In particular, a universe at a smaller level is a subtype of a universe at a larger level,
 while a level type bounded by a smaller level is a subtype of a level bounded by a larger level.
-The former is expressed by \rref{Cumul}, the latter by \rref{Trans}.
+The former is already expressed by \rref{Cumul}, the latter by \rref{Trans}.
 In this sense, the sole benefit of subtyping is being able to subtype function types,
 making function domains contravariant and codomains covariant with respect to subtyping.
-A number of these subtyping rules are given below, % in \cref{fig:subtyping},
+A number of these subtyping rules are given below,
 along with an updated \rref{Conv'} rule.
 %
-%\begin{figure}
 \begin{mathpar}
   \inferrule[\ottdrulename{S-Univ}]
     {[[G ⊢ k : Level< l]]}
@@ -1505,9 +1498,6 @@ along with an updated \rref{Conv'} rule.
     %-------------%
     {[[G ⊢ a : B]]}
 \end{mathpar}
-% \caption{Select subtyping rules}
-% \label{fig:subtyping}
-% \end{figure}
 
 Although all of this subtyping behaviour holds semantically in our current model,
 proving logical consistency is not so easy.
