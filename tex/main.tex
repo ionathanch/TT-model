@@ -60,7 +60,8 @@
 }
 
 \setlength{\fboxsep}{2pt}
-\setlength{\abovecaptionskip}{0.5\baselineskip}
+\setlength{\abovecaptionskip}{0.25\baselineskip}
+\setlength{\textfloatsep}{\baselineskip}
 
 \hypersetup{
   colorlinks=true,
@@ -134,8 +135,8 @@ mechanized entirely in Lean.
 Our contributions are as follows:
 
 \begin{itemize}
-  \item We state a concrete syntax and typing rules for a dependent type theory with
-    bounded, first-class universe levels.
+  \item We state a concrete syntax and typing rules for \textbf{\lang},
+    a dependent type theory with bounded, first-class universe levels.
     Our bounds differ from level constraints in previous work in that
     they are inherent to the type of a level,
     rather than a separate predicate on them.
@@ -156,7 +157,7 @@ To see where bounded first-class universe levels situates itself among existing 
 we compare it against three of the most common proof assistants with level polymorphism:
 Rocq, Lean, and Agda.%
 \footnote{\fstar's universe polymorphism works the same as Lean's.}
-An initial simple application is the level-polymorphic identity function.
+A simple application is the level-polymorphic identity function.
 
 \begin{table}[H]
 \begin{tabular}{rp{0.54\textwidth}}
@@ -256,15 +257,15 @@ and similarly in Lean.
 Without cumulativity, we need to take the maximum of two levels
 when working with a type composed of types in different universes.
 With cumulativity, we instead specify an upper bound.
-A type constructor for the type of constant functions demonstrates this use case.
+A type constructor for the type of constant functions at fixed levels demonstrates this use case.
 
 \begin{table}[H]
 \begin{tabular}{rp{0.86\textwidth}}
   \textsf{Rocq} &
   \begin{minipage}[t]{0.86\textwidth}
   \begin{minted}{coq}
-Definition Const@{u v w | u < w, v < w} (A : Type@{u}) (B : Type@{v}) : Type@{w} :=
-  A → B → A
+Definition Const@{u v w | u < w, v < w} : Type@{w} :=
+  ∀ (A : Type@{u}) (B : Type@{v}), A → B → A.
   \end{minted}
   \end{minipage}
   \\
@@ -272,7 +273,7 @@ Definition Const@{u v w | u < w, v < w} (A : Type@{u}) (B : Type@{v}) : Type@{w}
   \textsf{Lean} &
   \begin{minipage}[t]{0.86\textwidth}
   \begin{minted}{lean}
-def Const.{u, v} (A : Type u) (B : Type v) : Type (max u v) := A → B → A
+def Const.{u, v} : Type (max u v + 1) := ∀ (A : Type u) (B : Type v), A → B → A
   \end{minted}
   \end{minipage}
   \\
@@ -280,21 +281,22 @@ def Const.{u, v} (A : Type u) (B : Type v) : Type (max u v) := A → B → A
   \textsf{Agda} &
   \begin{minipage}[t]{0.86\textwidth}
   \begin{minted}{agda}
-Const : ∀ (ℓ₁ ℓ₂ : Level) → Set ℓ₁ → Set ℓ₂ → Set (ℓ₁ ⊔ ℓ₂)
-Const ℓ₁ ℓ₂ A B = A → B → A
+Const : ∀ (ℓ₁ ℓ₂ : Level) → Set (suc (ℓ₁ ⊔ ℓ₂))
+Const ℓ₁ ℓ₂ = ∀ (A : Set ℓ₁) (B : Set ℓ₂) → A → B → A
   \end{minted}
   \end{minipage}
   \\
   \midrule
   \lang &
   \begin{minipage}[t]{0.86\textwidth}
-  $\kw{Const} :    \Pi  l  \mathbin{:}   \kw{Level}\texttt{<} \gap   \omega    \mathpunct{.}   \Pi  j  \mathbin{:}   \kw{Level}\texttt{<} \gap  l   \mathpunct{.}   \Pi  k  \mathbin{:}   \kw{Level}\texttt{<} \gap  l   \mathpunct{.}   \kw{U} \gap  j      \to   \kw{U} \gap  \ottnt{k}    \to   \kw{U} \gap  \ell  $ \\
-  \phantom{$\kw{Const}$} $\coloneq    \lambda  l  \mathpunct{.}   \lambda  j  \mathpunct{.}   \lambda  k  \mathpunct{.}   \lambda  A  \mathpunct{.}   \lambda  B  \mathpunct{.}  A       \to  \ottnt{B}   \to  \ottnt{A} $
+  $\kw{Const} :  \Pi  l  \mathbin{:}   \kw{Level}\texttt{<} \gap   \omega    \mathpunct{.}   \Pi  j  \mathbin{:}   \kw{Level}\texttt{<} \gap  l   \mathpunct{.}   \Pi  k  \mathbin{:}   \kw{Level}\texttt{<} \gap  l   \mathpunct{.}   \kw{U} \gap  l    $ \\
+  \phantom{$\kw{Const}$} $\coloneq    \lambda  l  \mathpunct{.}   \lambda  j  \mathpunct{.}   \lambda  k  \mathpunct{.}   \Pi  A  \mathbin{:}   \kw{U} \gap  j   \mathpunct{.}   \Pi  B  \mathbin{:}   \kw{U} \gap  k   \mathpunct{.}  A       \to  \ottnt{B}   \to  \ottnt{A} $
   \end{minipage}
 \end{tabular}
 \end{table}
 
-In Lean and Agda, the level of the output universe is the maximum of that of the two input universes.
+In Lean and Agda, the level of the output universe is
+the successor of the maximum of that of the two input universes.
 In Rocq and our system, which has cumulativity,
 we achieve the same effect by abstracting over a third universe that bounds the other two.
 The novel feature of combining bounding and first-classness
@@ -303,9 +305,29 @@ but also by arbitrary level terms, as is the case for $\ottmv{j}, \ottnt{k}$ bou
 Our system therefore encompasses both the cumulativity of Rocq via bounding
 and the uniformity of Agda by treating levels as ordinary terms.
 
-TODO: talk about bounding vs constraints, higher-rank level quantification, functions returning levels
+The choice of using level bounding is inspired by
+the syntax of bounded sized types~\citep{sized} in Agda.%
+\footnote{\url{https://agda.readthedocs.io/en/stable/language/sized-types.html}}
+While the satisfiability of level constraints in Rocq can be checked using graph acyclicity,
+we avoid them here because first-class levels requires them to be predicates on levels
+and would involve explicitly constructing constraint proofs.
+Furthermore, separating level quantification from their constraints
+permits working in an inconsistent context with $\ottnt{k} < \ottnt{k}$,
+which immediately yields $ \kw{U} \gap  \ottnt{k}  :  \kw{U} \gap  \ottnt{k} $ and violates normalization.
+We discuss this further in \cref{sec:paradox}.
 
-\begin{table}
+Making levels first class also allows for higher-rank level quantification
+(\eg $  (   \kw{Level}\texttt{<} \gap   \omega    \to  \ottnt{A}  )   \to  \ottnt{B} $)
+and functions that compute levels (\eg $ \ottnt{A}  \to   \kw{Level}\texttt{<} \gap   \omega   $).
+In Agda, this is used with inductive types for generic programming~\citep{generic}.
+In particular, it is needed to construct lists of level-polymorphic types
+and to compute the level of a tuple of these types.
+
+\cref{tab:comparison} summarizes the comparison of \lang to existing proof assistants.
+To be more accurate, Rocq has a subtyping system that is more expressive than cumulativity,
+which we discuss as an extension in \cref{sec:subtyping}.
+
+\begin{table}[h]
 \begin{tabular}{lllll}
   \toprule
   System & Levels & Polymorphism & Operators & Subsumption \\
@@ -313,20 +335,16 @@ TODO: talk about bounding vs constraints, higher-rank level quantification, func
   Rocq & anonymous & prenex & $<, \le, =$ & subtyping \\
   Lean, \fstar & $\omega$ & prenex & $\mathrm{max}, {} + i$ & none \\
   Agda & $\omega + \omega$ & first class & $\mathrm{max}, {} + 1$ & cumulativity (optional) \\
-  this work & --- & first class & $<$ & cumulativity \\
+  \lang & --- & first class & $<$ & cumulativity \\
   \bottomrule \\
 \end{tabular}
 \caption{Comparison of proof assistants and universe level features}
 \label{tab:comparison}
 \end{table}
 
-We summarize our comparison of this work to existing proof assistants in \cref{tab:comparison}.
-To be more accurate, Rocq has a subtyping system that is more expressive than cumulativity,
-which we discuss as an extension in \cref{sec:subtyping}.
+\section{A minimal type theory with bounded first-class universe levels}
 
-\section{A basic type theory with bounded first-class universe levels}
-
-We consider with a Curry-style type theory \`a la Russell,
+\lang is a Curry-style type theory \`a la Russell,
 where terms have no type annotations,
 and there is no separate typing judgement for well-formedness of types.
 To keep the type theory minimal, it contains only dependent functions,
@@ -425,7 +443,6 @@ These metalevel levels are internalized directly in system as terms $\ottmv{i}$.
   \inferrule[\ottdrulename{E-Trans}]{ \ottnt{a}  \equiv  \ottnt{b}  \and  \ottnt{b}  \equiv  \ottnt{c} }{ \ottnt{a}  \equiv  \ottnt{c} } \and
   \cdots
 \end{mathpar}
-
 \caption{Typing and selected equality rules (no universes or levels)}
 \label{fig:typing:basic}
 \end{figure}
@@ -1131,7 +1148,7 @@ which we explicitly state below.
   \end{itemize}
 \end{proof}
 
-It is worthwhile to also explicitly state the inversion principle
+We also explicitly state here the inversion principle
 asserting that types that have interpretations are indeed one of the four types,
 proven by induction on the logical relation.
 
@@ -1310,7 +1327,7 @@ Consistency and canonicity results then follow from the fundamental theorem as c
   we then have that $ \ell  \Rightarrow^\ast   \ottmv{i_{{\mathrm{2}}}}  $ and $ \ottnt{k}  \Rightarrow^\ast   \ottmv{i_{{\mathrm{1}}}}  $ such that $ \ottmv{i_{{\mathrm{1}}}}  <  \ottmv{i_{{\mathrm{2}}}} $.
 \end{corollary}
 
-\subsection{Counterexample to normalization}
+\subsection{Counterexample to normalization} \label{sec:paradox}
 
 Our type theory is not normalizing.
 While directly declaring an ill-founded level $ \ottmv{x}  \mathbin{:}   \kw{Level}\texttt{<} \gap  \ottmv{x}  $ is impossible,
@@ -1370,11 +1387,9 @@ otherwise, it \emph{could} have an interpretation.
 Without assuming that $\ottmv{x}$ reduces to a canonical, concrete level,
 we have no way of interpreting $ \kw{U} \gap  \ottmv{y} $.
 We cannot simply say that universes with neutral levels only contain neutral terms, either,
-as $ \kw{U} \gap  \ottmv{x} $ is such a universe that clearly contains the normal term $ \kw{U} \gap  \ottmv{y} $.
+as $ \kw{U} \gap  \ottmv{x} $ is such a universe that contains the normal term $ \kw{U} \gap  \ottmv{y} $.
 
-\section{Conclusion and future work}
-
-\subsection{Extensions}
+\section{Extensions}
 
 Our type theory is intentionally minimal to focus only on the core necessities
 of first-class levels and to keep the proof development small and uncluttered.
@@ -1386,16 +1401,15 @@ Here, we instead look at extensions that augment how universes and levels behave
 some of which are validated by our current semantics,
 and others which present additional challenges.
 
-\subsubsection{Level operators}
+\subsection{Level operators}
 
 The only features that we do not have but Agda does are a zeroth level,
 a level successor operator, and a level maximum operator.
 To justify them semantically,
 we would impose the first two as additional existence conditions on the metalevel levels;
 the third follows from the total ordering, which lets us pick the larger of two levels.
-Their typing rules are straightforward, given below. % in \cref{fig:lvl-ops}.
+Their typing rules are straightforward, given below.
 %
-% \begin{figure}
 \begin{mathpar}
   \inferrule[\ottdrulename{Zero}]
     { \Gamma  \vdash  \ottnt{k}  \mathrel{:}   \kw{Level}\texttt{<} \gap  \ell  }
@@ -1413,9 +1427,6 @@ Their typing rules are straightforward, given below. % in \cref{fig:lvl-ops}.
     %----------------------------------%
     { \Gamma  \vdash   \ottnt{k_{{\mathrm{1}}}}  \sqcup  \ottnt{k_{{\mathrm{2}}}}   \mathrel{:}   \kw{Level}\texttt{<} \gap   (  \ell_{{\mathrm{1}}}  \sqcup  \ell_{{\mathrm{2}}}  )   }
 \end{mathpar}
-% \caption{Typing rules for level operators}
-% \label{fig:lvl-ops}
-% \end{figure}
 
 What complicates matters are the additional definitional equalities that need to be added
 to ensure that the maximum operator is idempotent, associative, commutative,
@@ -1428,7 +1439,7 @@ Our notions of reduction then need to pick a direction for each equality
 to reduce levels to some chosen canonical form.
 We believe the mechanization to be doable, but tedious and uninteresting.
 
-\subsubsection{Level and universe eliminators}
+\subsection{Level and universe eliminators}
 
 Levels and universes can at the moment only be constructed, but not eliminated.
 Even so, well-founded induction on levels holds at the metalevel,
@@ -1455,7 +1466,7 @@ Such an operator is justified by \nameref{lem:canon:univ}.
 TODO: Expound on the utility of typecase,
 and write down an explicit typing rule if possible.
 
-\subsubsection{Subtyping} \label{sec:subtyping}
+\subsection{Subtyping} \label{sec:subtyping}
 
 Because levels are now terms,
 subtyping necessarily involves typing to compare two levels.
@@ -1464,10 +1475,9 @@ while a level type bounded by a smaller level is a subtype of a level bounded by
 The former is already expressed by \rref{Cumul}, the latter by \rref{Trans}.
 In this sense, the sole benefit of subtyping is being able to subtype function types,
 making function domains contravariant and codomains covariant with respect to subtyping.
-A number of these subtyping rules are given below, % in \cref{fig:subtyping},
+A number of these subtyping rules are given below,
 along with an updated \rref{Conv'} rule.
 %
-%\begin{figure}
 \begin{mathpar}
   \inferrule[\ottdrulename{S-Univ}]
     { \Gamma  \vdash  \ottnt{k}  \mathrel{:}   \kw{Level}\texttt{<} \gap  \ell  }
@@ -1503,9 +1513,6 @@ along with an updated \rref{Conv'} rule.
     %-------------%
     { \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{B} }
 \end{mathpar}
-% \caption{Select subtyping rules}
-% \label{fig:subtyping}
-% \end{figure}
 
 Although all of this subtyping behaviour holds semantically in our current model,
 proving logical consistency is not so easy.
