@@ -163,6 +163,11 @@ yet fails to satisfy substitution properties and therefore violates subject redu
 
 In this work, we give an end-to-end account of first-class levels in type theory,
 mechanized entirely in Lean.
+The development consists of just under 1600 lines of Lean code,
+which can be found in the supplementary materials at \repo{}.
+The definitions and theorems in this paper
+are hyperlinked to the corresponding Lean files.
+
 Our contributions are as follows:
 
 \begin{itemize}
@@ -171,16 +176,18 @@ Our contributions are as follows:
     Our bounds differ from level constraints in that
     they are inherent to the type of a level,
     rather than a separate predicate on them.
+    We compare our system to existing implementations of level polymorphism in the next section
+    before proceeding to the formal definition of the type theory in \cref{sec:ttbfl}.
   \item We prove the syntactic properties of subject reduction (\ie preservation),
-    progress, and type safety.
-  \item Using a syntactic logical relation, we prove logical consistency and canonicity.
-    Normalization remains an open problem.
+    progress, and type safety in \cref{sec:safety}.
+  \item Using a syntactic logical relation,
+    we prove logical consistency and canonicity in \cref{sec:lr}.
+    Normalization remains an open problem (\cref{sec:paradox}).
 \end{itemize}
 
-The development consists of just under 1600 lines of Lean code,
-which can be found in the supplementary materials at \repo{}.
-The definitions, lemmas, and theorems in this paper
-are hyperlinked to the corresponding Lean files.
+As our system is intentionally very minimal,
+we discuss some further extensions in \cref{sec:extensions},
+including universe/level eliminators and subtyping.
 
 \section{Overview}
 
@@ -373,7 +380,7 @@ which we discuss as an extension in \cref{sec:subtyping}.
 \label{tab:comparison}
 \end{table}
 
-\section{A minimal type theory with bounded first-class universe levels}
+\section{A minimal type theory with bounded first-class universe levels} \label{sec:ttbfl}
 
 \lang is a Curry-style type theory \ala Russell,
 where terms have no type annotations,
@@ -390,7 +397,7 @@ as $ \ottnt{b} [  \ottmv{x}  \mapsto  \ottnt{a}  ] $.
 We also use $ \ottnt{A}  \to  \ottnt{B} $ as sugar for nondependent functions
 $ \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B} $ where $\ottmv{x}$ does not occur in $\ottnt{B}$.
 
-\begin{figure}
+\begin{figure}[b]
 \begin{align*}
   i, j & \Coloneqq \texttt{<external universe levels>} \\
   x, y, z & \Coloneqq \texttt{<term variables>} \\
@@ -580,7 +587,7 @@ we omit the details of manipulating these substitutions,
 continuing to state theorems in nominal form
 to focus on the ideas rather than the minutiae.
 
-\subsection{Type safety}
+\subsection{Type safety} \label{sec:safety}
 
 Our type safety theorem is stated in terms of a call-by-name evaluation strategy,
 which we define shortly.
@@ -915,7 +922,7 @@ closed, well-typed terms either reduce to a value, or must continue reducing.
   from the former.
 \end{proof}
 
-\subsection{Consistency and canonicity}
+\subsection{Consistency and canonicity} \label{sec:lr}
 
 To prove consistency and canonicity,
 we use a logical relation to semantically interpret closed types as sets of closed terms;
@@ -1420,7 +1427,7 @@ we have no way of interpreting $ \kw{U} \gap  \ottmv{y} $.
 We cannot simply say that universes with neutral levels only contain neutral terms, either,
 as $ \kw{U} \gap  \ottmv{x} $ is such a universe that contains the normal term $ \kw{U} \gap  \ottmv{y} $.
 
-\section{Extensions}
+\section{Extensions} \label{sec:extensions}
 
 Our type theory is intentionally minimal to focus only on the core necessities
 of first-class levels and to keep the proof development small and uncluttered.
