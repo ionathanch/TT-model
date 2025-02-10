@@ -97,14 +97,32 @@
 
 \inputott{rules}
 
-\acknowledgements{hi \href{https://types.pl}{\texttt{types.pl}}!}
+% \acknowledgements{hi \href{https://types.pl}{\texttt{types.pl}}!}
 
 \begin{document}
 
 \maketitle
 
 \begin{abstract}
-  abstract
+  In type theory, being able to refer to a type universe as a term itself
+  increases its expressive power,
+  but requires mechanisms in place to prevent Girard's paradox
+  from introducing logical inconsistency in the presence of type-in-type.
+  The simplest is a hierarchy of universes indexed by a sequence of levels,
+  typically the naturals.
+  To improve reusability of definitions,
+  they can be made level polymorphic,
+  abstracting over level variables and adding a notion of level expressions.
+  For even more expressive power,
+  level expressions can be terms themselves,
+  and level polymorphism is subsumed by first-class levels.
+  Furthermore, bounded level polymorphism provides more precision
+  by being able to explicitly state constraints on level variables.
+  While semantics for first-class levels with constraints are known,
+  syntax and typing rules have not been concretely written down.
+  In this work, we design a concrete type theory with bounded first-class levels,
+  and prove the metatheoretic properties of type safety and consistency.
+  This is entirely mechanized from syntax to semantics in Lean.
 \end{abstract}
 
 \section{Introduction}
@@ -119,7 +137,8 @@ Universe level polymorphism addresses this issue by abstracting over level varia
 Its simplest form is prenex level polymorphism,
 which restricts the abstraction to top-level definitions,
 is well studied~\citep{anon-univ,univ-poly-coq},
-as well as its extension to abstractions over (in)equality constraints on levels~\citep{explicit}.
+as well as its extension to abstractions over (in)equality constraints on levels
+and with notions of level operators and expressions~\citep{explicit}.
 
 Prenex level polymorphism does not augment the proof power of the type theory,
 as uses of level-polymorphic definitions require instantiating its levels
