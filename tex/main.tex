@@ -108,7 +108,7 @@
   increases its expressive power,
   but requires mechanisms in place to prevent Girard's paradox
   from introducing logical inconsistency in the presence of type-in-type.
-  The simplest is a hierarchy of universes indexed by a sequence of levels,
+  The simplest mechanism is a hierarchy of universes indexed by a sequence of levels,
   typically the naturals.
   To improve reusability of definitions,
   they can be made level polymorphic,
@@ -121,8 +121,9 @@
   While semantics for first-class levels with constraints are known,
   syntax and typing rules have not been concretely written down.
   In this work, we design a concrete type theory with bounded first-class levels,
-  and prove the metatheoretic properties of type safety and consistency.
-  This is entirely mechanized from syntax to semantics in Lean.
+  parametrized over arbitrary well-founded sets of levels.
+  We prove the metatheoretic properties of type safety and consistency,
+  entirely mechanized from syntax to semantics in Lean.
 \end{abstract}
 
 \section{Introduction}
@@ -156,7 +157,7 @@ introduce such a type theory (referred to here as BCDE)
 with level constraints~\citep{univ-poly}.
 Going further, rather than keeping universe levels distinct from terms,
 we can define level expressions as a subset of terms,
-and add a type of levels to which they belong;
+and add a type of levels;
 such first-class levels are found in Agda.
 Level quantification is subsumed by dependent functions whose domain is the level type.
 The codomain can also be the level type,
