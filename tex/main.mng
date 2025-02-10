@@ -22,6 +22,7 @@
 \newcommand{\eg}{\textit{e.g.}\@\xspace}
 \newcommand{\etal}{\textit{et al.}\@\xspace}
 \newcommand{\vs}{\textit{vs.}\@\xspace}
+\newcommand{\ala}{\textit{\`a la}\@\xspace}
 \newcommand{\apriori}{\textit{a priori}\@\xspace}
 \newcommand{\fstar}{F$^\star$\@\xspace}
 \newcommand{\welltyped}{well-\hspace{0pt}typed\@\xspace}
@@ -108,15 +109,47 @@
 
 \section{Introduction}
 
-TODO: explain ``universe'', ``bounded'', ``first class'', ``level polymorphism''
+TODO: opening blurb about universes and hierarchies
+
+Having only a concrete universe hierarchy, however,
+limits reusability of definitions that are not inherently tied to particular universe levels.
+For example, the identity function $\kw{id} : [[:concrete: ΠA: Type i. A → A]]$
+would need to be redefined for each universe level $[[i]]$ at which it is needed.
+Universe level polymorphism addresses this issue by abstracting over level variables.
+Its simplest form is prenex level polymorphism,
+which restricts the abstraction to top-level definitions,
+is well studied~\citep{anon-univ,univ-poly-coq},
+as well as its extension to abstractions over (in)equality constraints on levels~\citep{explicit}.
+
+Prenex level polymorphism does not augment the proof power of the type theory,
+as uses of level-polymorphic definitions require instantiating its levels
+and thus have level-monomorphic types.
+Indeed, Favonia, Angiuli, and Mullanix note that it
+``is as consistent as standard (monomorphic) type theory [\dots]
+because any given proof can only mention finitely many universes'',
+and show consistency using this principle~\citep{displacement}.
+
+If level quantification is added as a type former directly to the type theory,
+we obtain higher-order level polymorphism,
+where level-polymorphic terms can be passed as arguments to functions.
+For instance, Bezem, Coquand, Dybjer, and Escard\'o
+introduce such a type theory (referred to here as BCDE)
+with level constraints~\citep{univ-poly}.
+Going further, rather than keeping universe levels distinct from terms,
+we can define level expressions as a subset of terms,
+and add a type of levels to which they belong;
+such first-class levels are found in Agda.
+Level quantification is subsumed by dependent functions whose domain is the level type.
+The codomain can also be the level type,
+which describes functions that compute levels.
 
 First-class universe levels are known to be logically consistent.
 In particular, Kov\'{a}cs~\citep{gen-univ} gives a semantic model for a type theory TTFL,
 which features first-class levels and an ordering relation $<$ on them.
 The model is given as categories with families (cwfs)~\citep{cwf},
 mostly mechanized in Agda using induction--recursion,
-and supports features such as bounded level polymorphism,
-least upper bounds on levels, and induction on levels,
+and supports features such as level constraints,
+maxima of levels, and induction on levels,
 which subsumes the predicative universe features in Agda, Rocq, and Lean.
 
 The syntax of TTFL is considered to be the initial model in the category of cwfs,
@@ -124,26 +157,24 @@ but a concrete syntax and typing rules are not given,
 and proving initiality even for MLTT is a colossal task~\citep{initiality}.
 Furthermore, while a syntax may satisfy semantic properties such as logical consistency,
 it may not necessarily satisfy desirable syntactic properties.
-For instance, Bezem, Coquand, Dybjer, and Escard\'o~\citep{univ-poly}
-introduce a concrete type theory with higher-order universe level polymorphism and level constraints,
-whose semantics can conceivably be viewed as that of TTFL without making levels first class.
-However, as they note, their type theory fails to satisfy substitution properties
-and therefore violates subject reduction.
+In particular, BCDE's semantics can conceivably be viewed as
+that of TTFL without making levels first class,
+yet fails to satisfy substitution properties and therefore violates subject reduction.
 
-In this work, we give an end-to-end account of universe levels in type theory,
+In this work, we give an end-to-end account of first-class levels in type theory,
 mechanized entirely in Lean.
 Our contributions are as follows:
 
 \begin{itemize}
   \item We state a concrete syntax and typing rules for \textbf{\lang},
     a dependent type theory with bounded, first-class universe levels.
-    Our bounds differ from level constraints in previous work in that
+    Our bounds differ from level constraints in that
     they are inherent to the type of a level,
     rather than a separate predicate on them.
   \item We prove the syntactic properties of subject reduction (\ie preservation),
     progress, and type safety.
   \item Using a syntactic logical relation, we prove logical consistency and canonicity.
-    However, normalization remains an open problem.
+    Normalization remains an open problem.
 \end{itemize}
 
 The development consists of just under 1600 lines of Lean code,
@@ -344,7 +375,7 @@ which we discuss as an extension in \cref{sec:subtyping}.
 
 \section{A minimal type theory with bounded first-class universe levels}
 
-\lang is a Curry-style type theory \`a la Russell,
+\lang is a Curry-style type theory \ala Russell,
 where terms have no type annotations,
 and there is no separate typing judgement for well-formedness of types.
 To keep the type theory minimal, it contains only dependent functions,
