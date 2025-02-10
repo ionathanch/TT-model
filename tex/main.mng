@@ -130,7 +130,7 @@ because any given proof can only mention finitely many universes'',
 and show consistency using this principle~\citep{displacement}.
 
 If level quantification is added as a type former directly to the type theory,
-we obtain higher-order level polymorphism,
+we obtain higher-rank level polymorphism,
 where level-polymorphic terms can be passed as arguments to functions.
 For instance, Bezem, Coquand, Dybjer, and Escard\'o
 introduce such a type theory (referred to here as BCDE)
@@ -239,7 +239,7 @@ and universes in these levels live in a limit universe \mintinline{agda}{Setω}.
 In our system, assuming we also have levels $[[0]], [[1]], \dots, [[o]]$,
 we explicitly say which levels are quantified over by specifying the bound.
 
-The expressive power of higher-order level quantification
+The expressive power of level quantification as a type former
 afforded by its first-classness as compared to mere prenex quantification
 becomes evident when we consider the universe in which the types of identity functions live.
 
