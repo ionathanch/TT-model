@@ -17,9 +17,12 @@ grammar
 a, b, c, A, B, C, k, l {{ tex \ell }} :: 'tm_' ::= {{ com terms }}
   | x :: :: Var
     {{ com variable }}
-  | λ x . b :: :: Abs
+  | λ x : A . b :: :: Abs
     (+ bind x in b +)
     {{ com function }}
+    {{ tex \lambda [[x]] \mathbin{:} [[A]] \mathpunct{.} [[b]] }}
+  | λ x . b :: S :: UAbs
+    {{ com unannotated functions }}
     {{ tex \lambda [[x]] \mathpunct{.} [[b]] }}
   | Π x : A . B :: :: Pi
     (+ bind x in B +)
@@ -34,10 +37,10 @@ a, b, c, A, B, C, k, l {{ tex \ell }} :: 'tm_' ::= {{ com terms }}
   | ⊥ :: :: Mty
     {{ com empty type }}
     {{ tex \bot }}
-  | abs b :: :: Exf
+  | abs b :: S :: Exf
     {{ com ex falso quodlibet }}
     {{ tex \kw{absurd} \gap [[b]] }}
-  | abs' A b :: S :: Exf'
+  | abs' A b :: :: Exf'
     {{ com explicitly annotated ex falso }}
     {{ tex \kw{absurd}_{[[A]]} \gap [[b]] }}
   | Type k :: :: Univ
@@ -85,7 +88,7 @@ s {{ tex \sigma }} :: 'subst_' ::= {{ com substitutions }}
     {{ com substitution extension }}
     {{ tex [[s]], [[x]] \mapsto [[a]] }}
 v :: 'val_' ::= {{ com values }}
-  | λ x . b :: :: Abs
+  | λ x : A . b :: :: Abs
     (+ bind x in b +)
   | Π x : A . B :: :: Pi
     (+ bind x in b +)

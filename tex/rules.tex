@@ -37,13 +37,14 @@
 \newcommand{\otta}{
 \ottrulehead{\ottnt{a}  ,\ \ottnt{b}  ,\ \ottnt{c}  ,\ \ottnt{A}  ,\ \ottnt{B}  ,\ \ottnt{C}  ,\ \ottnt{k}  ,\ \ell}{::=}{\ottcom{terms}}\ottprodnewline
 \ottfirstprodline{|}{\ottmv{x}}{}{}{}{\ottcom{variable}}\ottprodnewline
-\ottprodline{|}{ \lambda  \ottmv{x}  \mathpunct{.}  \ottnt{b} }{}{\textsf{bind}\; \ottmv{x}\; \textsf{in}\; \ottnt{b}}{}{\ottcom{function}}\ottprodnewline
+\ottprodline{|}{ \lambda  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{b} }{}{\textsf{bind}\; \ottmv{x}\; \textsf{in}\; \ottnt{b}}{}{\ottcom{function}}\ottprodnewline
+\ottprodline{|}{ \lambda  \ottmv{x}  \mathpunct{.}  \ottnt{b} } {\textsf{S}}{}{}{\ottcom{unannotated functions}}\ottprodnewline
 \ottprodline{|}{ \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B} }{}{\textsf{bind}\; \ottmv{x}\; \textsf{in}\; \ottnt{B}}{}{\ottcom{function type}}\ottprodnewline
 \ottprodline{|}{ \ottnt{A}  \to  \ottnt{B} } {\textsf{S}}{}{}{\ottcom{nondependent function type}}\ottprodnewline
 \ottprodline{|}{ \ottnt{b}  \gap  \ottnt{a} }{}{}{}{\ottcom{function application}}\ottprodnewline
 \ottprodline{|}{ \bot }{}{}{}{\ottcom{empty type}}\ottprodnewline
-\ottprodline{|}{ \kw{absurd} \gap  \ottnt{b} }{}{}{}{\ottcom{ex falso quodlibet}}\ottprodnewline
-\ottprodline{|}{ \kw{absurd}_{ \ottnt{A} } \gap  \ottnt{b} } {\textsf{S}}{}{}{\ottcom{explicitly annotated ex falso}}\ottprodnewline
+\ottprodline{|}{ \kw{absurd} \gap  \ottnt{b} } {\textsf{S}}{}{}{\ottcom{ex falso quodlibet}}\ottprodnewline
+\ottprodline{|}{ \kw{absurd}_{ \ottnt{A} } \gap  \ottnt{b} }{}{}{}{\ottcom{explicitly annotated ex falso}}\ottprodnewline
 \ottprodline{|}{ \kw{U} \gap  \ottnt{k} }{}{}{}{\ottcom{type universe}}\ottprodnewline
 \ottprodline{|}{ \kw{Level}\texttt{<} \gap  \ell }{}{}{}{\ottcom{level type}}\ottprodnewline
 \ottprodline{|}{ \ottmv{i} }{}{}{}{\ottcom{concrete level}}\ottprodnewline
@@ -62,7 +63,7 @@
 
 \newcommand{\ottv}{
 \ottrulehead{\ottnt{v}}{::=}{\ottcom{values}}\ottprodnewline
-\ottfirstprodline{|}{ \lambda  \ottmv{x}  \mathpunct{.}  \ottnt{b} }{}{\textsf{bind}\; \ottmv{x}\; \textsf{in}\; \ottnt{b}}{}{}\ottprodnewline
+\ottfirstprodline{|}{ \lambda  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{b} }{}{\textsf{bind}\; \ottmv{x}\; \textsf{in}\; \ottnt{b}}{}{}\ottprodnewline
 \ottprodline{|}{ \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B} }{}{\textsf{bind}\; \ottmv{x}\; \textsf{in}\; \ottnt{b}}{}{}\ottprodnewline
 \ottprodline{|}{ \bot }{}{}{}{}\ottprodnewline
 \ottprodline{|}{ \kw{U} \gap  \ottnt{k} }{}{}{}{}\ottprodnewline
