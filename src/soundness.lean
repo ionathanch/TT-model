@@ -25,7 +25,7 @@ theorem soundness {Γ} {a A : Term} (h : Γ ⊢ a ∶ A) : Γ ⊨ a ∶ A := by
     rw [parsLofInv ra'] at rb'
     injection (parsLofInv rb') with e
     simp_rw [e, hB]
-  case abs ihpi ihb =>
+  case abs ihpi _ ihb =>
     let ⟨_, _, h𝒰, hpi⟩ := ihpi σ hσ
     let ⟨_, _, _, e⟩ := interps𝒰Inv h𝒰
     subst e

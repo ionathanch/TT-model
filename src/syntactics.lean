@@ -21,10 +21,10 @@ inductive Term : Type where
   | var : Nat → Term
   | 𝒰 : Term → Term
   | pi : Term → Term → Term
-  | abs : Term → Term
+  | abs : Term → Term → Term
   | app : Term → Term → Term
   | mty : Term
-  | exf : Term → Term
+  | exf : Term → Term → Term
   | lvl : Term → Term
   | lof : lc.L → Term
 open Term
@@ -68,10 +68,10 @@ def rename (ξ : Nat → Nat) : Term → Term
   | var s => var (ξ s)
   | 𝒰 a => 𝒰 (rename ξ a)
   | pi a b => pi (rename ξ a) (rename (lift ξ) b)
-  | abs b => abs (rename (lift ξ) b)
+  | abs a b => abs (rename ξ a) (rename (lift ξ) b)
   | app b a => app (rename ξ b) (rename ξ a)
   | mty => mty
-  | exf b => exf (rename ξ b)
+  | exf a b => exf (rename ξ a) (rename ξ b)
   | lvl a => lvl (rename ξ a)
   | lof k => lof k
 
@@ -153,10 +153,10 @@ def subst (σ : Nat → Term) : Term → Term
   | var s => σ s
   | 𝒰 a => 𝒰 (subst σ a)
   | pi a b => pi (subst σ a) (subst (⇑ σ) b)
-  | abs b => abs (subst (⇑ σ) b)
+  | abs a b => abs (subst σ a) (subst (⇑ σ) b)
   | app b a => app (subst σ b) (subst σ a)
   | mty => mty
-  | exf b => exf (subst σ b)
+  | exf a b => exf (subst σ a) (subst σ b)
   | lvl a => lvl (subst σ a)
   | lof k => lof k
 

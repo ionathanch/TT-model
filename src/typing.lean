@@ -17,7 +17,7 @@ set_option hygiene false
 local infix:40 (priority := 1001) "≈" => Eqv -- override HasEquiv.Equiv
 
 inductive Eqv : Term → Term → Prop where
-  | β {b a} : app (abs b) a ≈ subst (a +: var) b
+  | β {b a c} : app (abs c b) a ≈ subst (a +: var) b
   | 𝒰 {a a'} :
     a ≈ a' →
     -----------
@@ -27,19 +27,21 @@ inductive Eqv : Term → Term → Prop where
     b ≈ b' →
     -----------------
     pi a b ≈ pi a' b'
-  | abs {b b'} :
+  | abs {a a' b b'} :
+    a ≈ a' →
     b ≈ b' →
-    --------------
-    abs b ≈ abs b'
+    -------------------
+    abs a b ≈ abs a' b'
   | app {b b' a a'} :
     b ≈ b' →
     a ≈ a' →
     -------------------
     app b a ≈ app b' a'
-  | exf {b b'} :
+  | exf {a a' b b'} :
+    a ≈ a' →
     b ≈ b' →
-    --------------
-    exf b ≈ exf b'
+    -------------------
+    exf a b ≈ exf a' b'
   | lvl {a a'} :
     a ≈ a' →
     -----------
@@ -64,7 +66,7 @@ infix:40 (priority := 1001) "≈" => Eqv
 theorem parEqv {a b} (r : a ⇒ b) : a ≈ b := by
   induction r
   case β ihb iha =>
-    exact Eqv.trans (Eqv.app (Eqv.abs ihb) iha) Eqv.β
+    exact Eqv.trans (Eqv.app (Eqv.abs Eqv.refl ihb) iha) Eqv.β
   all_goals constructor <;> assumption
 
 theorem parsEqv {a b} (r : a ⇒⋆ b) : a ≈ b := by
@@ -146,9 +148,10 @@ inductive Wtf : (Σ w, idx w) → Prop where
     Γ ⊢ pi A B ∶ 𝒰 k
   | abs {Γ A B b k} :
     Γ ⊢ pi A B ∶ 𝒰 k →
+    Γ ⊢ A ∶ 𝒰 k →
     Γ ∷ A ⊢ b ∶ B →
-    -------------------
-    Γ ⊢ abs b ∶ pi A B
+    --------------------
+    Γ ⊢ abs A b ∶ pi A B
   | app {Γ A B b a} :
     Γ ⊢ b ∶ pi A B →
     Γ ⊢ a ∶ A →
@@ -161,8 +164,8 @@ inductive Wtf : (Σ w, idx w) → Prop where
   | exf {Γ A b k} :
     Γ ⊢ A ∶ 𝒰 k →
     Γ ⊢ b ∶ mty →
-    -------------
-    Γ ⊢ exf b ∶ A
+    ---------------
+    Γ ⊢ exf A b ∶ A
   | lvl {Γ a b j k} :
     Γ ⊢ a ∶ lvl b →
     Γ ⊢ 𝒰 j ∶ 𝒰 k →
@@ -217,8 +220,9 @@ theorem wtfInd {w} (wtf : Wtf w) (P : ∀ {w}, Wtf w → Prop)
     P hA → P hB → P (Wtf.pi hA hB))
   (abs : ∀ {Γ A B b k}
     (hpi : Γ ⊢ Term.pi A B ∶ Term.𝒰 k)
+    (hA : Γ ⊢ A ∶ Term.𝒰 k)
     (hb : Γ ∷ A ⊢ b ∶ B),
-    P hpi → P hb → P (Wtf.abs hpi hb))
+    P hpi → P hA → P hb → P (Wtf.abs hpi hA hb))
   (app : ∀ {Γ A B b a}
     (hb : Γ ⊢ b ∶ Term.pi A B)
     (ha : Γ ⊢ a ∶ A),
@@ -258,7 +262,7 @@ theorem wtfInd {w} (wtf : Wtf w) (P : ∀ {w}, Wtf w → Prop)
   case var wf mem ih => exact var wf mem ih
   case 𝒰 h ih => exact 𝒰 h ih
   case pi hA hB ihA ihB => exact pi hA hB ihA ihB
-  case abs hpi hb ihpi ihb => exact abs hpi hb ihpi ihb
+  case abs hA hB hb ihA ihB ihb => exact abs hA hB hb ihA ihB ihb
   case app hb ha ihb iha => exact app hb ha ihb iha
   case mty h ih => exact mty h ih
   case exf hA hb ihA ihb => exact exf hA hb ihA ihb
@@ -282,8 +286,9 @@ theorem wtInd {Γ} {a A : Term} (wt : Γ ⊢ a ∶ A) (P : ∀ {Γ} {a A : Term}
     P hA → P hB → P (Wtf.pi hA hB))
   (abs : ∀ {Γ A B b k}
     (hpi : Γ ⊢ Term.pi A B ∶ Term.𝒰 k)
+    (hA : Γ ⊢ A ∶ Term.𝒰 k)
     (hb : Γ ∷ A ⊢ b ∶ B),
-    P hpi → P hb → P (Wtf.abs hpi hb))
+    P hpi → P hA → P hb → P (Wtf.abs hpi hA hb))
   (app : ∀ {Γ A B b a}
     (hb : Γ ⊢ b ∶ Term.pi A B)
     (ha : Γ ⊢ a ∶ A),
@@ -325,7 +330,7 @@ theorem wtInd {Γ} {a A : Term} (wt : Γ ⊢ a ∶ A) (P : ∀ {Γ} {a A : Term}
   case var wf mem _ => exact var wf mem
   case 𝒰 h ih => exact 𝒰 h ih
   case pi hA hB ihA ihB => exact pi hA hB ihA ihB
-  case abs hpi hb ihpi ihb => exact abs hpi hb ihpi ihb
+  case abs hpi hA hb ihpi ihA ihb => exact abs hpi hA hb ihpi ihA ihb
   case app hb ha ihb iha => exact app hb ha ihb iha
   case mty h ih => exact mty h ih
   case exf hA hb ihA ihb => exact exf hA hb ihA ihb
@@ -375,14 +380,28 @@ theorem wtf𝒰Inv {Γ j 𝒰'}
     let ⟨_, e₂⟩ := ih
     exact ⟨_, Eqv.trans e₂ e₁⟩
 
-theorem wtfPiInvA {Γ A B 𝒰'}
+theorem wtfPiInvA𝒰 {Γ A B 𝒰'}
   (h : Γ ⊢ pi A B ∶ 𝒰') :
-  ∃ j, Γ ⊢ A ∶ 𝒰 j := by
+  ∃ j, Γ ⊢ A ∶ 𝒰 j ∧ 𝒰 j ≈ 𝒰' := by
   generalize e : pi A B = t at h
   induction h using wtInd
   all_goals injections <;> subst_eqs <;> specialize_rfls
-  case pi k _ _ _ _ => exists k
-  all_goals assumption
+  case pi j hA _ _ _ => exact ⟨j, hA, Eqv.refl⟩
+  case trans ih =>
+    let ⟨_, _, e⟩ := ih
+    cases (convLvl𝒰 (convSym (eqvConv e)))
+  case conv e₁ _ _ _ ih =>
+    let ⟨_, hA, e₂⟩ := ih
+    exact ⟨_, hA, Eqv.trans e₂ e₁⟩
+  case sub hj _ _ ih =>
+    let ⟨_, hA, e⟩ := ih
+    exact ⟨_, Wtf.sub hj (Wtf.conv e hA (Wtf.𝒰 hj)), Eqv.refl⟩
+
+theorem wtfPiInvA {Γ A B 𝒰'}
+  (h : Γ ⊢ pi A B ∶ 𝒰') :
+  ∃ j, Γ ⊢ A ∶ 𝒰 j := by
+  let ⟨j, hA, _⟩ := wtfPiInvA𝒰 h
+  exact ⟨j, hA⟩
 
 theorem wtfPiInvB {Γ A B 𝒰'}
   (h : Γ ⊢ pi A B ∶ 𝒰') :
@@ -396,32 +415,24 @@ theorem wtfPiInvB {Γ A B 𝒰'}
 theorem wtfPiInv𝒰 {Γ A B 𝒰'}
   (h : Γ ⊢ pi A B ∶ 𝒰') :
   ∃ j, 𝒰 j ≈ 𝒰' := by
-  generalize e : pi A B = t at h
-  induction h using wtInd
-  all_goals injections <;> subst_eqs <;> specialize_rfls
-  case pi | sub => exact ⟨_, Eqv.refl⟩
-  case trans ih =>
-    let ⟨_, e⟩ := ih
-    cases convLvl𝒰 (convSym (eqvConv e))
-  case conv e₁ _ _ _ ih =>
-    let ⟨_, e₂⟩ := ih
-    exact ⟨_, Eqv.trans e₂ e₁⟩
+  let ⟨j, _, e⟩ := wtfPiInvA𝒰 h
+  exact ⟨j, e⟩
 
-theorem wtfAbsInv {Γ b C}
-  (h : Γ ⊢ abs b ∶ C) :
-  ∃ A B, Γ ∷ A ⊢ b ∶ B ∧ pi A B ≈ C := by
-  generalize e : abs b = t at h
+theorem wtfAbsInv {Γ A' b C}
+  (h : Γ ⊢ abs A' b ∶ C) :
+  ∃ A B, Γ ∷ A ⊢ b ∶ B ∧ A ≈ A' ∧ pi A B ≈ C := by
+  generalize e : abs A' b = t at h
   induction h using wtInd
   all_goals injections <;> subst_eqs <;> specialize_rfls
-  case abs hb _ => exact ⟨_, _, hb, Eqv.refl⟩
+  case abs hb _ => exact ⟨_, _, hb, Eqv.refl, Eqv.refl⟩
   case trans ih =>
-    let ⟨_, _, _, e⟩ := ih
-    cases convLvlPi (convSym (eqvConv e))
+    let ⟨_, _, _, _, eC⟩ := ih
+    cases convLvlPi (convSym (eqvConv eC))
   case conv DC _ _ _ ih =>
-    let ⟨A, B, hb, ABD⟩ := ih
-    exact ⟨A, B, hb, Eqv.trans ABD DC⟩
+    let ⟨A, B, hb, AA', ABD⟩ := ih
+    exact ⟨A, B, hb, AA', Eqv.trans ABD DC⟩
   case sub ih =>
-    let ⟨_, _, _, e⟩ := ih
+    let ⟨_, _, _, _, e⟩ := ih
     cases conv𝒰Pi (convSym (eqvConv e))
 
 theorem wtfMtyInv {Γ 𝒰'}

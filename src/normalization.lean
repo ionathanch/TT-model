@@ -80,7 +80,7 @@ theorem soundness {w} (h : Wtf w) :
     rw [parsLofInv ra'] at rb'
     injection (parsLofInv rb') with e
     simp_rw [e, hB]
-  case abs ihpi ihb =>
+  case abs ihpi _ ihb =>
     let ⟨_, _, h𝒰, hpi⟩ := ihpi σ hσ
     let ⟨_, _, _, e⟩ := interps𝒰Inv h𝒰
     subst e
@@ -115,14 +115,15 @@ theorem soundness {w} (h : Wtf w) :
     let ⟨P, hi⟩ := hi
     let ⟨_, _, _, e⟩ := interps𝒰Inv hi; subst e
     exact ⟨_, _, hi, ⟨_, interpsMty⟩⟩
-  case exf b _ _ _ ihA ihb =>
+  case exf A b _ _ _ ihA ihb =>
     let ⟨k, _, hmty, hb⟩ := ihb σ hσ
     let ⟨_, _, h𝒰, hA⟩ := ihA σ hσ
     let ⟨_, _, _, e⟩ := interps𝒰Inv h𝒰; subst e
     let ⟨P, hA⟩ := hA
-    let ⟨CRne, _⟩ := adequacy hA (exf (subst σ b))
+    let ⟨_, CRnf⟩ := adequacy h𝒰 (subst σ A)
+    let ⟨CRne, _⟩ := adequacy hA (exf (subst σ A) (subst σ b))
     rw [interpsMtyInv hmty] at hb
-    refine ⟨_, P, hA, CRne (wneExf hb)⟩
+    exact ⟨_, P, hA, CRne (wneExf (CRnf ⟨P, hA⟩) hb)⟩
   case lvl iha ihj =>
     let ⟨_, _, hj, hi⟩ := ihj σ hσ
     let ⟨j, _, _, e⟩ := interps𝒰Inv hj; subst e

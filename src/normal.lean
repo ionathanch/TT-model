@@ -20,9 +20,9 @@ mutual
 def nf : Term → Prop
   | 𝒰 a => nf a
   | pi a b => nf a ∧ nf b
-  | abs b => nf b
+  | abs a b => nf a ∧ nf b
   | app b a => ne b ∧ nf a
-  | exf b => ne b
+  | exf a b => nf a ∧ ne b
   | lvl a => nf a
   | _ => True
 
@@ -30,7 +30,7 @@ def nf : Term → Prop
 def ne : Term → Prop
   | var _ => True
   | app b a => ne b ∧ nf a
-  | exf b => ne b
+  | exf a b => nf a ∧ ne b
   | _ => False
 end
 
@@ -40,6 +40,10 @@ theorem neNf {a} : ne a → nf a := by
     intro neb nfa
     unfold nf
     exact ⟨neb, nfa⟩
+  case exf =>
+    intro nfa neb
+    unfold nf
+    exact ⟨nfa, neb⟩
 
 /-*---------------------------------------------------
   Normal and neutral forms are stable under renaming
@@ -49,15 +53,15 @@ theorem neNf {a} : ne a → nf a := by
 mutual
 theorem nfRename {ξ a} (nfa : nf (rename ξ a)) : nf a := by
   cases a <;> simp at *
-  case 𝒰 | abs | lvl => exact nfRename nfa
-  case pi => let ⟨nfa, nfb⟩ := nfa; exact ⟨nfRename nfa, nfRename nfb⟩
+  case 𝒰 | lvl => exact nfRename nfa
+  case pi | abs => let ⟨nfa, nfb⟩ := nfa; exact ⟨nfRename nfa, nfRename nfb⟩
   case app => let ⟨nfb, nfa⟩ := nfa; exact ⟨neRename nfb, nfRename nfa⟩
-  case exf => exact neRename nfa
+  case exf => let ⟨nfa, neb⟩ := nfa; exact ⟨nfRename nfa, neRename neb⟩
 
 theorem neRename {ξ a} (nfa : ne (rename ξ a)) : ne a := by
   cases a <;> simp at *
   case app => let ⟨neb, nfa⟩ := nfa; exact ⟨neRename neb, nfRename nfa⟩
-  case exf => exact neRename nfa
+  case exf => let ⟨nfa, neb⟩ := nfa; exact ⟨nfRename nfa, neRename neb⟩
 end
 
 /-*-------------------------------------------------
@@ -67,15 +71,15 @@ end
 mutual
 theorem nfPar {a b} (r : a ⇒ b) : nf a → nf b := by
   cases r <;> simp <;> intros
-  case 𝒰 ra nfa | abs ra nfa | lvl ra nfa => exact nfPar ra nfa
-  case pi ra rb nfa nfb => exact ⟨nfPar ra nfa, nfPar rb nfb⟩
+  case 𝒰 ra nfa | lvl ra nfa => exact nfPar ra nfa
+  case pi ra rb nfa nfb | abs ra rb nfa nfb => exact ⟨nfPar ra nfa, nfPar rb nfb⟩
   case app rb ra neb nfa => exact ⟨nePar rb neb, nfPar ra nfa⟩
-  case exf rb neb => exact nePar rb neb
+  case exf ra rb nfa neb => exact ⟨nfPar ra nfa, nePar rb neb⟩
 
 theorem nePar {a b} (r : a ⇒ b) : ne a → ne b := by
   cases r <;> simp <;> intros
   case app rb ra neb nfa => exact ⟨nePar rb neb, nfPar ra nfa⟩
-  case exf rb neb => exact nePar rb neb
+  case exf ra rb nfa neb => exact ⟨nfPar ra nfa, nePar rb neb⟩
 end
 
 theorem nfPars {a b} (r : a ⇒⋆ b) : nf a → nf b := by
@@ -149,9 +153,10 @@ theorem wnfPi {a b} (wnfa : wnf a) (wnfb : wnf b) : wnf (pi a b) :=
   let ⟨b', nfb, rb⟩ := wnfb
   ⟨pi a' b', ⟨nfa, nfb⟩, parsPi ra rb⟩
 
-theorem wnfAbs {b} (wnfb : wnf b) : wnf (abs b) :=
-  let ⟨c, nfc, rc⟩ := wnfb
-  ⟨abs c, nfc, parsAbs rc⟩
+theorem wnfAbs {a b} (wnfa : wnf a) (wnfb : wnf b) : wnf (abs a b) :=
+  let ⟨a', nfa, ra⟩ := wnfa
+  let ⟨b', nfb, rb⟩ := wnfb
+  ⟨abs a' b', ⟨nfa, nfb⟩, parsAbs ra rb⟩
 
 theorem wneApp {b a} (wneb : wne b) (wnfa : wnf a) : wne (app b a) :=
   let ⟨b', neb, rb⟩ := wneb
@@ -162,9 +167,10 @@ theorem wnf𝒰 {b} (wnfb : wnf b) : wnf (𝒰 b) :=
   let ⟨c, nfc, rc⟩ := wnfb
   ⟨𝒰 c, nfc, pars𝒰 rc⟩
 
-theorem wneExf {b} (wneb : wne b) : wne (exf b) :=
-  let ⟨c, nfc, rc⟩ := wneb
-  ⟨exf c, nfc, parsExf rc⟩
+theorem wneExf {a b} (wnfa : wnf a) (wneb : wne b) : wne (exf a b) :=
+  let ⟨a', nfa, ra⟩ := wnfa
+  let ⟨b', neb, rb⟩ := wneb
+  ⟨exf a' b', ⟨nfa, neb⟩, parsExf ra rb⟩
 
 theorem wnfLvl {b} (wnfb : wnf b) : wnf (lvl b) :=
   let ⟨c, nfc, rc⟩ := wnfb
@@ -191,7 +197,7 @@ theorem wnfAppInv {b s} : wnf (app b (var s)) → wnf b
         rw [substToRename] at rb'
         have rb' := Pars.trans (parRename (s +: id) rb) rb'
         let ⟨c, e, rb⟩ := parsAntirenaming rb'; subst e
-        exact wnfAbs ⟨c, nfRename nfc, rb⟩
+        exact wnfAbs sorry ⟨c, nfRename nfc, rb⟩
       case app rb ra ih =>
         cases ra
         apply wnfBwds (parPars rb) (ih nfc rfl)

@@ -17,11 +17,11 @@ set_option hygiene false
 local infix:40 "⇒" => Par
 
 inductive Par : Term → Term → Prop where
-  | β {b b' a a'} :
+  | β {b b' a a' c} :
     b ⇒ b' →
     a ⇒ a' →
-    ------------------------------------
-    app (abs b) a ⇒ subst (a' +: var) b'
+    --------------------------------------
+    app (abs c b) a ⇒ subst (a' +: var) b'
   | var s : var s ⇒ var s
   | 𝒰 {a a'} :
     a ⇒ a' →
@@ -32,20 +32,22 @@ inductive Par : Term → Term → Prop where
     b ⇒ b' →
     -----------------
     pi a b ⇒ pi a' b'
-  | abs {b b'} :
+  | abs {a a' b b'} :
+    a ⇒ a' →
     b ⇒ b' →
-    --------------
-    abs b ⇒ abs b'
+    ------------------
+    abs a b ⇒ abs a' b'
   | app {b b' a a'} :
     b ⇒ b' →
     a ⇒ a' →
     -------------------
     app b a ⇒ app b' a'
   | mty : mty ⇒ mty
-  | exf {b b'} :
+  | exf {a a' b b'} :
+    a ⇒ a' →
     b ⇒ b' →
-    --------------
-    exf b ⇒ exf b'
+    -------------------
+    exf a b ⇒ exf a' b'
   | lvl {a a'} :
     a ⇒ a' →
     --------------
@@ -105,20 +107,22 @@ theorem antirenaming {ξ a b'} (r : rename ξ a ⇒ b') : ∃ b, b' = rename ξ 
     let ⟨b, eb, rb⟩ := ihb
     subst ea; subst eb
     exact ⟨pi a b, rfl, Par.pi ra rb⟩
-  case abs ihb =>
-    let ⟨b, e, r⟩ := ihb
-    subst e
-    exact ⟨abs b, rfl, Par.abs r⟩
+  case abs iha ihb =>
+    let ⟨a, ea, ra⟩ := iha
+    let ⟨b, eb, rb⟩ := ihb
+    subst ea; subst eb
+    exact ⟨abs a b, rfl, Par.abs ra rb⟩
   case app ihb iha =>
     let ⟨a, ea, ra⟩ := iha
     let ⟨b, eb, rb⟩ := ihb
     subst ea; subst eb
     exact ⟨app b a, rfl, Par.app rb ra⟩
   case mty => exact ⟨mty, rfl, Par.mty⟩
-  case exf ih =>
-    let ⟨b, e, r⟩ := ih
-    subst e
-    exact ⟨exf b, rfl, Par.exf r⟩
+  case exf iha ihb =>
+    let ⟨a, ea, ra⟩ := iha
+    let ⟨b, eb, rb⟩ := ihb
+    subst ea; subst eb
+    exact ⟨exf a b, rfl, Par.exf ra rb⟩
   case lvl ih =>
     let ⟨a, e, r⟩ := ih
     subst e
@@ -190,10 +194,15 @@ theorem parsPi {a a' b b'} (ra : a ⇒⋆ a') (rb : b ⇒⋆ b') : pi a b ⇒⋆
   case trans.trans ih _ _ _ _ _ _ =>
     constructor; constructor; assumption; assumption; apply ih; assumption
 
-theorem parsAbs {b b'} (r : b ⇒⋆ b') : abs b ⇒⋆ abs b' := by
-  induction r
-  case refl => constructor
-  case trans => constructor; constructor; assumption; assumption
+theorem parsAbs {a a' b b'} (ra : a ⇒⋆ a') (rb : b ⇒⋆ b') : abs a b ⇒⋆ abs a' b' := by
+  induction ra generalizing b b' <;> induction rb
+  case refl.refl => constructor
+  case refl.trans ih =>
+    constructor; constructor; apply parRefl; assumption; apply ih
+  case trans.refl ih _ =>
+    constructor; constructor; assumption; apply parRefl; apply ih; constructor
+  case trans.trans ih _ _ _ _ _ _ =>
+    constructor; constructor; assumption; assumption; apply ih; assumption
 
 theorem parsApp {a a' b b'} (rb : b ⇒⋆ b') (ra : a ⇒⋆ a') : app b a ⇒⋆ app b' a' := by
   induction rb generalizing a a' ra <;> induction ra
@@ -205,17 +214,22 @@ theorem parsApp {a a' b b'} (rb : b ⇒⋆ b') (ra : a ⇒⋆ a') : app b a ⇒�
   case trans.trans ih _ _ _ _ _ _ =>
     constructor; constructor; assumption; assumption; apply ih; assumption
 
-theorem parsExf {b b'} (r : b ⇒⋆ b') : exf b ⇒⋆ exf b' := by
-  induction r
-  case refl => constructor
-  case trans => constructor; constructor; assumption; assumption
+theorem parsExf {a a' b b'} (ra : a ⇒⋆ a') (rb : b ⇒⋆ b') : exf a b ⇒⋆ exf a' b' := by
+  induction ra generalizing b b' <;> induction rb
+  case refl.refl => constructor
+  case refl.trans ih =>
+    constructor; constructor; apply parRefl; assumption; apply ih
+  case trans.refl ih _ =>
+    constructor; constructor; assumption; apply parRefl; apply ih; constructor
+  case trans.trans ih _ _ _ _ _ _ =>
+    constructor; constructor; assumption; assumption; apply ih; assumption
 
 theorem parsLvl {a a'} (r : a ⇒⋆ a') : lvl a ⇒⋆ lvl a' := by
   induction r
   case refl => constructor
   case trans => constructor; constructor; assumption; assumption
 
-theorem parsβ {b a} σ : app (abs (subst (⇑ σ) b)) a ⇒⋆ subst (a +: σ) b := by
+theorem parsβ {b a c} σ : app (abs c (subst (⇑ σ) b)) a ⇒⋆ subst (a +: σ) b := by
   constructor
   . constructor; apply parRefl; apply parRefl
   . rw [← substUnion]; constructor
@@ -248,23 +262,23 @@ theorem parsPiInv {a b c} (r : pi a b ⇒⋆ c) : ∃ a' b', c = pi a' b' ∧ a 
     let ⟨a', b', e, ra₂, rb₂⟩ := ih rfl
     exact ⟨a', b', e, trans ra₁ ra₂, trans rb₁ rb₂⟩
 
-theorem parsAbsInv {b c} (r : abs b ⇒⋆ c) : ∃ b', c = abs b' ∧ b ⇒⋆ b' := by
-  generalize e : abs b = c' at r
-  induction r generalizing b <;> subst e
-  case refl => exists b; repeat constructor
+theorem parsAbsInv {a b c} (r : abs a b ⇒⋆ c) : ∃ a' b', c = abs a' b' ∧ a ⇒⋆ a' ∧ b ⇒⋆ b' := by
+  generalize e : abs a b = c' at r
+  induction r generalizing a b <;> subst e
+  case refl => exists a, b; repeat constructor
   case trans ih r =>
-    cases r with | abs r₁ =>
-    let ⟨b', e, r₂⟩ := ih rfl
-    exact ⟨b', e, trans r₁ r₂⟩
+    cases r with | abs ra₁ rb₁ =>
+    let ⟨a', b', e, ra₂, rb₂⟩ := ih rfl
+    exact ⟨a', b', e, trans ra₁ ra₂, trans rb₁ rb₂⟩
 
-theorem parsExfInv {b c} (r : exf b ⇒⋆ c) : ∃ b', c = exf b' ∧ b ⇒⋆ b' := by
-  generalize e : exf b = c' at r
-  induction r generalizing b <;> subst e
-  case refl => exists b; repeat constructor
+theorem parsExfInv {a b c} (r : exf a b ⇒⋆ c) : ∃ a' b', c = exf a' b' ∧ a ⇒⋆ a' ∧ b ⇒⋆ b' := by
+  generalize e : exf a b = c' at r
+  induction r generalizing a b <;> subst e
+  case refl => exists a, b; repeat constructor
   case trans ih r =>
-    cases r with | exf r₁ =>
-    let ⟨b', e, r₂⟩ := ih rfl
-    exact ⟨b', e, trans r₁ r₂⟩
+    cases r with | exf ra₁ rb₁ =>
+    let ⟨a', b', e, ra₂, rb₂⟩ := ih rfl
+    exact ⟨a', b', e, trans ra₁ ra₂, trans rb₁ rb₂⟩
 
 theorem parsLvlInv {i b} (r : lvl i ⇒⋆ b) : ∃ j, b = lvl j ∧ i ⇒⋆ j := by
   generalize e : lvl i = a at r
@@ -288,11 +302,11 @@ theorem parsLofInv {j b} (r : lof j ⇒⋆ b) : b = lof j := by
 def taka : Term → Term
   | 𝒰 a => 𝒰 (taka a)
   | pi a b => pi (taka a) (taka b)
-  | abs b => abs (taka b)
+  | abs a b => abs (taka a) (taka b)
   | app b a => match b with
-    | abs b => subst (taka a +: var) (taka b)
+    | abs _ b => subst (taka a +: var) (taka b)
     | b => app (taka b) (taka a)
-  | exf b => exf (taka b)
+  | exf a b => exf (taka a) (taka b)
   | lvl a => lvl (taka a)
   | t => t
 
@@ -389,15 +403,17 @@ theorem convPi {a a' b b'} : a ⇔ a' → b ⇔ b' → pi a b ⇔ pi a' b'
   | ⟨a'', ra, ra'⟩, ⟨b'', rb, rb'⟩ =>
   ⟨pi a'' b'', parsPi ra rb, parsPi ra' rb'⟩
 
-theorem convAbs {b b'} : b ⇔ b' → abs b ⇔ abs b'
-  | ⟨b'', rb, rb'⟩ => ⟨abs b'', parsAbs rb, parsAbs rb'⟩
+theorem convAbs {a a' b b'} : a ⇔ a' → b ⇔ b' → abs a b ⇔ abs a' b'
+  | ⟨a'', ra, ra'⟩, ⟨b'', rb, rb'⟩ =>
+  ⟨abs a'' b'', parsAbs ra rb, parsAbs ra' rb'⟩
 
 theorem convApp {b b' a a'} : b ⇔ b' → a ⇔ a' → app b a ⇔ app b' a'
   | ⟨b'', rb, rb'⟩, ⟨a'', ra, ra'⟩ =>
   ⟨app b'' a'', parsApp rb ra, parsApp rb' ra'⟩
 
-theorem convExf {b b'} : b ⇔ b' → exf b ⇔ exf b'
-  | ⟨b'', rb, rb'⟩ => ⟨exf b'', parsExf rb, parsExf rb'⟩
+theorem convExf {a a' b b'} : a ⇔ a' → b ⇔ b' → exf a b ⇔ exf a' b'
+  | ⟨a'', ra, ra'⟩, ⟨b'', rb, rb'⟩ =>
+  ⟨exf a'' b'', parsExf ra rb, parsExf ra' rb'⟩
 
 theorem convLvl {a a'} : a ⇔ a' → lvl a ⇔ lvl a'
   | ⟨a'', ra, ra'⟩ => ⟨lvl a'', parsLvl ra, parsLvl ra'⟩

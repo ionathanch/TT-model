@@ -13,14 +13,14 @@ variable [lc : LevelClass]
 theorem nfCBN {a b} (nfa : nf a) (r : a ⇒β b) : False := by
   induction r <;> simp at *
   case app ih => let ⟨neb, _⟩ := nfa; exact ih (neNf neb)
-  case exf ih => exact ih (neNf nfa)
+  case exf ih => let ⟨_, neb⟩ := nfa; exact ih (neNf neb)
 
 -- Forward preservation of values
 theorem valuePars {a b} (r : a ⇒⋆ b) (v : Value a) : Nonempty (Value b) := by
   cases v
   case 𝒰 => let ⟨_, e, _⟩ := pars𝒰Inv r; subst e; constructor; constructor
   case pi => let ⟨_, _, e, _⟩ := parsPiInv r; subst e; constructor; constructor
-  case abs => let ⟨_, e, _⟩ := parsAbsInv r; subst e; constructor; constructor
+  case abs => let ⟨_, _, e, _⟩ := parsAbsInv r; subst e; constructor; constructor
   case mty => have e := parsMtyInv r; subst e; constructor; constructor
   case lvl => let ⟨_, e, _⟩ := parsLvlInv r; subst e; constructor; constructor
   case lof => have e := parsLofInv r; subst e; constructor; constructor

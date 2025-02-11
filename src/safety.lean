@@ -23,9 +23,9 @@ theorem wtRename {ξ : ℕ → ℕ} {Γ Δ} {a A : Term}
     refine Wtf.pi ihA' ?_
     rw [renameLiftRename]
     exact ihB (wRenameLift hξ) (Wtf.cons hΔ ihA')
-  case abs ihPi ihb =>
+  case abs ihPi ihA ihb =>
     let ihPi' := ihPi hξ hΔ
-    refine Wtf.abs ihPi' ?_
+    refine Wtf.abs ihPi' (ihA hξ hΔ) ?_
     let ⟨k, hA⟩ := wtfPiInvA ihPi'
     exact ihb (wRenameLift hξ) (Wtf.cons hΔ hA)
   case app ihb iha => rw [← renameDist]; exact Wtf.app (ihb hξ hΔ) (iha hξ hΔ)
@@ -83,10 +83,10 @@ theorem wtMorph {σ : ℕ → Term} {Γ Δ} {a A : Term}
     refine Wtf.pi ihA' ?_
     rw [renameUpSubst]
     exact ihB (wSubstUp ihA' hσ) (Wtf.cons hΔ ihA')
-  case abs ihPi ihb =>
+  case abs ihPi ihA ihb =>
     let ihPi' := ihPi hσ hΔ
     let ⟨k, hA⟩ := wtfPiInvA ihPi'
-    exact Wtf.abs ihPi' (ihb (wSubstUp hA hσ) (Wtf.cons hΔ hA))
+    exact Wtf.abs ihPi' (ihA hσ hΔ) (ihb (wSubstUp hA hσ) (Wtf.cons hΔ hA))
   case app ihb iha => rw [← substDist]; exact Wtf.app (ihb hσ hΔ) (iha hσ hΔ)
   case mty ih => exact Wtf.mty (ih hσ hΔ)
   case exf ihb ihA => exact Wtf.exf (ihb hσ hΔ) (ihA hσ hΔ)
@@ -139,7 +139,7 @@ theorem wtRegularity {Γ} {a A : Term} (h : Γ ⊢ a ∶ A) : ∃ k, Γ ⊢ A �
   induction h using wtInd
   case var wf mem => exact wtMem mem wf
   case pi ih _ | trans ih => exact ih
-  case abs h _ _ _ | exf h _ _ _ | conv h _ _ => exact ⟨_, h⟩
+  case abs h _ _ _ _ _ | exf h _ _ _ | conv h _ _ => exact ⟨_, h⟩
   case 𝒰 ih =>
     let ⟨_, ihk⟩ := ih
     let ⟨l, _, hk, _⟩ := wtfLvlInv ihk
@@ -161,6 +161,14 @@ theorem wtRegularity {Γ} {a A : Term} (h : Γ ⊢ a ∶ A) : ∃ k, Γ ⊢ A �
     let ⟨l, _, hk, _⟩ := wtfLvlInv ihk
     exact ⟨l, Wtf.𝒰 hk⟩
 
+theorem wtfAbs {Γ} {A B b k : Term}
+  (hpi : Γ ⊢ pi A B ∶ 𝒰 k)
+  (hb : Γ ∷ A ⊢ b ∶ B) :
+  Γ ⊢ abs A b ∶ pi A B := by
+  let ⟨_, hA, e⟩ := wtfPiInvA𝒰 hpi
+  let ⟨_, h𝒰⟩ := wtRegularity hpi
+  refine Wtf.abs hpi (Wtf.conv e hA h𝒰) hb
+
 /-*-------------
   Preservation
 -------------*-/
@@ -173,14 +181,19 @@ theorem wtPar {Γ} {a b A : Term} (r : a ⇒ b) (h : Γ ⊢ a ∶ A) : Γ ⊢ b 
     cases r with | pi ra rb =>
     let ihA' := ihA ra
     exact Wtf.pi ihA' (wtReplace (parEqv ra) ihA' (ihB rb))
-  case abs hPi _ _ ihb => cases r with | abs r' => exact Wtf.abs hPi (ihb r')
+  case abs B _ _ hPi _ _ ihPi ihA ihb => cases r with | abs rA rb =>
+    let rPi := Par.pi rA (parRefl B)
+    let hb := wtReplace (convEqv (parConv rA)) (ihA rA) (ihb rb)
+    exact Wtf.conv
+      (convEqv (convSym (parConv rPi)))
+      (Wtf.abs (ihPi rPi) (ihA rA) hb) hPi
   case app hb ha ihb iha =>
     cases r
     case β rb ra =>
       let ⟨_, hA⟩ := wtRegularity ha
       let ⟨_, hPi⟩ := wtRegularity hb
       let ⟨_, hB⟩ := wtfPiInvB hPi
-      let ⟨A', B', hb', e⟩ := wtfAbsInv (ihb (Par.abs rb))
+      let ⟨A', B', hb', _, e⟩ := wtfAbsInv (ihb (Par.abs (parRefl _) rb))
       let ⟨eA, eB⟩ := convPiInv (eqvConv e)
       exact Wtf.conv
         (convEqv (convCong (convSym (parConv ra)) eB))
@@ -192,7 +205,10 @@ theorem wtPar {Γ} {a b A : Term} (r : a ⇒ b) (h : Γ ⊢ a ∶ A) : Γ ⊢ b 
         (convEqv (convSym (parConv (parCong ra (parRefl _)))))
         (Wtf.app (ihb rb) (iha ra)) hBa
   case mty ih => cases r; exact Wtf.mty (ih (parRefl _))
-  case exf hA _ _ ihb => cases r with | exf r' => exact Wtf.exf hA (ihb r')
+  case exf hA _ ihA ihb => cases r with | exf rA rb =>
+    exact Wtf.conv
+      (convEqv (convSym (parConv rA)))
+      (Wtf.exf (ihA rA) (ihb rb)) hA
   case lvl hj iha _ => cases r with | lvl r' => exact Wtf.lvl (iha r') hj
   case lof => cases r; constructor <;> assumption
   case trans hj ihi _ => exact Wtf.trans (ihi r) hj
@@ -213,7 +229,7 @@ theorem wtPars {Γ} {a b A : Term} (r : a ⇒⋆ b) (h : Γ ⊢ a ∶ A) : Γ �
 inductive Value : Term → Type where
   | 𝒰 {k} : Value (𝒰 k)
   | pi {a b} : Value (pi a b)
-  | abs {b} : Value (abs b)
+  | abs {a b} : Value (abs a b)
   | mty : Value mty
   | lvl {k} : Value (lvl k)
   | lof {k} : Value (lof k)
@@ -224,9 +240,9 @@ local infix:40 "⇒β" => CBN
 local infix:40 "⇒β⋆" => CBNs
 
 inductive CBN : Term → Term → Prop where
-  | β {b a} : app (abs b) a ⇒β subst (a +: var) b
+  | β {b a c} : app (abs c b) a ⇒β subst (a +: var) b
   | app {b b' a} : b ⇒β  b' → app b a ⇒β app b' a
-  | exf {b b'} : b ⇒β b' → exf b ⇒β exf b'
+  | exf {a b b'} : b ⇒β b' → exf a b ⇒β exf a b'
 
 inductive CBNs : Term → Term → Prop where
   | refl a : a ⇒β⋆ a
@@ -239,7 +255,7 @@ infix:40 "⇒β⋆" => CBNs
 theorem CBNpar {a b} : a ⇒β b → a ⇒ b
   | CBN.β => Par.β (parRefl _) (parRefl _)
   | CBN.app rb => Par.app (CBNpar rb) (parRefl _)
-  | CBN.exf rb => Par.exf (CBNpar rb)
+  | CBN.exf rb => Par.exf (parRefl _) (CBNpar rb)
 
 @[simp] -- Shape of types of canonical values
 def valueType {a} (A : Term) : Value a → Prop
@@ -251,22 +267,22 @@ def valueType {a} (A : Term) : Value a → Prop
 theorem wtValue {Γ} {a A B : Term} (h : Γ ⊢ a ∶ A) (e : A ≈ B) : (v : Value a) → valueType B v
   | Value.𝒰 => let ⟨_, e𝒰⟩ := wtf𝒰Inv h; ⟨_, Eqv.trans e𝒰 e⟩
   | Value.pi => let ⟨_, e𝒰⟩ := wtfPiInv𝒰 h; ⟨_, Eqv.trans e𝒰 e⟩
-  | Value.abs => let ⟨_, _, _, epi⟩ := wtfAbsInv h; ⟨_, _, Eqv.trans epi e⟩
+  | Value.abs => let ⟨_, _, _, _, epi⟩ := wtfAbsInv h; ⟨_, _, Eqv.trans epi e⟩
   | Value.mty => let ⟨_, e𝒰⟩ := wtfMtyInv h; ⟨_, Eqv.trans e𝒰 e⟩
   | Value.lvl => let ⟨_, _, _, e𝒰⟩ := wtfLvlInv h; ⟨_, Eqv.trans e𝒰 e⟩
   | Value.lof => let ⟨_, elvl⟩ := wtfLofInv h; ⟨_, Eqv.trans elvl e⟩
 
-theorem wtAbs {Γ} {b A B : Term} (v : Value b) (h : Γ ⊢ b ∶ pi A B) : ∃ b', b = abs b' := by
+theorem wtAbs {Γ} {b A B : Term} (v : Value b) (h : Γ ⊢ b ∶ pi A B) : ∃ a' b', b = abs a' b' := by
   generalize e : pi A B = T at h
   induction h using wtInd
   all_goals try first | subst e | injection e
   case var | app | exf => contradiction
-  case abs => exact ⟨_, rfl⟩
+  case abs => exact ⟨_, _, rfl⟩
   case conv h v epi _ _ =>
     let _e := wtValue h epi v
     cases v <;> let ⟨_, e⟩ := _e
     case 𝒰 | pi | mty | lvl => cases conv𝒰Pi (eqvConv e)
-    case abs => exact ⟨_, rfl⟩
+    case abs => exact ⟨_, _, rfl⟩
     case lof => cases convLvlPi (eqvConv e)
 
 theorem wtMty {Γ} {b : Term} (v : Value b) (h : Γ ⊢ b ∶ mty) : False := by
@@ -292,7 +308,7 @@ theorem wtProgress {a A : Term} (h : ⬝ ⊢ a ∶ A) : Nonempty (Value a) ∨ �
     cases ihb
     case inl v =>
       cases v with | intro v =>
-      let ⟨_, e⟩ := wtAbs v hb; subst e
+      let ⟨_, _, e⟩ := wtAbs v hb; subst e
       exact Or.inr ⟨_, CBN.β⟩
     case inr r => let ⟨_, r⟩ := r; exact Or.inr ⟨_, CBN.app r⟩
   case exf _ hb _ ihb =>
