@@ -140,6 +140,8 @@ Therefore, in Martin-L\"of's type theory (MLTT)~\citep{mltt},
 he stratified the universe into a countably infinite hierarchy of universes
 $ \kw{U}_{ 0 }  :  \kw{U}_{ 1 }  :  \kw{U}_{ 2 }  : \dots$
 indexed by universe levels spanning the naturals.
+Many contemporary proof assistants based on dependent types feature such a hierarchy,
+such as Rocq~\citep{rocq}, Agda~\citep{agda}, Lean~\citep{lean}, and F$^\star$~\citep{fstar}.
 
 Having only a concrete universe hierarchy, however,
 limits reusability of definitions that are not inherently tied to particular universe levels.
@@ -181,8 +183,7 @@ which features first-class levels and an ordering relation $<$ on them.
 The model is given as categories with families (cwfs)~\citep{cwf},
 mostly mechanized in Agda using induction--recursion,
 and supports features such as level constraints,
-maxima of levels, and induction on levels,
-which subsumes the predicative universe features in Agda, Rocq, and Lean.
+maxima of levels, and induction on levels.
 
 The syntax of TTFL is considered to be the initial model in the category of cwfs,
 but a concrete syntax and typing rules are not given,
