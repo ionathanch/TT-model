@@ -43,9 +43,12 @@ a, b, c, A, B, C, k, l {{ tex \ell }} :: 'tm_' ::= {{ com terms }}
   | abs' A b :: :: Exf'
     {{ com explicitly annotated ex falso }}
     {{ tex \kw{absurd}_{[[A]]} \gap [[b]] }}
-  | Type k :: :: Univ
+  | Type k :: :: Type
     {{ com type universe }}
     {{ tex \kw{U} \gap [[k]] }}
+  | U i :: :: Univ
+    {{ com concrete type universe }}
+    {{ tex \kw{U}_{[[i]]} }}
   | Level< l :: :: Lvl
     {{ com level type }}
     {{ tex \kw{Level}\texttt{<} \gap [[l]] }}

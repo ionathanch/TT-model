@@ -129,13 +129,21 @@
 
 \section{Introduction}
 
-TODO: opening blurb about universes and hierarchies
+TODO: say what $[[Type _]]$ mean
+
+Girard showed that the type-in-type axiom makes type theory logically inconsistent:
+if the type of a universe is itself, all types are inhabited.
+Therefore, in Martin-L\"of's type theory (MLTT)~\citep{mltt},
+he stratified the universe into a countably infinite hierarchy of universes
+$[[U 0]] : [[U 1]] : [[U 2]] : \dots$
+indexed by universe levels spanning the naturals.
 
 Having only a concrete universe hierarchy, however,
 limits reusability of definitions that are not inherently tied to particular universe levels.
 For example, the identity function $\kw{id} : [[:concrete: ΠA: Type i. A → A]]$
 would need to be redefined for each universe level $[[i]]$ at which it is needed.
-Universe level polymorphism addresses this issue by abstracting over level variables.
+Universe level polymorphism addresses this issue by abstracting over level variables,
+used to index universes alongside concrete levels.
 Its simplest form is prenex level polymorphism,
 which restricts the abstraction to top-level definitions,
 is well studied~\citep{anon-univ,univ-poly-coq},

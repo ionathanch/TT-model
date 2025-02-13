@@ -13,7 +13,7 @@ OTTFILES = $(MAIN).ott
 OTT_FLAGS = -tex_wrap false -tex_show_meta false -merge true $(OTTFILES)
 
 MAKEDEPS  := Makefile
-LATEXDEPS := refs.bib
+LATEXDEPS := main.bib
 MOREDEPS := lipics-v2021.cls lipics-logo-bw.pdf cc-by.pdf orcid.pdf
 GENERATED := $(RULES).tex $(MAIN).tex
 
@@ -26,7 +26,7 @@ $(MAIN).tex: $(RULES).tex $(MAIN).mng
 	$(OTT) -tex_filter $(MAIN).mng $(MAIN).tex $(OTT_FLAGS)
 
 .PHONY: FORCE
-$(MAIN).pdf: $(MAIN).tex
+$(MAIN).pdf: $(MAIN).tex $(LATEXDEPS)
 	$(LATEXRUN) $(MAIN).tex
 
 $(DIFF).pdf: $(RULES).tex $(MAIN).mng
