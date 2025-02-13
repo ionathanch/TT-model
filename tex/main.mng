@@ -218,10 +218,11 @@ Our contributions are as follows:
     via the fundamental soundness theorem in \cref{sec:lr}.
     Normalization remains an open problem.
 \end{itemize}
-
+%
 As our system is intentionally very minimal,
 we discuss some further extensions in \cref{sec:extensions},
 including level operators and subtyping.
+We conclude with future work in \cref{sec:conclusion}.
 
 \section{Overview}
 
@@ -1624,6 +1625,39 @@ By introducing a subtyping judgement that depends on typing,
 which in turn depends on subtyping, to prove consistency,
 the logical relation would have to be extended to include a semantic notion of equality,
 similar to the reducibility judgements used by Abel, \"Ohman, and Vezzosi~\citep{dec-conv}.
+
+\section{Conclusion and future work} \label{sec:conclusion}
+
+We have presented \lang, a type theory with first-class universe levels.
+In contrast to existing work,
+rather than level constraints being separate from the type of levels,
+we combine them such that every level explicitly has a bound.
+We have proven our type theory to be type safe and logically consistent.
+
+Proving normalization and decidability of type checking
+is the next step in showing that our type theory is effectively type checkable
+and thus has the potential to be a basis for theorem proving.
+Whether the normalization issues discussed in \cref{sec:paradox}
+are inherent to the system is unclear.
+The only formal syntactic system we know of
+with universe level polymorphism beyond prenex polymorphism
+is BCDE~\citep{univ-poly}.
+However, their system does not satisfy subject reduction,
+and their proposed amendment to allow looping level constraints of the form $[[k]] < [[k]]$
+to fix the issue would permit type-in-type in a looping context
+and break normalization.
+Even so, we are hopeful that normalization holds,
+as no issues with cumulative first-class levels have yet arisen in Agda.
+
+Decidability of type checking does not hold straightforwardly from normalization,
+as a type checking algorithm must incorporate the non--syntax-directed \rref{Trans,Cumul}.
+It may be done separately via algorithmic subtyping,
+but as seen in \cref{sec:subtyping},
+a subtyping relation must depend on typing
+to show that one level expression is strictly smaller than another.
+The challenge lies in showing totality of a mutual typing--subtyping algorithm,
+but if looping level bounds $[[k]] : [[Level< k]]$ are ruled out by normalization,
+there is no reason to believe it would not be total.
 
 \bibliographystyle{plainurl}
 \bibliography{main.bib}
