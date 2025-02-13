@@ -8,7 +8,7 @@
 \let\renewlist\relax
 \usepackage{enumitem,booktabs,xspace,doi}
 \usepackage{mathpartir,mathtools,stmaryrd}
-\usepackage[flushmargin,multiple,para]{footmisc} % para spacing is weird and ugly
+\usepackage[bottom,flushmargin,multiple,para]{footmisc} % para spacing is weird and ugly
 \usepackage[outputdir=latex.out]{minted}
 \usepackage{fontspec}
 \setmonofont[Scale=MatchUppercase]{sgr-iosevka-fixed-regular.ttc}
@@ -61,7 +61,7 @@
 }
 
 \setlength{\fboxsep}{2pt}
-\setlength{\abovecaptionskip}{0.25\baselineskip}
+\setlength{\abovecaptionskip}{0\baselineskip}
 \setlength{\textfloatsep}{\baselineskip}
 \setlength{\intextsep}{0.25\baselineskip}
 
@@ -80,7 +80,7 @@
 \keywords{type theory, universes, universe polymorphism}
 \hideLIPIcs
 
-\author{ionchy}
+\author{Jonathan Chan}
   {University of Pennsylvania, Philadelphia, USA}
   {jcxz@seas.upenn.edu}
   {0000-0003-0830-3180}
@@ -101,6 +101,9 @@
 % \acknowledgements{hi \href{https://types.pl}{\texttt{types.pl}}!}
 
 \begin{document}
+
+\setlength{\abovedisplayskip}{0.25\baselineskip}
+\setlength{\belowdisplayskip}{0.25\baselineskip}
 
 \maketitle
 
@@ -432,6 +435,7 @@ We write single substitutions of a variable $[[x]]$
 in a term $[[b]]$ by another term $[[a]]$ as $[[b{x ↦ a}]]$.
 
 \begin{figure}[b]
+\vspace{-\baselineskip}
 \begin{align*}
   i, j & \Coloneqq \texttt{<external universe levels>} \\
   x, y, z & \Coloneqq \texttt{<term variables>} \\
@@ -538,30 +542,30 @@ The other typing rules are otherwise typical.
 
 \begin{figure}
 \begin{mathpar}
-  \inferrule[\ottdrulename{Univ}]
+  \inferrule*[right=\ottdrulename{Univ}]
     {[[G ⊢ k : Level< l]]}
     %-----------------------%
     {[[G ⊢ Type k : Type l]]}
-  \and
-  \inferrule[\ottdrulename{Level<}]
+  \quad
+  \inferrule*[right=\ottdrulename{Level<}]
     {[[G ⊢ Type k1 : Type l1]] \and
      [[G ⊢ k0 : Level< l0]]}
     %---------------------------%
     {[[G ⊢ Level< k0 : Type k1]]}
-  \and
-  \inferrule[\ottdrulename{Lvl}]
+  \quad
+  \inferrule*[right=\ottdrulename{Lvl}]
     {[[⊢ G]] \and
      [[i < j]]}
     %--------------------%
     {[[G ⊢ i : Level< j]]}
   \and
-  \inferrule[\ottdrulename{Trans}]
+  \inferrule*[right=\ottdrulename{Trans}]
     {[[G ⊢ k1 : Level< k2]] \and
      [[G ⊢ k2 : Level< k3]]}
     %----------------------%
     {[[G ⊢ k1 : Level< k3]]}
   \and
-  \inferrule[\ottdrulename{Cumul}]
+  \inferrule*[right=\ottdrulename{Cumul}]
     {[[G ⊢ A : Type k]] \and
      [[G ⊢ k : Level< l]]}
     %--------------------%
@@ -903,15 +907,15 @@ The proof of subject reduction requires most of the above lemmas.
 
 \begin{figure}
 \begin{mathpar}
-  \inferrule[\ottdrulename{N-Beta}]{~}
+  \inferrule*[right=\ottdrulename{N-Beta}]{~}
     {[[(λx : A. b) a ⇝ b{x ↦ a}]]}
-  \and
-  \inferrule[\ottdrulename{N-App}]
+  \qquad
+  \inferrule*[right=\ottdrulename{N-App}]
     {[[b ⇝ b']]}
     %--------------%
     {[[b a ⇝ b' a]]}
-  \and
-  \inferrule[\ottdrulename{N-Abs}]
+  \qquad
+  \inferrule*[right=\ottdrulename{N-Abs}]
     {[[b ⇝ b']]}
     %------------------------%
     {[[abs' A b ⇝ abs' A b']]}
@@ -1013,7 +1017,7 @@ to ensure that the interpretation is well defined,
 the mechanization implements it as an inductive definition
 parametrized by interpretations at lower levels,
 then ties the knot by well-founded induction on levels.
-For clarity and concision, we ignore these mechanization details
+For clarity and concision, we ignore these details
 and present the logical relation in \cref{fig:lr:closed}
 without worrying about well-foundedness.
 
@@ -1077,7 +1081,7 @@ and that $[[f y]]$ is in the \emph{particular} interpretation of the codomain.
 It then sounds like we would want \rref{I-Pi'} below.
 %
 \begin{mathpar}
-  \inferrule[\ottdrulename{I-Pi'}]
+  \inferrule*[right=\ottdrulename{I-Pi'}]
     {[[⟦ A ⟧ i ↘ P1]] \and
      [[∀ y. y ∈ P1 → ∃ P2. ⟦ B{x ↦ y} ⟧ i ↘ P2]]}
     %--------------------------------------------------------------------------------%
@@ -1153,7 +1157,7 @@ hold by induction, using properties of parallel reduction as needed.
 However, it is the inversion principle for \rref{I-Pi'} that we want.
 The issue lies in the set of terms of the interpretation:
 if we do not yet know that the sets are unique,
-then inversion on \rref{I-PI} gives \emph{some} interpretation $[[P1]]$ of the codomain,
+then inversion on \rref{I-Pi} gives \emph{some} interpretation $[[P1]]$ of the codomain,
 but we do not know whether it is \emph{the} interpretation that is required.
 We solve this by proving functionality.
 
@@ -1181,6 +1185,7 @@ We solve this by proving functionality.
 Functionality holds even with different universe levels,
 the idea being that the interpretation of a type is independent
 of the level at which it lives.
+We are then finally able to prove the inversion property for \rref{I-Pi'}.
 
 \begin{lemma}[Functionality (l.r.)] \label{lem:lr:func}
   If $[[⟦A⟧ i ↘ P]]$ and $[[⟦A⟧ j ↘ Q]]$, then $[[P]] = [[Q]]$.
@@ -1194,9 +1199,6 @@ of the level at which it lives.
   we use \nameref{lem:lr:cumul} to lift the logical relation at the lower level to the higher level.
   Then the sets are equal by \nameref{lem:lr:fixed-func}.
 \end{proof}
-
-Finally, we are able to prove the inversion property for \rref{I-Pi'},
-which we explicitly state below.
 
 \begin{lemma}[Inversion on function types (l.r.)]$\!\!{\dagger}$ \label{lem:lr:inv-pi}
   If $[[⟦Πx: A. B⟧ i ↘ P]]$,
@@ -1241,7 +1243,8 @@ which we explicitly state below.
   \end{itemize}
 \end{proof}
 
-We also explicitly state here the inversion principle
+Inversion principles for the other types hold as well, omitted here.
+We however explicitly state here the inversion principle
 asserting that types that have interpretations are indeed one of the four types,
 proven by induction on the logical relation.
 
@@ -1281,9 +1284,9 @@ but the admissible rules defined in \cref{fig:sem:subst} are more convenient.
 \begin{figure}
 \begin{mathpar}
   \mprset{fraction={\cdot\cdots\cdot}}
-  \inferrule[\ottdrulename{I-Nil}]{~}{[[s ⊧ •]]}
+  \inferrule*[right=\ottdrulename{I-Nil}]{~}{[[s ⊧ •]]}
   \and
-  \inferrule[\ottdrulename{I-Cons}]
+  \inferrule*[right=\ottdrulename{I-Cons}]
     {[[s ⊧ G]] \and
      [[⟦A{s}⟧ i ↘ P]] \and
      [[a ∈ P]]}
