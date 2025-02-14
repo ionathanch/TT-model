@@ -17,6 +17,9 @@ grammar
 a, b, c, A, B, C, k, l {{ tex \ell }} :: 'tm_' ::= {{ com terms }}
   | x :: :: Var
     {{ com variable }}
+  | ! x :: :: Const
+    {{ com constant }}
+    {{ tex \kw{[[x]]} }}
   | λ x : A . b :: :: Abs
     (+ bind x in b +)
     {{ com function }}
@@ -43,12 +46,15 @@ a, b, c, A, B, C, k, l {{ tex \ell }} :: 'tm_' ::= {{ com terms }}
   | abs' A b :: :: Exf'
     {{ com explicitly annotated ex falso }}
     {{ tex \kw{absurd}_{[[A]]} \gap [[b]] }}
+  | a = b :: :: Eq
+    {{ com equality type }}
+    {{ tex [[a]] = [[b]] }}
   | Type k :: :: Type
     {{ com type universe }}
     {{ tex \kw{U} \gap [[k]] }}
-  | U i :: :: Univ
+  | U k :: :: Univ
     {{ com concrete type universe }}
-    {{ tex \kw{U}_{[[i]]} }}
+    {{ tex \kw{U}_{[[k]]} }}
   | Level< l :: :: Lvl
     {{ com level type }}
     {{ tex \kw{Level}\texttt{<} \gap [[l]] }}
@@ -61,9 +67,24 @@ a, b, c, A, B, C, k, l {{ tex \ell }} :: 'tm_' ::= {{ com terms }}
   | ↑ k :: :: Succ
     {{ com level successor }}
     {{ tex \mathop{\uparrow} [[k]] }}
+  | k ++ :: S :: PlusOne
+    {{ com level meta successor }}
+    {{ tex [[k]] + 1 }}
   | k ⊔ l :: :: Sup
     {{ com level maximum }}
     {{ tex [[k]] \sqcup [[l]] }}
+  | ∀ x . A :: S :: PPi
+    {{ com level polymorphism }}
+    {{ tex \forall [[x]] \mathpunct{.} [[A]] }}
+  | ∀ x < k . A :: S :: BPPi
+    {{ com bounded level polymorphism }}
+    {{ tex \forall [[x]] < [[k]] \mathpunct{.} [[A]] }}
+  | Λ x . a :: S :: PAbs
+    {{ com level abstraction }}
+    {{ tex \Lambda [[x]] \mathpunct{.} [[a]] }}
+  | a [ k ] :: S :: PApp
+    {{ com level application }}
+    {{ tex [[a]] \gap [ [[k]] ]}}
   | wf c :: :: Wf
     {{ com well-founded level induction }}
     {{ tex \kw{wf} \gap [[c]] }}
@@ -73,12 +94,15 @@ a, b, c, A, B, C, k, l {{ tex \ell }} :: 'tm_' ::= {{ com terms }}
   | b { s } :: S :: Substs
     {{ com simultaneous substitution }}
     {{ tex [[b]][ [[s]] ]}}
-  | _ :: M :: Hole
+  | _ :: S :: Hole
     {{ com hole }}
     {{ tex \relax }}
   | ( a ) :: S :: Parens
     {{ com parentheses }}
     {{ tex ([[a]]) }}
+  | (# a #) :: S :: SParens
+    {{ com invisible parentheses }}
+    {{ tex [[a]] }}
   | a ^ T :: M :: Taka
     {{ com Takahashi's complete development }}
     {{ tex [[a]]^{ \mathsf{T} } }}

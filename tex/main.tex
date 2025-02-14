@@ -64,6 +64,7 @@
 \setlength{\abovecaptionskip}{0\baselineskip}
 \setlength{\textfloatsep}{\baselineskip}
 \setlength{\intextsep}{0.25\baselineskip}
+\setlength{\jot}{0\baselineskip}
 
 \hypersetup{
   colorlinks=true,
@@ -138,14 +139,14 @@ Girard showed that the type-in-type axiom makes type theory logically inconsiste
 if the type of a universe is itself, all types are inhabited.
 Therefore, in Martin-L\"of's type theory (MLTT)~\citep{mltt},
 he stratified the universe into a countably infinite hierarchy of universes
-$ \kw{U}_{ 0 }  :  \kw{U}_{ 1 }  :  \kw{U}_{ 2 }  : \dots$
+$ \kw{U}_{  0  }  :  \kw{U}_{  1  }  :  \kw{U}_{  2  }  : \dots$
 indexed by universe levels spanning the naturals.
 Many contemporary proof assistants based on dependent types feature such a hierarchy,
 such as Rocq~\citep{rocq}, Agda~\citep{agda}, Lean~\citep{lean}, and F$^\star$~\citep{fstar}.
 
 Having only a concrete universe hierarchy, however,
 limits reusability of definitions that are not inherently tied to particular universe levels.
-For example, the identity function $\kw{id} :   \Pi  A  \mathbin{:}   \kw{U} \gap  i   \mathpunct{.}  A   \to  \ottnt{A} $
+For example, the identity function $\kw{id} :   \Pi  A  \mathbin{:}   \kw{U}_{ i }   \mathpunct{.}  A   \to  A $
 would need to be redefined for each universe level $\ottmv{i}$ at which it is needed.
 Universe level polymorphism addresses this issue by abstracting over level variables,
 used to index universes alongside concrete levels.
@@ -224,6 +225,121 @@ we discuss some further extensions in \cref{sec:extensions},
 including level operators and subtyping.
 We conclude with future work in \cref{sec:conclusion}.
 
+\section{Motivation}
+
+To motivate the range of features in \lang,
+we look at examples starting from monomorphic universe levels
+and build up to first-class levels and bounding in this section.
+Although not found in our minimal language,
+we additionally use dependent pair types, equality types, and list types
+for more illuminating examples.
+
+Let us start by revisiting the identity function and its type,
+supposing $ \kw{U}_{  0  }  :  \kw{U}_{  1  }  : \dots  \kw{U}_{  \omega  } $,
+with a limit universe at the top,
+which will come in handy later.
+%
+\begin{align*}
+   \kw{ Id }  &:  \kw{U}_{  1  } 
+  & \kw{ id }  &:  \kw{ Id }  \\
+   \kw{ Id }  &\coloneqq   \Pi  A  \mathbin{:}   \kw{U}_{  0  }   \mathpunct{.}  A   \to  A 
+  &  \kw{ id }  &\coloneqq  \lambda  A  \mathbin{:}   \kw{U}_{  0  }   \mathpunct{.}   \lambda  x  \mathbin{:}  A  \mathpunct{.}  x  
+\end{align*}
+
+This identity function is polymorphic over types in $ \kw{U}_{  0  } $,
+but not over universes, so the self application
+$   \kw{ id }   \gap   \kw{ Id }    \gap   \kw{ id }  $ is ill typed.
+More generally, if we want to reuse a definition at different universe levels,
+it would need to be redefined for every level needed.
+If we introduce prenex polymorphism of universe levels,
+where top-level definitions are permitted to be polymorphic,
+we can write a universe polymorphic identity function
+that can be instantiated at different levels and self-applied.
+%
+\begin{align*}
+   \kw{ Id }  &:  \forall  i  \mathpunct{.}   \kw{U}_{   i  + 1   }  
+  & \kw{ id }  &:   \forall  i  \mathpunct{.}   \kw{ Id }    \gap [  i  ]  \\
+   \kw{ Id }  &\coloneqq   \Lambda  i  \mathpunct{.}   \Pi  A  \mathbin{:}   \kw{U}_{ i }   \mathpunct{.}  A    \to  A 
+  & \kw{ id }  &\coloneqq  \Lambda  i  \mathpunct{.}   \lambda  A  \mathbin{:}   \kw{U}_{ i }   \mathpunct{.}   \lambda  x  \mathbin{:}  A  \mathpunct{.}  x   
+\end{align*}
+
+Now, the expression $    \kw{ id }   \gap [   1   ]   \gap   (   \kw{ Id }   \gap [   0   ]  )    \gap   (   \kw{ id }   \gap [   0   ]  )  $ is well typed.
+A definition can also be polymorphic over multiple levels,
+such as the constant function that takes two arguments but always returns the first.
+For this, we need a binary least upper bound operator $  \relax   \sqcup   \relax  $ on levels.
+%
+\begin{align*}
+   \kw{ Const }  &:  \forall  i  \mathpunct{.}   \forall  j  \mathpunct{.}   \kw{U}_{    (  i  \sqcup  j  )   + 1   }   
+  & \kw{ const }  &:    \forall  i  \mathpunct{.}   \forall  j  \mathpunct{.}   \kw{ Const }     \gap [  i  ]   \gap [  j  ]  \\
+   \kw{ Const }  &\coloneqq    \Lambda  i  \mathpunct{.}   \Lambda  j  \mathpunct{.}   \Pi  A  \mathbin{:}   \kw{U}_{ i }   \mathpunct{.}   \Pi  B  \mathbin{:}   \kw{U}_{ j }   \mathpunct{.}  A      \to  B   \to  A 
+  & \kw{ const }  &\coloneqq  \Lambda  i  \mathpunct{.}   \Lambda  j  \mathpunct{.}   \lambda  A  \mathpunct{.}   \lambda  B  \mathpunct{.}   \lambda  x  \mathpunct{.}   \lambda  y  \mathpunct{.}  x      
+\end{align*}
+
+The universe in which $   \kw{ Const }   \gap [   \ottmv{i}   ]   \gap [   \ottmv{j}   ] $ lives is $  (   \ottmv{i}   \sqcup   \ottmv{j}   )   + 1 $,
+because its universe must contain the universes
+$ \kw{U}_{  \ottmv{i}  } $ and $ \kw{U}_{  \ottmv{j}  } $ over which it quantifies.
+As more level variables get involved,
+the algebraic expressions on levels becomes increasingly complex.
+But the precise universe in which $ \kw{ Const } $ lives is not as important
+as knowing that it lives in \emph{some} greater universe,
+which is all that is needed to prevent type-in-type inconsistencies.
+This is expressed by bounded level quantification,
+simplifying level expressions at the cost of an additional level variable.
+%
+\begin{align*}
+   \kw{ Const }  &:  \forall  k  <   \omega   \mathpunct{.}   \forall  i  <  k  \mathpunct{.}   \forall  j  <  k  \mathpunct{.}   \kw{U}_{ k }     \\
+   \kw{ Const }  &\coloneqq    \Lambda  k  \mathpunct{.}   \Lambda  i  \mathpunct{.}   \Lambda  j  \mathpunct{.}   \Pi  A  \mathbin{:}   \kw{U}_{ i }   \mathpunct{.}   \Pi  B  \mathbin{:}   \kw{U}_{ j }   \mathpunct{.}  A       \to  B   \to  A 
+\end{align*}
+
+Generalizing from prenex level polymorphism to higher-rank level polymorphism affords even more reusability.
+One application is assuming level-polymorphic axioms,
+such as function extensionality,
+explicitly as hypotheses instead of globally axiomatizing them.
+%
+\begin{align*}
+   \kw{ FunExt }  &:  \forall  k  <   \omega   \mathpunct{.}   \forall  i  <  k  \mathpunct{.}   \forall  j  <  k  \mathpunct{.}   \kw{U}_{ k }     \\
+   \kw{ FunExt }  &\coloneqq  \Lambda  k  \mathpunct{.}   \Lambda  i  \mathpunct{.}   \Lambda  j  \mathpunct{.}   \Pi  A  \mathbin{:}   \kw{U}_{ i }   \mathpunct{.}   \Pi  B  \mathbin{:}   (  A  \to   \kw{U}_{ j }   )   \mathpunct{.}   \relax       \\
+  &\phantom{{} \coloneqq {}}   \Pi  f  \mathbin{:}   (   \Pi  x  \mathbin{:}  A  \mathpunct{.}  B   \gap  x  )   \mathpunct{.}   \Pi  g  \mathbin{:}   (   \Pi  x  \mathbin{:}  A  \mathpunct{.}  B   \gap  x  )   \mathpunct{.}   (     \Pi  x  \mathbin{:}  A  \mathpunct{.}  f   \gap  x   =  g   \gap  x  )     \to    \ottmv{f}  =  \ottmv{g}   
+\end{align*}
+
+Suppose we wished to prove that function extensionality for
+functions with two arguments at different universe levels follows from $ \kw{ FunExt } $.
+Using only prenex polymorphism, we would need two separate instantiations,
+once for its application to the functions of type $ \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}     \ottnt{B}  \gap  \ottmv{x}   \to  \ottnt{C}   \gap  \ottmv{x}  $,
+and once for its application to the functions of type $   \ottnt{B}  \gap  \ottmv{x}   \to  \ottnt{C}   \gap  \ottmv{x} $.
+%
+\begin{align*}
+   \kw{ FunExt2 }  &:    \forall  l  <   \omega   \mathpunct{.}   \forall  i  <  l  \mathpunct{.}   \forall  j  <  l  \mathpunct{.}   \forall  k  <  l  \mathpunct{.}   (     \kw{ FunExt }   \gap [  l  ]   \gap [  i  ]   \gap [   j  \sqcup  k   ]  )       \to   (     \kw{ Funext }   \gap [  l  ]   \gap [  j  ]   \gap [  k  ]  )    \to   \relax   \\
+  &\phantom{{} : {}}  \Pi  A  \mathbin{:}   \kw{U}_{ i }   \mathpunct{.}   \Pi  B  \mathbin{:}   (  A  \to   \kw{U}_{ j }   )   \mathpunct{.}   \Pi  C  \mathbin{:}   (  A  \to   \kw{U}_{ k }   )   \mathpunct{.}   \relax     \\
+  &\phantom{{} : {}}  \Pi  f  \mathbin{:}   (     \Pi  x  \mathbin{:}  A  \mathpunct{.}  B   \gap  x   \to  C   \gap  x  )   \mathpunct{.}   \Pi  g  \mathbin{:}   (     \Pi  x  \mathbin{:}  A  \mathpunct{.}  B   \gap  x   \to  C   \gap  x  )   \mathpunct{.}   \relax    \\
+  &\phantom{{} : {}}   (       \Pi  x  \mathbin{:}  A  \mathpunct{.}   \Pi  y  \mathbin{:}   B  \gap  x   \mathpunct{.}  f    \gap  x   \gap  y   =  g   \gap  x   \gap  y  )   \to    \ottmv{f}  =  \ottmv{g}   
+\end{align*}
+
+Once more universe levels get involved,
+instantiating up front every possible use becomes unwieldy.
+With higher-rank polymorphism,
+we can quantify over a polymorphic function extensionality principle once and for all,
+and instantiate its levels within the proof as needed.
+%
+\begin{align*}
+   \kw{ FunExt2 }  &:   (     \forall  k  <   \omega   \mathpunct{.}   \forall  i  <  k  \mathpunct{.}   \forall  j  <  k  \mathpunct{.}   \kw{ FunExt }      \gap [  i  ]   \gap [  j  ]   \gap [  k  ]  )   \to   \relax   \\
+  &\phantom{{} : {}}  \forall  l  <   \omega   \mathpunct{.}   \forall  i  <  l  \mathpunct{.}   \forall  j  <  l  \mathpunct{.}   \forall  k  <  l  \mathpunct{.}   \Pi  A  \mathbin{:}   \kw{U}_{ i }   \mathpunct{.}   \Pi  B  \mathbin{:}   (  A  \to   \kw{U}_{ j }   )   \mathpunct{.}   \Pi  C  \mathbin{:}   (  A  \to   \kw{U}_{ k }   )   \mathpunct{.}   \relax         \\
+  &\phantom{{} : {}}  \Pi  f  \mathbin{:}   (     \Pi  x  \mathbin{:}  A  \mathpunct{.}  B   \gap  x   \to  C   \gap  x  )   \mathpunct{.}   \Pi  g  \mathbin{:}   (     \Pi  x  \mathbin{:}  A  \mathpunct{.}  B   \gap  x   \to  C   \gap  x  )   \mathpunct{.}   \relax    \\
+  &\phantom{{} : {}}   (       \Pi  x  \mathbin{:}  A  \mathpunct{.}   \Pi  y  \mathbin{:}   B  \gap  x   \mathpunct{.}  f    \gap  x   \gap  y   =  g   \gap  x   \gap  y  )   \to    \ottmv{f}  =  \ottmv{g}   
+\end{align*}
+
+With higher-rank level polymorphism,
+a level-polymorphic type itself must live in some universe,
+which is often that of the bounding level.
+Coming back to the identity function,
+we can define its type as a bounded level quantification,
+and use the bound for the universe.
+%
+\begin{align*}
+   \kw{ Id }  &:  \kw{U}_{  \omega  }  \\
+   \kw{ Id }  &\coloneqq   \forall  i  <   \omega   \mathpunct{.}   \Pi  A  \mathbin{:}   \kw{U}_{ i }   \mathpunct{.}  A    \to  A 
+\end{align*}
+
 \section{Overview}
 
 To see where bounded first-class universe levels situates itself among existing work,
@@ -259,7 +375,7 @@ id ℓ A a = a
   \end{minipage}
   \\
   \midrule
-  \lang & $\kw{id} :   \Pi  k  \mathbin{:}   \kw{Level}\texttt{<} \gap   \omega    \mathpunct{.}   \Pi  A  \mathbin{:}   \kw{U} \gap  k   \mathpunct{.}  A    \to  \ottnt{A}  \coloneq  \lambda  k  \mathpunct{.}   \lambda  A  \mathpunct{.}   \lambda  a  \mathpunct{.}  a   $
+  \lang & $\kw{id} :   \Pi  k  \mathbin{:}   \kw{Level}\texttt{<} \gap   \omega    \mathpunct{.}   \Pi  A  \mathbin{:}   \kw{U} \gap  k   \mathpunct{.}  A    \to  A  \coloneq  \lambda  k  \mathpunct{.}   \lambda  A  \mathpunct{.}   \lambda  a  \mathpunct{.}  a   $
 \end{tabular}
 \end{table}
 
@@ -305,7 +421,7 @@ Id = ∀ (ℓ : Level) (A : Set ℓ) → A → A
   \end{minipage}
   \\
   \midrule
-  \lang & $\kw{Id} :  \kw{U} \gap   \omega   \coloneq   \Pi  k  \mathbin{:}   \kw{Level}\texttt{<} \gap   \omega    \mathpunct{.}   \Pi  A  \mathbin{:}   \kw{U} \gap  k   \mathpunct{.}  A    \to  \ottnt{A} $
+  \lang & $\kw{Id} :  \kw{U} \gap   \omega   \coloneq   \Pi  k  \mathbin{:}   \kw{Level}\texttt{<} \gap   \omega    \mathpunct{.}   \Pi  A  \mathbin{:}   \kw{U} \gap  k   \mathpunct{.}  A    \to  A $
 \end{tabular}
 \end{table}
 
@@ -363,7 +479,7 @@ Const ℓ₁ ℓ₂ = ∀ (A : Set ℓ₁) (B : Set ℓ₂) → A → B → A
   \lang &
   \begin{minipage}[t]{0.83\textwidth}
   $\kw{Const} :  \Pi  l  \mathbin{:}   \kw{Level}\texttt{<} \gap   \omega    \mathpunct{.}   \Pi  j  \mathbin{:}   \kw{Level}\texttt{<} \gap  l   \mathpunct{.}   \Pi  k  \mathbin{:}   \kw{Level}\texttt{<} \gap  l   \mathpunct{.}   \kw{U} \gap  l    $ \\
-  \phantom{$\kw{Const}$} $\coloneq    \lambda  l  \mathpunct{.}   \lambda  j  \mathpunct{.}   \lambda  k  \mathpunct{.}   \Pi  A  \mathbin{:}   \kw{U} \gap  j   \mathpunct{.}   \Pi  B  \mathbin{:}   \kw{U} \gap  k   \mathpunct{.}  A       \to  \ottnt{B}   \to  \ottnt{A} $
+  \phantom{$\kw{Const}$} $\coloneq    \lambda  l  \mathpunct{.}   \lambda  j  \mathpunct{.}   \lambda  k  \mathpunct{.}   \Pi  A  \mathbin{:}   \kw{U} \gap  j   \mathpunct{.}   \Pi  B  \mathbin{:}   \kw{U} \gap  k   \mathpunct{.}  A       \to  B   \to  A $
   \end{minipage}
 \end{tabular}
 \end{table}
@@ -1044,10 +1160,10 @@ without worrying about well-foundedness.
   \and
   \inferrule[\ottdrulename{I-Pi}]
     { \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{1}}}}  \and
-       \forall  \ottmv{y}  \mathpunct{.}   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}    \to   \exists  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )    \\\\
+        \forall  \ottmv{y}  \mathpunct{.}  \ottmv{y}   \in  \ottnt{P_{{\mathrm{1}}}}   \to   \exists  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )    \\\\
        \forall  \ottmv{y}  \mathpunct{.}   \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )     \to   \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}  }
     %-------------------------------------------------------------------%
-    { \mathopen{\llbracket}   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \lbrace  \ottmv{f}  \mid   \forall  \ottmv{y}  \mathpunct{.}    \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}    \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )   \to   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}     \to    \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}     \rbrace  }
+    { \mathopen{\llbracket}   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \lbrace  \ottmv{f}  \mid   \forall  \ottmv{y}  \mathpunct{.}     \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )    \to   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}    \to    \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}     \rbrace  }
 \end{mathpar}
 \caption{Logical relation for closed types}
 \label{fig:lr:closed}
@@ -1085,9 +1201,9 @@ It then sounds like we would want \rref{I-Pi'} below.
 \begin{mathpar}
   \inferrule*[right=\ottdrulename{I-Pi'}]
     { \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{1}}}}  \and
-       \forall  \ottmv{y}  \mathpunct{.}   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}    \to   \exists  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}   }
+        \forall  \ottmv{y}  \mathpunct{.}  \ottmv{y}   \in  \ottnt{P_{{\mathrm{1}}}}   \to   \exists  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}   }
     %--------------------------------------------------------------------------------%
-    { \mathopen{\llbracket}   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \lbrace  \ottmv{f}  \mid   \forall  \ottmv{y}  \mathpunct{.}    \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}    (  \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}  )   \to   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}     \to    \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}     \rbrace  }
+    { \mathopen{\llbracket}   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \lbrace  \ottmv{f}  \mid   \forall  \ottmv{y}  \mathpunct{.}     \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   (  \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}  )    \to   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}    \to    \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}     \rbrace  }
 \end{mathpar}
 
 The problem is that the interpretation is not strictly positive in the conclusion,
@@ -1207,8 +1323,8 @@ We are then finally able to prove the inversion property for \rref{I-Pi'}.
   then there exists a $\ottnt{P_{{\mathrm{1}}}}$ such that:
   \begin{enumerate}[topsep=0pt]
     \item \label{lem:inv-pi:goal:A} $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{1}}}} $;
-    \item \label{lem:inv-pi:goal:B} $  \forall  \ottmv{y}  \mathpunct{.}   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}    \to   \exists  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}   $; and
-    \item \label{lem:inv-pi:goal:P} $\ottnt{P} =  \lbrace  \ottmv{f}  \mid   \forall  \ottmv{y}  \mathpunct{.}    \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}    (  \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}  )   \to   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}     \to    \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}     \rbrace $.
+    \item \label{lem:inv-pi:goal:B} $   \forall  \ottmv{y}  \mathpunct{.}  \ottmv{y}   \in  \ottnt{P_{{\mathrm{1}}}}   \to   \exists  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}   $; and
+    \item \label{lem:inv-pi:goal:P} $\ottnt{P} =  \lbrace  \ottmv{f}  \mid   \forall  \ottmv{y}  \mathpunct{.}     \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   (  \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}  )    \to   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}    \to    \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}     \rbrace $.
   \end{enumerate}
 \end{lemma}
 
@@ -1217,9 +1333,9 @@ We are then finally able to prove the inversion property for \rref{I-Pi'}.
   which gives $\ottnt{P_{{\mathrm{1}}}}$ and $\ottnt{R}$ such that:
   \begin{enumerate}[topsep=0pt,start=4]
     \item \label{lem:inv-pi:hyp:A} $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{1}}}} $;
-    \item \label{lem:inv-pi:hyp:R} $  \forall  \ottmv{y}  \mathpunct{.}   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}    \to   \exists  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )   $;
+    \item \label{lem:inv-pi:hyp:R} $   \forall  \ottmv{y}  \mathpunct{.}  \ottmv{y}   \in  \ottnt{P_{{\mathrm{1}}}}   \to   \exists  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )   $;
     \item \label{lem:inv-pi:hyp:B} $  \forall  \ottmv{y}  \mathpunct{.}   \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )     \to   \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}  $; and
-    \item \label{lem:inv-pi:hyp:P} $\ottnt{P} =  \lbrace  \ottmv{f}  \mid   \forall  \ottmv{y}  \mathpunct{.}    \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}    \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )   \to   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}     \to    \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}     \rbrace $.
+    \item \label{lem:inv-pi:hyp:P} $\ottnt{P} =  \lbrace  \ottmv{f}  \mid   \forall  \ottmv{y}  \mathpunct{.}     \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )    \to   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}    \to    \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}     \rbrace $.
   \end{enumerate}
   \ref{lem:inv-pi:goal:A} holds directly by \ref{lem:inv-pi:hyp:A},
   and \ref{lem:inv-pi:goal:B} holds by combining \ref{lem:inv-pi:hyp:R} and \ref{lem:inv-pi:hyp:B}.

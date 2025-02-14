@@ -64,6 +64,7 @@
 \setlength{\abovecaptionskip}{0\baselineskip}
 \setlength{\textfloatsep}{\baselineskip}
 \setlength{\intextsep}{0.25\baselineskip}
+\setlength{\jot}{0\baselineskip}
 
 \hypersetup{
   colorlinks=true,
@@ -145,7 +146,7 @@ such as Rocq~\citep{rocq}, Agda~\citep{agda}, Lean~\citep{lean}, and F$^\star$~\
 
 Having only a concrete universe hierarchy, however,
 limits reusability of definitions that are not inherently tied to particular universe levels.
-For example, the identity function $\kw{id} : [[:concrete: ΠA: Type i. A → A]]$
+For example, the identity function $\kw{id} : [[:concrete: ΠA: U i. A → A]]$
 would need to be redefined for each universe level $[[i]]$ at which it is needed.
 Universe level polymorphism addresses this issue by abstracting over level variables,
 used to index universes alongside concrete levels.
@@ -223,6 +224,121 @@ As our system is intentionally very minimal,
 we discuss some further extensions in \cref{sec:extensions},
 including level operators and subtyping.
 We conclude with future work in \cref{sec:conclusion}.
+
+\section{Motivation}
+
+To motivate the range of features in \lang,
+we look at examples starting from monomorphic universe levels
+and build up to first-class levels and bounding in this section.
+Although not found in our minimal language,
+we additionally use dependent pair types, equality types, and list types
+for more illuminating examples.
+
+Let us start by revisiting the identity function and its type,
+supposing $[[U 0]] : [[U 1]] : \dots [[U o]]$,
+with a limit universe at the top,
+which will come in handy later.
+%
+\begin{align*}
+  [[!Id]] &: [[U 1]]
+  &[[!id]] &: [[!Id]] \\
+  [[!Id]] &\coloneqq [[:concrete: ΠA : U 0. A → A]]
+  & [[!id]] &\coloneqq [[:concrete: λA : U 0. λx : A. x]]
+\end{align*}
+
+This identity function is polymorphic over types in $[[U 0]]$,
+but not over universes, so the self application
+$[[!id !Id !id]]$ is ill typed.
+More generally, if we want to reuse a definition at different universe levels,
+it would need to be redefined for every level needed.
+If we introduce prenex polymorphism of universe levels,
+where top-level definitions are permitted to be polymorphic,
+we can write a universe polymorphic identity function
+that can be instantiated at different levels and self-applied.
+%
+\begin{align*}
+  [[!Id]] &: [[:concrete: ∀i. U (# i++ #)]]
+  &[[!id]] &: [[:concrete: ∀i. !Id [i] ]] \\
+  [[!Id]] &\coloneqq [[:concrete: Λi. ΠA : U i. A → A]]
+  &[[!id]] &\coloneqq [[:concrete: Λi. λA : U i. λx : A. x]]
+\end{align*}
+
+Now, the expression $[[!id [1] (!Id [0]) (!id [0])]]$ is well typed.
+A definition can also be polymorphic over multiple levels,
+such as the constant function that takes two arguments but always returns the first.
+For this, we need a binary least upper bound operator $[[_ ⊔ _]]$ on levels.
+%
+\begin{align*}
+  [[!Const]] &: [[:concrete: ∀i. ∀j. U (# (i ⊔ j)++ #)]]
+  &[[!const]] &: [[:concrete: ∀i. ∀j. !Const [i] [j] ]] \\
+  [[!Const]] &\coloneqq [[:concrete: Λi. Λj. ΠA : U i. ΠB : U j. A → B → A]]
+  &[[!const]] &\coloneqq [[:concrete: Λi. Λj. λA. λB. λx. λy. x]]
+\end{align*}
+
+The universe in which $[[!Const [i] [j] ]]$ lives is $[[(i ⊔ j)++]]$,
+because its universe must contain the universes
+$[[U i]]$ and $[[U j]]$ over which it quantifies.
+As more level variables get involved,
+the algebraic expressions on levels becomes increasingly complex.
+But the precise universe in which $[[!Const]]$ lives is not as important
+as knowing that it lives in \emph{some} greater universe,
+which is all that is needed to prevent type-in-type inconsistencies.
+This is expressed by bounded level quantification,
+simplifying level expressions at the cost of an additional level variable.
+%
+\begin{align*}
+  [[!Const]] &: [[:concrete: ∀k < o. ∀i < k. ∀j < k. U k]] \\
+  [[!Const]] &\coloneqq [[:concrete: Λk. Λi. Λj. ΠA : U i. Π B : U j. A → B → A]]
+\end{align*}
+
+Generalizing from prenex level polymorphism to higher-rank level polymorphism affords even more reusability.
+One application is assuming level-polymorphic axioms,
+such as function extensionality,
+explicitly as hypotheses instead of globally axiomatizing them.
+%
+\begin{align*}
+  [[!FunExt]] &: [[:concrete: ∀k < o. ∀i < k. ∀j < k. U k]] \\
+  [[!FunExt]] &\coloneqq [[:concrete: Λk. Λi. Λj. ΠA : U i. Π B : (A → U j). _]] \\
+  &\phantom{{} \coloneqq {}} [[:concrete: Πf : (Πx : A. B x). Πg : (Πx : A. B x). (Πx : A. f x = g x) → (# f = g #)]]
+\end{align*}
+
+Suppose we wished to prove that function extensionality for
+functions with two arguments at different universe levels follows from $[[!FunExt]]$.
+Using only prenex polymorphism, we would need two separate instantiations,
+once for its application to the functions of type $[[Πx : A. B x → C x]]$,
+and once for its application to the functions of type $[[B x → C x]]$.
+%
+\begin{align*}
+  [[!FunExt2]] &: [[:concrete: ∀l < o. ∀i < l. ∀j < l. ∀k < l. (!FunExt [l] [i] [j ⊔ k]) → (!Funext [l] [j] [k]) → _]] \\
+  &\phantom{{} : {}} [[:concrete: ΠA : U i. ΠB : (A → U j). ΠC : (A → U k). _]] \\
+  &\phantom{{} : {}} [[:concrete: Πf : (Πx : A. B x → C x). Πg : (Πx : A. B x → C x). _]] \\
+  &\phantom{{} : {}} [[:concrete: (Πx : A. Πy : B x. f x y = g x y) → (# f = g #)]]
+\end{align*}
+
+Once more universe levels get involved,
+instantiating up front every possible use becomes unwieldy.
+With higher-rank polymorphism,
+we can quantify over a polymorphic function extensionality principle once and for all,
+and instantiate its levels within the proof as needed.
+%
+\begin{align*}
+  [[!FunExt2]] &: [[:concrete: (∀k < o. ∀i < k. ∀j < k. !FunExt [i] [j] [k]) → _]] \\
+  &\phantom{{} : {}} [[:concrete: ∀l < o. ∀i < l. ∀j < l. ∀k < l. ΠA : U i. ΠB : (A → U j). ΠC : (A → U k). _]] \\
+  &\phantom{{} : {}} [[:concrete: Πf : (Πx : A. B x → C x). Πg : (Πx : A. B x → C x). _]] \\
+  &\phantom{{} : {}} [[:concrete: (Πx : A. Πy : B x. f x y = g x y) → (# f = g #)]]
+\end{align*}
+
+With higher-rank level polymorphism,
+a level-polymorphic type itself must live in some universe,
+which is often that of the bounding level.
+Coming back to the identity function,
+we can define its type as a bounded level quantification,
+and use the bound for the universe.
+%
+\begin{align*}
+  [[!Id]] &: [[U o]] \\
+  [[!Id]] &\coloneqq [[:concrete: ∀i < o. ΠA : U i. A → A]]
+\end{align*}
 
 \section{Overview}
 
