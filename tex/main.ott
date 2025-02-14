@@ -37,12 +37,25 @@ a, b, c, A, B, C, k, l {{ tex \ell }} :: 'tm_' ::= {{ com terms }}
   | b a :: :: App
     {{ com function application }}
     {{ tex [[b]] \gap [[a]] }}
+  | Σ x : A . B :: :: Sigma
+    (+ bind x in B +)
+    {{ com pair type }}
+    {{ tex \Sigma [[x]] \mathbin{:} [[A]] \mathpunct{.} [[B]] }}
+  | A × B :: S :: Product
+    {{ com nondependent pair type }}
+    {{ tex [[A]] \times [[B]] }}
+  | a , b :: :: Pair
+    {{ com pair }}
+    {{ tex [[a]] , [[b]] }}
   | ⊥ :: :: Mty
     {{ com empty type }}
     {{ tex \bot }}
   | abs b :: S :: Exf
     {{ com ex falso quodlibet }}
     {{ tex \kw{absurd} \gap [[b]] }}
+  | ⊤ :: :: Unit
+    {{ com unit type }}
+    {{ tex \top }}
   | abs' A b :: :: Exf'
     {{ com explicitly annotated ex falso }}
     {{ tex \kw{absurd}_{[[A]]} \gap [[b]] }}

@@ -340,6 +340,44 @@ and use the bound for the universe.
   [[!Id]] &\coloneqq [[:concrete: ∀i < o. ΠA : U i. A → A]]
 \end{align*}
 
+So far, our notions of level polymorphism treat levels as syntactically separate from terms,
+with special level operators $\cdot [[_ ++]]$ and $\cdot [[_ ⊔ _]] \cdot$.
+Consequently, if we want more general ways to compute level expressions,
+we must add them as primitives to the language.
+If we instead make levels first class,
+we are then able to manipulate and store them as terms.
+Bounded level quantifications are subsumed by ordinary dependent types
+whose domain is the type of all levels bounded by some strictly greater level $[[Level< k]]$.
+An example application is computing the least upper bound level
+from a list of levels and types of that level.
+%
+\begin{align*}
+  [[!lub]] &: [[:concrete: !List (Σi : Level< o. Type i) → Level< o]] \\
+  [[!lub]] &\gap [[!nil]] \coloneqq 0 \\
+  [[!lub]] &\gap [[(!cons (i, A) As)]] \coloneqq [[i ⊔ (!lub As)]]
+\end{align*}
+
+This level computation can be used to turn a list of types and their levels
+into an n-ary tuple with a precise level.
+This is a technique used, for instance, by Escot and Cockx in generic programming
+to represent level-polymorphic inductive types~\citep{generic}.
+%
+\begin{align*}
+  [[!Interp]] &: [[:concrete: ΠAs : !List (Σi : Level< o. Type i). Type (!lub As)]] \\
+  [[!Interp]] &\gap [[!nil]] \coloneqq [[⊤]] \\
+  [[!Interp]] &\gap [[(!cons (i, A) As)]] \coloneqq [[A × (!Interp As)]]
+\end{align*}
+
+Various proof assistants with universe level polymorphism implement different subsets of these features.
+Lean and F$^\star$ have prenex polymorphism with successor and least upper bound operators.
+Rocq has prenex polymorphism along with level (in)equality declarations,
+but no other operators.
+Agda has first-class levels and the two level operator, but no level constraints.
+In \lang, we include bounded first-class levels,
+but omit the two level operators for simplicity,
+opting to treat them as straightforward potential extensions.
+
+\iffalse
 \section{Overview}
 
 To see where bounded first-class universe levels situates itself among existing work,
@@ -531,6 +569,7 @@ which we discuss as an extension in \cref{sec:subtyping}.
 \caption{Comparison of proof assistants and universe level features}
 \label{tab:comparison}
 \end{table}
+\fi
 
 \section{A minimal type theory with bounded first-class universe levels} \label{sec:ttbfl}
 
@@ -1150,7 +1189,7 @@ without worrying about well-foundedness.
   {[[⟦ Type j ⟧ i ↘ {z | ∃ P. ⟦ z ⟧ j ↘ P}]]}
   \and
   \inferrule[\ottdrulename{I-Level<}]{~}
-    {[[⟦ Level< j1 ⟧ i ↘ {z | ∃ j2. z ⇒* j2 ∧ j1 < j2}]]}
+    {[[⟦ Level< j1 ⟧ i ↘ {z | ∃ j2. z ⇒* j2 ∧ j2 < j1}]]}
   \and
   \inferrule[\ottdrulename{I-Step}]
     {[[A ⇒ B]] \and

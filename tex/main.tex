@@ -340,6 +340,44 @@ and use the bound for the universe.
    \kw{ Id }  &\coloneqq   \forall  i  <   \omega   \mathpunct{.}   \Pi  A  \mathbin{:}   \kw{U}_{ i }   \mathpunct{.}  A    \to  A 
 \end{align*}
 
+So far, our notions of level polymorphism treat levels as syntactically separate from terms,
+with special level operators $\cdot   \relax   + 1 $ and $\cdot   \relax   \sqcup   \relax   \cdot$.
+Consequently, if we want more general ways to compute level expressions,
+we must add them as primitives to the language.
+If we instead make levels first class,
+we are then able to manipulate and store them as terms.
+Bounded level quantifications are subsumed by ordinary dependent types
+whose domain is the type of all levels bounded by some strictly greater level $ \kw{Level}\texttt{<} \gap  \ottnt{k} $.
+An example application is computing the least upper bound level
+from a list of levels and types of that level.
+%
+\begin{align*}
+   \kw{ lub }  &:    \kw{ List }   \gap   (  \Sigma  i  \mathbin{:}   \kw{Level}\texttt{<} \gap   \omega    \mathpunct{.}   \kw{U} \gap  i   )    \to   \kw{Level}\texttt{<} \gap   \omega    \\
+   \kw{ lub }  &\gap  \kw{ nil }  \coloneqq 0 \\
+   \kw{ lub }  &\gap  (    \kw{ cons }   \gap   (   \ottmv{i}   ,  \ottnt{A}  )    \gap  As  )  \coloneqq   \ottmv{i}   \sqcup   (   \kw{ lub }   \gap  As  )  
+\end{align*}
+
+This level computation can be used to turn a list of types and their levels
+into an n-ary tuple with a precise level.
+This is a technique used, for instance, by Escot and Cockx in generic programming
+to represent level-polymorphic inductive types~\citep{generic}.
+%
+\begin{align*}
+   \kw{ Interp }  &:  \Pi  As  \mathbin{:}    \kw{ List }   \gap   (  \Sigma  i  \mathbin{:}   \kw{Level}\texttt{<} \gap   \omega    \mathpunct{.}   \kw{U} \gap  i   )    \mathpunct{.}   \kw{U} \gap   (   \kw{ lub }   \gap  As  )    \\
+   \kw{ Interp }  &\gap  \kw{ nil }  \coloneqq  \top  \\
+   \kw{ Interp }  &\gap  (    \kw{ cons }   \gap   (   \ottmv{i}   ,  \ottnt{A}  )    \gap  As  )  \coloneqq  \ottnt{A}  \times   (   \kw{ Interp }   \gap  As  )  
+\end{align*}
+
+Various proof assistants with universe level polymorphism implement different subsets of these features.
+Lean and F$^\star$ have prenex polymorphism with successor and least upper bound operators.
+Rocq has prenex polymorphism along with level (in)equality declarations,
+but no other operators.
+Agda has first-class levels and the two level operator, but no level constraints.
+In \lang, we include bounded first-class levels,
+but omit the two level operators for simplicity,
+opting to treat them as straightforward potential extensions.
+
+\iffalse
 \section{Overview}
 
 To see where bounded first-class universe levels situates itself among existing work,
@@ -531,6 +569,7 @@ which we discuss as an extension in \cref{sec:subtyping}.
 \caption{Comparison of proof assistants and universe level features}
 \label{tab:comparison}
 \end{table}
+\fi
 
 \section{A minimal type theory with bounded first-class universe levels} \label{sec:ttbfl}
 
@@ -1150,7 +1189,7 @@ without worrying about well-foundedness.
   { \mathopen{\llbracket}   \kw{U} \gap   \ottmv{j}    \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \lbrace  \ottmv{z}  \mid   \exists  \ottnt{P}  \mathpunct{.}   \mathopen{\llbracket}  \ottmv{z}  \mathclose{\rrbracket}_{ \ottmv{j} } \searrow  \ottnt{P}    \rbrace  }
   \and
   \inferrule[\ottdrulename{I-Level<}]{~}
-    { \mathopen{\llbracket}   \kw{Level}\texttt{<} \gap   \ottmv{j_{{\mathrm{1}}}}    \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \lbrace  \ottmv{z}  \mid   \exists  \ottmv{j_{{\mathrm{2}}}}  \mathpunct{.}    \ottmv{z}  \Rightarrow^\ast   \ottmv{j_{{\mathrm{2}}}}    \wedge   \ottmv{j_{{\mathrm{1}}}}  <  \ottmv{j_{{\mathrm{2}}}}     \rbrace  }
+    { \mathopen{\llbracket}   \kw{Level}\texttt{<} \gap   \ottmv{j_{{\mathrm{1}}}}    \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \lbrace  \ottmv{z}  \mid   \exists  \ottmv{j_{{\mathrm{2}}}}  \mathpunct{.}    \ottmv{z}  \Rightarrow^\ast   \ottmv{j_{{\mathrm{2}}}}    \wedge   \ottmv{j_{{\mathrm{2}}}}  <  \ottmv{j_{{\mathrm{1}}}}     \rbrace  }
   \and
   \inferrule[\ottdrulename{I-Step}]
     { \ottnt{A}  \Rightarrow  \ottnt{B}  \and
@@ -1163,7 +1202,7 @@ without worrying about well-foundedness.
         \forall  \ottmv{y}  \mathpunct{.}  \ottmv{y}   \in  \ottnt{P_{{\mathrm{1}}}}   \to   \exists  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )    \\\\
        \forall  \ottmv{y}  \mathpunct{.}   \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )     \to   \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}  }
     %-------------------------------------------------------------------%
-    { \mathopen{\llbracket}   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \lbrace  \ottmv{f}  \mid   \forall  \ottmv{y}  \mathpunct{.}     \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )    \to   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}    \to    \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}     \rbrace  }
+    { \mathopen{\llbracket}   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \lbrace  \ottmv{f}  \mid    \forall  \ottmv{y}  \mathpunct{.}   \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )     \to    \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}   \to    \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}     \rbrace  }
 \end{mathpar}
 \caption{Logical relation for closed types}
 \label{fig:lr:closed}
@@ -1335,7 +1374,7 @@ We are then finally able to prove the inversion property for \rref{I-Pi'}.
     \item \label{lem:inv-pi:hyp:A} $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{1}}}} $;
     \item \label{lem:inv-pi:hyp:R} $   \forall  \ottmv{y}  \mathpunct{.}  \ottmv{y}   \in  \ottnt{P_{{\mathrm{1}}}}   \to   \exists  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )   $;
     \item \label{lem:inv-pi:hyp:B} $  \forall  \ottmv{y}  \mathpunct{.}   \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )     \to   \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}  $; and
-    \item \label{lem:inv-pi:hyp:P} $\ottnt{P} =  \lbrace  \ottmv{f}  \mid   \forall  \ottmv{y}  \mathpunct{.}     \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )    \to   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}    \to    \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}     \rbrace $.
+    \item \label{lem:inv-pi:hyp:P} $\ottnt{P} =  \lbrace  \ottmv{f}  \mid    \forall  \ottmv{y}  \mathpunct{.}   \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )     \to    \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}   \to    \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}     \rbrace $.
   \end{enumerate}
   \ref{lem:inv-pi:goal:A} holds directly by \ref{lem:inv-pi:hyp:A},
   and \ref{lem:inv-pi:goal:B} holds by combining \ref{lem:inv-pi:hyp:R} and \ref{lem:inv-pi:hyp:B}.
@@ -1351,7 +1390,7 @@ We are then finally able to prove the inversion property for \rref{I-Pi'}.
       so we can apply the first hypothesis to get $  \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}} $.
     \item \textit{\ref{lem:inv-pi:hyp:P} implies \ref{lem:inv-pi:goal:P}.}
       Supposing $\ottmv{y}$ and $\ottnt{P_{{\mathrm{2}}}}$,
-      we have three hypotheses $   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )   \to   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}    \to    \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}  $,
+      we have three hypotheses $  \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )   \to    \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}   \to    \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}   $,
       $ \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}} $, and $ \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}} $.
       Instantiating the first hypothesis using \ref{lem:inv-pi:hyp:R},
       we know there exists a $\ottnt{P'_{{\mathrm{2}}}}$ such that $  \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P'_{{\mathrm{2}}}} $.
