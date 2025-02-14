@@ -458,6 +458,13 @@ theorem convLvlMty {j} : ¬ lvl j ⇔ mty
     have emty := parsMtyInv rmty
     by subst elvl; contradiction
 
+theorem convLvlInv {j k} : lvl j ⇔ lvl k → j ⇔ k
+  | ⟨_, rj, rk⟩ =>
+  let ⟨j, elvlj, rj'⟩ := parsLvlInv rj
+  let ⟨k, elvlk, rk'⟩ := parsLvlInv rk
+  by subst elvlj; injection elvlk with ejk; subst ejk
+     exact ⟨j, rj', rk'⟩
+
 theorem conv𝒰Inv {a b} : 𝒰 a ⇔ 𝒰 b → a ⇔ b
   | ⟨_, ra, rb⟩ =>
   let ⟨a, e𝒰a, ra'⟩ := pars𝒰Inv ra
