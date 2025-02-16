@@ -4,7 +4,7 @@ embed
     \newcommand{\kw}[1]{ \mathsf{#1} }
   }}
 
-metavar x, y, z, f, g ::=
+metavar x, y, z, g, h ::=
   {{ com term variables }}
   {{ lex alphanum }}
 
@@ -127,14 +127,33 @@ s {{ tex \sigma }} :: 'subst_' ::= {{ com substitutions }}
   | s , x ↦ a :: :: Cons
     {{ com substitution extension }}
     {{ tex [[s]], [[x]] \mapsto [[a]] }}
+
 v :: 'val_' ::= {{ com values }}
-  | λ x : A . b :: :: Abs
-    (+ bind x in b +)
   | Π x : A . B :: :: Pi
+    (+ bind x in b +)
+  | λ x : A . b :: :: Abs
     (+ bind x in b +)
   | ⊥ :: :: Mty
   | Type k :: :: Univ
   | Level< l :: :: Lvl
+  | i :: :: Lof
+
+e, E :: 'ne_' ::= {{ com neutrals }}
+  | x :: :: Var
+  | e n :: :: App
+  | abs' N e :: :: Exf'
+
+n, N :: 'nf_' ::= {{ com normals }}
+  | x :: :: Var
+  | Π x : N1 . N2 :: :: Pi
+    (+ bind x in N2 +)
+  | λ x : N . n :: :: Abs
+    (+ bind x in n +)
+  | e n :: :: App
+  | ⊥ :: :: Mty
+  | abs' N e :: :: Exf'
+  | Type n :: :: Type
+  | Level< n :: :: Level
   | i :: :: Lof
 
 G {{ tex \Gamma }}, D {{ tex \Delta }} :: 'ctxt_' ::= {{ com contexts }}
@@ -207,6 +226,10 @@ formula :: 'formula_' ::=
     {{ tex [[a]] \rightsquigarrow [[b]] }}
   | a ⇝* b :: S :: cbns
     {{ tex [[a]] \rightsquigarrow^\ast [[b]] }}
+  | wne a :: S :: wne
+    {{ tex \mathbf{wne} \gap [[a]] }}
+  | wnf a :: S :: wnf
+    {{ tex \mathbf{wnf} \gap [[a]] }}
   | ⟦ A ⟧ i , I ↘ P :: S :: interp
     {{ tex \mathopen{\llbracket} [[A]] \mathclose{\rrbracket}_{[[i]]} \gap [[I]] \searrow [[P]] }}
   | ⟦ A ⟧ i ↘ P :: S :: interps
@@ -222,3 +245,5 @@ formula :: 'formula_' ::=
 
 subrules
   v <:: a
+  e <:: b
+  n <:: a

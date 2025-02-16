@@ -69,7 +69,8 @@
 \hypersetup{
   colorlinks=true,
   urlcolor=blue,
-  citecolor=magenta
+  linkcolor=magenta,
+  citecolor=teal
 }
 \urlstyle{tt}
 
@@ -217,7 +218,9 @@ Our contributions are as follows:
   \item Using a syntactic logical relation,
     we prove logical consistency and canonicity
     via the fundamental soundness theorem in \cref{sec:lr}.
-    Normalization remains an open problem.
+  \item Normalization remains an open problem.
+    \cref{sec:normalization} provides first steps towards proving it,
+    and we discuss where the proof gets stuck.
 \end{itemize}
 %
 As our system is intentionally very minimal,
@@ -299,7 +302,7 @@ explicitly as hypotheses instead of globally axiomatizing them.
 \begin{align*}
    \kw{ FunExt }  &:  \forall  k  <   \omega   \mathpunct{.}   \forall  i  <  k  \mathpunct{.}   \forall  j  <  k  \mathpunct{.}   \kw{U}_{ k }     \\
    \kw{ FunExt }  &\coloneqq  \Lambda  k  \mathpunct{.}   \Lambda  i  \mathpunct{.}   \Lambda  j  \mathpunct{.}   \Pi  A  \mathbin{:}   \kw{U}_{ i }   \mathpunct{.}   \Pi  B  \mathbin{:}   (  A  \to   \kw{U}_{ j }   )   \mathpunct{.}   \relax       \\
-  &\phantom{{} \coloneqq {}}   \Pi  f  \mathbin{:}   (   \Pi  x  \mathbin{:}  A  \mathpunct{.}  B   \gap  x  )   \mathpunct{.}   \Pi  g  \mathbin{:}   (   \Pi  x  \mathbin{:}  A  \mathpunct{.}  B   \gap  x  )   \mathpunct{.}   (     \Pi  x  \mathbin{:}  A  \mathpunct{.}  f   \gap  x   =  g   \gap  x  )     \to    \ottmv{f}  =  \ottmv{g}   
+  &\phantom{{} \coloneqq {}}   \Pi  f  \mathbin{:}   (   \Pi  x  \mathbin{:}  A  \mathpunct{.}  B   \gap  x  )   \mathpunct{.}   \Pi  g  \mathbin{:}   (   \Pi  x  \mathbin{:}  A  \mathpunct{.}  B   \gap  x  )   \mathpunct{.}   (     \Pi  x  \mathbin{:}  A  \mathpunct{.}  f   \gap  x   =  g   \gap  x  )     \to    f  =  \ottmv{g}   
 \end{align*}
 
 Suppose we wished to prove that function extensionality for
@@ -312,7 +315,7 @@ and once for its application to the functions of type $   \ottnt{B}  \gap  \ottm
    \kw{ FunExt2 }  &:    \forall  l  <   \omega   \mathpunct{.}   \forall  i  <  l  \mathpunct{.}   \forall  j  <  l  \mathpunct{.}   \forall  k  <  l  \mathpunct{.}   (     \kw{ FunExt }   \gap [  l  ]   \gap [  i  ]   \gap [   j  \sqcup  k   ]  )       \to   (     \kw{ Funext }   \gap [  l  ]   \gap [  j  ]   \gap [  k  ]  )    \to   \relax   \\
   &\phantom{{} : {}}  \Pi  A  \mathbin{:}   \kw{U}_{ i }   \mathpunct{.}   \Pi  B  \mathbin{:}   (  A  \to   \kw{U}_{ j }   )   \mathpunct{.}   \Pi  C  \mathbin{:}   (  A  \to   \kw{U}_{ k }   )   \mathpunct{.}   \relax     \\
   &\phantom{{} : {}}  \Pi  f  \mathbin{:}   (     \Pi  x  \mathbin{:}  A  \mathpunct{.}  B   \gap  x   \to  C   \gap  x  )   \mathpunct{.}   \Pi  g  \mathbin{:}   (     \Pi  x  \mathbin{:}  A  \mathpunct{.}  B   \gap  x   \to  C   \gap  x  )   \mathpunct{.}   \relax    \\
-  &\phantom{{} : {}}   (       \Pi  x  \mathbin{:}  A  \mathpunct{.}   \Pi  y  \mathbin{:}   B  \gap  x   \mathpunct{.}  f    \gap  x   \gap  y   =  g   \gap  x   \gap  y  )   \to    \ottmv{f}  =  \ottmv{g}   
+  &\phantom{{} : {}}   (       \Pi  x  \mathbin{:}  A  \mathpunct{.}   \Pi  y  \mathbin{:}   B  \gap  x   \mathpunct{.}  f    \gap  x   \gap  y   =  g   \gap  x   \gap  y  )   \to    f  =  \ottmv{g}   
 \end{align*}
 
 Once more universe levels get involved,
@@ -325,7 +328,7 @@ and instantiate its levels within the proof as needed.
    \kw{ FunExt2 }  &:   (     \forall  k  <   \omega   \mathpunct{.}   \forall  i  <  k  \mathpunct{.}   \forall  j  <  k  \mathpunct{.}   \kw{ FunExt }      \gap [  i  ]   \gap [  j  ]   \gap [  k  ]  )   \to   \relax   \\
   &\phantom{{} : {}}  \forall  l  <   \omega   \mathpunct{.}   \forall  i  <  l  \mathpunct{.}   \forall  j  <  l  \mathpunct{.}   \forall  k  <  l  \mathpunct{.}   \Pi  A  \mathbin{:}   \kw{U}_{ i }   \mathpunct{.}   \Pi  B  \mathbin{:}   (  A  \to   \kw{U}_{ j }   )   \mathpunct{.}   \Pi  C  \mathbin{:}   (  A  \to   \kw{U}_{ k }   )   \mathpunct{.}   \relax         \\
   &\phantom{{} : {}}  \Pi  f  \mathbin{:}   (     \Pi  x  \mathbin{:}  A  \mathpunct{.}  B   \gap  x   \to  C   \gap  x  )   \mathpunct{.}   \Pi  g  \mathbin{:}   (     \Pi  x  \mathbin{:}  A  \mathpunct{.}  B   \gap  x   \to  C   \gap  x  )   \mathpunct{.}   \relax    \\
-  &\phantom{{} : {}}   (       \Pi  x  \mathbin{:}  A  \mathpunct{.}   \Pi  y  \mathbin{:}   B  \gap  x   \mathpunct{.}  f    \gap  x   \gap  y   =  g   \gap  x   \gap  y  )   \to    \ottmv{f}  =  \ottmv{g}   
+  &\phantom{{} : {}}   (       \Pi  x  \mathbin{:}  A  \mathpunct{.}   \Pi  y  \mathbin{:}   B  \gap  x   \mathpunct{.}  f    \gap  x   \gap  y   =  g   \gap  x   \gap  y  )   \to    f  =  \ottmv{g}   
 \end{align*}
 
 With higher-rank level polymorphism,
@@ -557,9 +560,9 @@ where the levels $\ottmv{x}, \ottmv{y}$ are variables.
 from one universe to a higher universe.
 This rule is weaker than a full subtyping rule that accounts for
 contravariance in the domain and covariance in the codomain of function types.
-Therefore, for instance, $  \ottmv{f}  \mathbin{:}    \kw{U} \gap   2    \to   \kw{U} \gap   0      \vdash  \ottmv{f}  \mathrel{:}    \kw{U} \gap   1    \to   \kw{U} \gap   1    $ does \emph{not} hold.
+Therefore, for instance, $  f  \mathbin{:}    \kw{U} \gap   2    \to   \kw{U} \gap   0      \vdash  f  \mathrel{:}    \kw{U} \gap   1    \to   \kw{U} \gap   1    $ does \emph{not} hold.
 Nonetheless, cumulativity allows us to instead type the $\eta$-expansion
-$  \ottmv{f}  \mathbin{:}    \kw{U} \gap   2    \to   \kw{U} \gap   0      \vdash    \lambda  \ottmv{x}  \mathbin{:}   \kw{U} \gap   1    \mathpunct{.}  \ottmv{f}   \gap  \ottmv{x}   \mathrel{:}    \kw{U} \gap   1    \to   \kw{U} \gap   1    $.
+$  f  \mathbin{:}    \kw{U} \gap   2    \to   \kw{U} \gap   0      \vdash    \lambda  \ottmv{x}  \mathbin{:}   \kw{U} \gap   1    \mathpunct{.}  f   \gap  \ottmv{x}   \mathrel{:}    \kw{U} \gap   1    \to   \kw{U} \gap   1    $.
 
 Finally, \rref{Univ} asserts that a universe at level $\ottnt{k}$
 lives in the universe at level $\ell$ when $\ottnt{k}$ is strictly bounded by $\ell$.
@@ -580,11 +583,12 @@ Then the entire term has type $ \kw{U} \gap   \omega  $ by repeated application 
 
 Type safety is proven using standard syntactic methods
 to show progress and preservation (\ie subject reduction).
-The theorem is stated in terms of a call-by-name evaluation strategy,
-which we define shortly.
+% The theorem is stated in terms of a call-by-name evaluation strategy, which we define shortly.
 In essence, closed, well-typed terms evaluate (if they terminate) to values,
 which are type formers and constructors,
-defined as follows.
+defined below.
+The proof is standard, so we omit most details,
+only listing some of the key lemmas required.
 \begin{equation*}
   \ottnt{v} \Coloneqq \ottmv{i} \mid  \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}  \mid  \lambda  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{b}  \mid  \bot  \mid  \kw{U} \gap  \ottnt{k}  \mid  \kw{Level}\texttt{<} \gap  \ell 
 \end{equation*}
@@ -648,7 +652,7 @@ we use parallel reduction \fbox{$ \ottnt{a}  \Rightarrow  \ottnt{b} $},
 defined in \cref{fig:par},
 and its reflexive, transitive closure \fbox{$ \ottnt{a}  \Rightarrow^\ast  \ottnt{b} $},
 into which call-by-name evaluation embeds.
-We begin with simple lemmas about parallel reduction, stated without proof.
+We begin with simple lemmas about parallel reduction.
 
 \begin{lemma}[Substitution (p.r.)] \label{lem:pars:subst}
   If $ \ottnt{a}  \Rightarrow^\ast  \ottnt{a'} $ and $ \ottnt{b}  \Rightarrow^\ast  \ottnt{b'} $,
@@ -685,6 +689,7 @@ which is defined in terms of parallel reduction.
   $ \ottnt{a}  \Rightarrow^\ast  \ottnt{c} $ and $ \ottnt{b}  \Rightarrow^\ast  \ottnt{c} $
 \end{definition}
 
+\iffalse
 \begin{figure}
 \begin{alignat*}{3}
   \hspace{-1.5em}
@@ -713,11 +718,13 @@ which is defined in terms of parallel reduction.
 \caption{Complete development}
 \label{fig:taka}
 \end{figure}
+\fi
 
-Proving that conversion is transitive requires proving confluence for parallel reduction,
-which we prove using the notion of complete development by Takahashi~\citep{takahashi}.
-Complete development \fbox{$ \ottnt{a} ^{ \mathsf{T} } $} is defined in \cref{fig:taka},
-and is used to join parallel reductions and prove the diamond property.
+Proving that conversion is transitive requires proving confluence for parallel reduction.
+We use the notion of complete development \fbox{$ \ottnt{a} ^{ \mathsf{T} } $} by Takahashi~\citep{takahashi},
+which joins parallel reduction and proves the diamond property.
+Its definition is omitted here,
+but corresponds to simultaneous reduction of all redexes.
 
 \begin{lemma}[Completion (p.r.)] \label{lem:par:compl}
   If $ \ottnt{a}  \Rightarrow  \ottnt{b} $, then $ \ottnt{b}  \Rightarrow   \ottnt{a} ^{ \mathsf{T} }  $.
@@ -753,23 +760,24 @@ Inversion on parallel reduction gives syntactic consistency and injectivity of c
   \begin{enumerate}[topsep=0pt]
     \item If $  \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A_{{\mathrm{1}}}}  \mathpunct{.}  \ottnt{B_{{\mathrm{1}}}}   \Leftrightarrow   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A_{{\mathrm{2}}}}  \mathpunct{.}  \ottnt{B_{{\mathrm{2}}}}  $, then $ \ottnt{A_{{\mathrm{1}}}}  \Leftrightarrow  \ottnt{A_{{\mathrm{2}}}} $ and $ \ottnt{B_{{\mathrm{1}}}}  \Leftrightarrow  \ottnt{B_{{\mathrm{2}}}} $.
     \item If $  \kw{U} \gap  \ottnt{k_{{\mathrm{1}}}}   \Leftrightarrow   \kw{U} \gap  \ottnt{k_{{\mathrm{2}}}}  $, then $ \ottnt{k_{{\mathrm{1}}}}  \Leftrightarrow  \ottnt{k_{{\mathrm{2}}}} $.
+    \item If $  \kw{Level}\texttt{<} \gap  \ottnt{k_{{\mathrm{1}}}}   \Leftrightarrow   \kw{Level}\texttt{<} \gap  \ottnt{k_{{\mathrm{2}}}}  $, then $ \ottnt{k_{{\mathrm{1}}}}  \Leftrightarrow  \ottnt{k_{{\mathrm{2}}}} $.
   \end{enumerate}
 \end{lemma}
 
 Finally, definitional equality is equivalent to conversion,
 which allows us to use them interchangeably later on.
-The right-to-left direction is proven using induction on parallel reduction,
-while the left-to-right direction is proven by induction on definitional equality,
-using the various properties of conversion.
+% The right-to-left direction is proven using induction on parallel reduction,
+% while the left-to-right direction is proven by induction on definitional equality,
+% using the various properties of conversion.
 
 \begin{theorem} \label{lem:eq-conv}
   $ \ottnt{a}  \equiv  \ottnt{b} $ iff $ \ottnt{a}  \Leftrightarrow  \ottnt{b} $.
 \end{theorem}
 
-\subsection{Subject reduction}
+\subsection{Subject reduction and type safety}
 
 To prove subject reduction,
-we prove the usual weakening, substitution, replacement, and regularity lemmas.
+we need the usual weakening, substitution, replacement, and regularity lemmas.
 They follow from stronger forms of these lemmas involving simultaneous renaming and substitution,
 whose details we omit.
 
@@ -782,59 +790,59 @@ whose details we omit.
   then $  \Gamma ,  \ottmv{x}  \mathbin{:}  \ottnt{B}   \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $, where $\ottmv{x}$ is not in $\ottnt{a}$ or $\ottnt{A}$.
 \end{lemma}
 
-\begin{proof}
-  A renaming lemma is proven by induction on the typing derivation of $\ottnt{a}$,
-  showing that applying well-scoped renamings preserves typing.
-  Weakening is then the special case of a single renaming by $\ottmv{x}$ to avoid capture.
-\end{proof}
+% \begin{proof}
+%   A renaming lemma is proven by induction on the typing derivation of $\ottnt{a}$,
+%   showing that applying well-scoped renamings preserves typing.
+%   Weakening is then the special case of a single renaming by $\ottmv{x}$ to avoid capture.
+% \end{proof}
 
 \begin{lemma}[Substitution (w.t.)] \label{lem:wt:subst}
   If $ \Gamma  \vdash  \ottnt{b}  \mathrel{:}  \ottnt{B} $ and $  \Gamma ,  \ottmv{x}  \mathbin{:}  \ottnt{B}   \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $,
   then $ \Gamma  \vdash   \ottnt{a} [  \ottmv{x}  \mapsto  \ottnt{b}  ]   \mathrel{:}   \ottnt{A} [  \ottmv{x}  \mapsto  \ottnt{b}  ]  $.
 \end{lemma}
 
-\begin{proof}
-  A morphing lemma is proven by induction on the typing derivation of $\ottnt{a}$,
-  showing that applying well-typed substitutions preserves typing.
-  Substitution is then the special case of a single substitution of $\ottmv{x}$.
-\end{proof}
+% \begin{proof}
+%   A morphing lemma is proven by induction on the typing derivation of $\ottnt{a}$,
+%   showing that applying well-typed substitutions preserves typing.
+%   Substitution is then the special case of a single substitution of $\ottmv{x}$.
+% \end{proof}
 
 \begin{lemma}[Replacement (w.t.)] \label{lem:wt:replace}
   If $ \ottnt{A}  \equiv  \ottnt{B} $, $ \Gamma  \vdash  \ottnt{B}  \mathrel{:}   \kw{U} \gap  \ottnt{k}  $, and $  \Gamma ,  \ottmv{x}  \mathbin{:}  \ottnt{A}   \vdash  \ottnt{c}  \mathrel{:}  \ottnt{C} $,
   then $  \Gamma ,  \ottmv{x}  \mathbin{:}  \ottnt{B}   \vdash  \ottnt{c}  \mathrel{:}  \ottnt{C} $.
 \end{lemma}
 
-\begin{proof}
-  The morphing lemma allows us to change the context from one to the other
-  as long as there is a well-typed substitution between them.
-  We can show that the identity substitution is such a substitution
-  by proving $  \Gamma ,  \ottmv{x}  \mathbin{:}  \ottnt{B}   \vdash  \ottmv{x}  \mathrel{:}  \ottnt{A} $.
-  This follows from \rref{Conv},
-  \nameref{lem:wt:wf} for well-typedness of $\ottnt{A}$,
-  and \nameref{lem:wt:weak} to weaken it.
-\end{proof}
+% \begin{proof}
+%   The morphing lemma allows us to change the context from one to the other
+%   as long as there is a well-typed substitution between them.
+%   We can show that the identity substitution is such a substitution
+%   by proving $  \Gamma ,  \ottmv{x}  \mathbin{:}  \ottnt{B}   \vdash  \ottmv{x}  \mathrel{:}  \ottnt{A} $.
+%   This follows from \rref{Conv},
+%   \nameref{lem:wt:wf} for well-typedness of $\ottnt{A}$,
+%   and \nameref{lem:wt:weak} to weaken it.
+% \end{proof}
 
 \begin{lemma}[Context well-typedness] \label{lem:wt:ctxt}
   If $ \mathop{\vdash}  \Gamma $ and $ \ottmv{x}  \mathrel{:}  \ottnt{A}  \in  \Gamma $,
   then there exists some $\ottnt{k}$ such that $ \Gamma  \vdash  \ottnt{A}  \mathrel{:}   \kw{U} \gap  \ottnt{k}  $.
 \end{lemma}
 
-\begin{proof}
-  Our context membership judgement is defined inductively,
-  so we proceed by induction on its derivation.
-  We require \nameref{lem:wt:weak} to weaken the context of the type of the variable
-  by the variable itself, followed by any other variables after it.
-\end{proof}
+% \begin{proof}
+%   Our context membership judgement is defined inductively,
+%   so we proceed by induction on its derivation.
+%   We require \nameref{lem:wt:weak} to weaken the context of the type of the variable
+%   by the variable itself, followed by any other variables after it.
+% \end{proof}
 
 \begin{lemma}[Regularity] \label{lem:wt:reg}
   If $ \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $, then there exists some $\ottnt{k}$ such that
   $ \Gamma  \vdash  \ottnt{A}  \mathrel{:}   \kw{U} \gap  \ottnt{k}  $.
 \end{lemma}
 
-\begin{proof}
-  By straightforward induction on the typing derivation of $\ottnt{a}$,
-  using \nameref{lem:wt:ctxt} in the \rref*{Var} case.
-\end{proof}
+% \begin{proof}
+%   By straightforward induction on the typing derivation of $\ottnt{a}$,
+%   using \nameref{lem:wt:ctxt} in the \rref*{Var} case.
+% \end{proof}
 
 At this point, we are able to prove admissibility of \rref{Lam}
 without its first premise. (This is not required for subject reduction.)
@@ -842,12 +850,12 @@ without its first premise. (This is not required for subject reduction.)
 \begin{corollary}[\textsc{Lam'}] \label{Lam'}
   Given $ \Gamma  \vdash   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \mathrel{:}   \kw{U} \gap  \ottnt{k}  $ and $  \Gamma ,  \ottmv{x}  \mathbin{:}  \ottnt{A}   \vdash  \ottnt{b}  \mathrel{:}  \ottnt{B} $,
   we have $ \Gamma  \vdash   \lambda  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{b}   \mathrel{:}   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}  $.
-  Inversion on the first hypothesis yields $ \Gamma  \vdash  \ottnt{A}  \mathrel{:}   \kw{U} \gap  \ottnt{k'}  $
-  such that $  \kw{U} \gap  \ottnt{k}   \equiv   \kw{U} \gap  \ottnt{k'}  $.
-  By \nameref{lem:wt:reg} on the same hypothesis,
-  we obtain well-typedness of $ \kw{U} \gap  \ottnt{k} $,
-  which lets us use \rref{Conv} to show $ \Gamma  \vdash  \ottnt{A}  \mathrel{:}   \kw{U} \gap  \ottnt{k}  $.
-  The goal then holds by \rref{Lam}.
+  % Inversion on the first hypothesis yields $ \Gamma  \vdash  \ottnt{A}  \mathrel{:}   \kw{U} \gap  \ottnt{k'}  $
+  % such that $  \kw{U} \gap  \ottnt{k}   \equiv   \kw{U} \gap  \ottnt{k'}  $.
+  % By \nameref{lem:wt:reg} on the same hypothesis,
+  % we obtain well-typedness of $ \kw{U} \gap  \ottnt{k} $,
+  % which lets us use \rref{Conv} to show $ \Gamma  \vdash  \ottnt{A}  \mathrel{:}   \kw{U} \gap  \ottnt{k}  $.
+  % The goal then holds by \rref{Lam}.
 \end{corollary}
 
 The proof of subject reduction requires most of the above lemmas.
@@ -866,6 +874,27 @@ The proof of subject reduction requires most of the above lemmas.
   follow directly from the induction hypotheses.
 \end{proof}
 
+For progress and type safety, our notion of evaluation is
+the reflexive, transitive closure \fbox{$ \ottnt{a}  \rightsquigarrow^\ast  \ottnt{b} $}
+of call-by-name (cbn) reduction \fbox{$ \ottnt{a}  \rightsquigarrow  \ottnt{b} $},
+which reduces $\beta$-redexes and head positions.
+A single step of cbn reduction embeds into
+a single step of parallel reduction by induction,
+which allows us to use \nameref{lem:preservation}.
+These proofs are also standard.
+
+\begin{lemma}[Progress] \label{lem:progress}
+  If $  \cdot   \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $, then either $\ottnt{a}$ is a value,
+  or $ \ottnt{a}  \rightsquigarrow  \ottnt{b} $ for some $\ottnt{b}$.
+\end{lemma}
+
+\begin{theorem}[Type safety]
+  If $  \cdot   \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $ and $ \ottnt{a}  \rightsquigarrow^\ast  \ottnt{b} $,
+  then either $\ottnt{b}$ is a value,
+  or $ \ottnt{b}  \rightsquigarrow  \ottnt{c} $ for some $\ottnt{c}$.
+\end{theorem}
+
+\iffalse
 \subsection{Progress}
 
 \begin{figure}
@@ -941,6 +970,7 @@ closed, well-typed terms either reduce to a value, or must continue reducing.
   using \nameref{lem:preservation} for well typedness of $\ottnt{b}$
   from the former.
 \end{proof}
+\fi
 
 \section{Consistency and canonicity} \label{sec:lr}
 
@@ -1008,7 +1038,7 @@ without worrying about well-foundedness.
         \forall  \ottmv{y}  \mathpunct{.}  \ottmv{y}   \in  \ottnt{P_{{\mathrm{1}}}}   \to   \exists  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )    \\\\
        \forall  \ottmv{y}  \mathpunct{.}   \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )     \to   \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}  }
     %-------------------------------------------------------------------%
-    { \mathopen{\llbracket}   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \lbrace  \ottmv{f}  \mid    \forall  \ottmv{y}  \mathpunct{.}   \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )     \to    \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}   \to    \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}     \rbrace  }
+    { \mathopen{\llbracket}   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \lbrace  f  \mid    \forall  \ottmv{y}  \mathpunct{.}   \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )     \to    \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}   \to    f  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}     \rbrace  }
 \end{mathpar}
 \caption{Logical relation for closed types}
 \label{fig:lr:closed}
@@ -1033,14 +1063,14 @@ more precisely, it is the set of terms that reduce to such concrete levels.
 The interpretation of $ \kw{U} \gap   \ottmv{j}  $ given by \rref{I-Univ}
 is the set of types that have an interpretation.
 
-The intuition behind \rref{I-Pi} for function types is that a function $\ottmv{f}$
+The intuition behind \rref{I-Pi} for function types is that a function $f$
 is in its interpretation if for every argument $\ottmv{y}$ in the interpretation of the domain,
-the application $ \ottmv{f}  \gap  \ottmv{y} $ is in the interpretation of the codomain.
+the application $ f  \gap  \ottmv{y} $ is in the interpretation of the codomain.
 Because we are dealing with dependent types,
 the interpretation of the codomain varies with the argument,
 so we need to ensure first that the interpretation exists
 for \emph{every} argument in the interpretation of the domain,
-and that $ \ottmv{f}  \gap  \ottmv{y} $ is in the \emph{particular} interpretation of the codomain.
+and that $ f  \gap  \ottmv{y} $ is in the \emph{particular} interpretation of the codomain.
 It then sounds like we would want \rref{I-Pi'} below.
 %
 \begin{mathpar}
@@ -1048,7 +1078,7 @@ It then sounds like we would want \rref{I-Pi'} below.
     { \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{1}}}}  \and
         \forall  \ottmv{y}  \mathpunct{.}  \ottmv{y}   \in  \ottnt{P_{{\mathrm{1}}}}   \to   \exists  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}   }
     %--------------------------------------------------------------------------------%
-    { \mathopen{\llbracket}   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \lbrace  \ottmv{f}  \mid   \forall  \ottmv{y}  \mathpunct{.}     \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   (  \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}  )    \to   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}    \to    \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}     \rbrace  }
+    { \mathopen{\llbracket}   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \lbrace  f  \mid   \forall  \ottmv{y}  \mathpunct{.}     \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   (  \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}  )    \to   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}    \to    f  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}     \rbrace  }
 \end{mathpar}
 
 The problem is that the interpretation is not strictly positive in the conclusion,
@@ -1169,7 +1199,7 @@ We are then finally able to prove the inversion property for \rref{I-Pi'}.
   \begin{enumerate}[topsep=0pt]
     \item \label{lem:inv-pi:goal:A} $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{1}}}} $;
     \item \label{lem:inv-pi:goal:B} $   \forall  \ottmv{y}  \mathpunct{.}  \ottmv{y}   \in  \ottnt{P_{{\mathrm{1}}}}   \to   \exists  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}   $; and
-    \item \label{lem:inv-pi:goal:P} $\ottnt{P} =  \lbrace  \ottmv{f}  \mid   \forall  \ottmv{y}  \mathpunct{.}     \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   (  \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}  )    \to   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}    \to    \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}     \rbrace $.
+    \item \label{lem:inv-pi:goal:P} $\ottnt{P} =  \lbrace  f  \mid   \forall  \ottmv{y}  \mathpunct{.}     \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   (  \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}  )    \to   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}    \to    f  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}     \rbrace $.
   \end{enumerate}
 \end{lemma}
 
@@ -1180,7 +1210,7 @@ We are then finally able to prove the inversion property for \rref{I-Pi'}.
     \item \label{lem:inv-pi:hyp:A} $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{1}}}} $;
     \item \label{lem:inv-pi:hyp:R} $   \forall  \ottmv{y}  \mathpunct{.}  \ottmv{y}   \in  \ottnt{P_{{\mathrm{1}}}}   \to   \exists  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )   $;
     \item \label{lem:inv-pi:hyp:B} $  \forall  \ottmv{y}  \mathpunct{.}   \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )     \to   \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}  $; and
-    \item \label{lem:inv-pi:hyp:P} $\ottnt{P} =  \lbrace  \ottmv{f}  \mid    \forall  \ottmv{y}  \mathpunct{.}   \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )     \to    \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}   \to    \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}     \rbrace $.
+    \item \label{lem:inv-pi:hyp:P} $\ottnt{P} =  \lbrace  f  \mid    \forall  \ottmv{y}  \mathpunct{.}   \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )     \to    \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}   \to    f  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}     \rbrace $.
   \end{enumerate}
   \ref{lem:inv-pi:goal:A} holds directly by \ref{lem:inv-pi:hyp:A},
   and \ref{lem:inv-pi:goal:B} holds by combining \ref{lem:inv-pi:hyp:R} and \ref{lem:inv-pi:hyp:B}.
@@ -1189,19 +1219,19 @@ We are then finally able to prove the inversion property for \rref{I-Pi'}.
   \begin{itemize}[topsep=0pt]
     \item \textit{\ref{lem:inv-pi:goal:P} implies \ref{lem:inv-pi:hyp:P}.}
       Supposing $\ottmv{y}$ and $\ottnt{P_{{\mathrm{2}}}}$,
-      we have three hypotheses $   (  \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}  )   \to   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}    \to    \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}  $,
+      we have three hypotheses $   (  \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}}  )   \to   \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}    \to    f  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}  $,
       $ \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} ) $, and $ \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}} $.
       From \ref{lem:inv-pi:hyp:B} on the second hypothesis,
       we have $ \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}} $,
-      so we can apply the first hypothesis to get $  \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}} $.
+      so we can apply the first hypothesis to get $  f  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}} $.
     \item \textit{\ref{lem:inv-pi:hyp:P} implies \ref{lem:inv-pi:goal:P}.}
       Supposing $\ottmv{y}$ and $\ottnt{P_{{\mathrm{2}}}}$,
-      we have three hypotheses $  \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )   \to    \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}   \to    \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}   $,
+      we have three hypotheses $  \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )   \to    \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}   \to    f  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}   $,
       $ \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}} $, and $ \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}} $.
       Instantiating the first hypothesis using \ref{lem:inv-pi:hyp:R},
-      we know there exists a $\ottnt{P'_{{\mathrm{2}}}}$ such that $  \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P'_{{\mathrm{2}}}} $.
+      we know there exists a $\ottnt{P'_{{\mathrm{2}}}}$ such that $  f  \gap  \ottmv{y}   \in  \ottnt{P'_{{\mathrm{2}}}} $.
       From \ref{lem:inv-pi:hyp:B}, we also know that $ \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto  \ottmv{y}  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P'_{{\mathrm{2}}}} $.
-      Then by \nameref{lem:lr:func}, we have $\ottnt{P_{{\mathrm{2}}}} = \ottnt{P'_{{\mathrm{2}}}}$, so $  \ottmv{f}  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}} $.
+      Then by \nameref{lem:lr:func}, we have $\ottnt{P_{{\mathrm{2}}}} = \ottnt{P'_{{\mathrm{2}}}}$, so $  f  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}} $.
       \qedhere
   \end{itemize}
 \end{proof}
@@ -1386,9 +1416,119 @@ Consistency and canonicity results then follow from the fundamental theorem as c
   we then have that $ \ell  \Rightarrow^\ast   \ottmv{i_{{\mathrm{2}}}}  $ and $ \ottnt{k}  \Rightarrow^\ast   \ottmv{i_{{\mathrm{1}}}}  $ such that $ \ottmv{i_{{\mathrm{1}}}}  <  \ottmv{i_{{\mathrm{2}}}} $.
 \end{corollary}
 
-\subsection{Curry-style violates normalization} \label{sec:paradox}
+\section{Towards normalization} \label{sec:normalization}
 
-If we remove type annotations from our type theory
+One conventional way to prove normalization,
+given that we already have a syntactic logical relation,
+is to extend it from closed to open types and terms.
+However, we quickly run into issues proving
+the fundamental soundness theorem following this technique.
+For now, we consider only weak normalization,
+defined in terms of neutral and normal forms,
+where neutral forms $\ottnt{e}$ are elimination forms that do not reduce,
+and normal forms $\ottnt{n}$ are all terms that do not reduce.
+%
+\begin{align*}
+   \ottnt{e}  ,  \ottnt{E}  &\Coloneqq \ottmv{x} \mid  \ottnt{e}  \gap  \ottnt{n}  \mid  \kw{absurd}_{ \ottnt{N} } \gap  \ottnt{e}  \\
+   \ottnt{n}  ,  \ottnt{N}  &\Coloneqq \ottmv{i} \mid  \Pi  \ottmv{x}  \mathbin{:}  \ottnt{N}  \mathpunct{.}  \ottnt{N}  \mid  \lambda  \ottmv{x}  \mathbin{:}  \ottnt{N}  \mathpunct{.}  \ottnt{n}  \mid  \bot  \mid  \kw{U} \gap  \ottnt{n}  \mid  \kw{Level}\texttt{<} \gap  \ottnt{n}  \mid \ottnt{e}
+\end{align*}
+
+\begin{definition}[Weak normalization] ~
+  \begin{itemize}[topsep=0pt]
+    \item A term weakly reduces to neutral form,
+      written $ \mathbf{wne} \gap  \ottnt{a} $, if there exists $\ottnt{e}$ such that $ \ottnt{a}  \Rightarrow^\ast  \ottnt{e} $.
+    \item A term weakly reduces to normal form,
+      written $ \mathbf{wnf} \gap  \ottnt{a} $, if there exists $\ottnt{n}$ such that $ \ottnt{a}  \Rightarrow^\ast  \ottnt{n} $.
+  \end{itemize}
+\end{definition}
+
+The extended logical relation has an additional constructor for neutral types,
+and their interpretations include weakly neutral terms.
+The key property we require out of the logical relation is adequacy:
+the interpretation of a type is a set that contains all weakly neutral terms,
+and all terms in the set are weakly normal.
+Then from the fundamental theorem,
+we obtain weak normalization of well typed terms and their types.
+
+\begin{figure}
+\begin{mathpar}
+  \inferrule[\ottdrulename{I'-Ne}]{~}{ \mathopen{\llbracket}  \ottnt{E}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \lbrace  \ottmv{z}  \mid   \mathbf{wne} \gap  \ottmv{z}   \rbrace  }
+  \and
+  %\inferrule[\ottdrulename{I'-Mty}]{~}
+  %  { \mathopen{\llbracket}   \bot   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \lbrace  \ottmv{z}  \mid   \mathbf{wne} \gap  \ottmv{z}   \rbrace  }
+  %\and
+  \inferrule[\ottdrulename{I'-Level<}]{~}
+    { \mathopen{\llbracket}   \kw{Level}\texttt{<} \gap  \ottnt{n}   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \lbrace  \ottmv{z}  \mid    \mathbf{wne} \gap  \ottmv{z}   \vee   (    \exists  \ottmv{j_{{\mathrm{1}}}}  \mathpunct{.}   \exists  \ottmv{j_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{n}  \Rightarrow^\ast   \ottmv{j_{{\mathrm{1}}}}      \wedge   \ottmv{z}  \Rightarrow^\ast   \ottmv{j_{{\mathrm{2}}}}     \wedge   \ottmv{j_{{\mathrm{2}}}}  <  \ottmv{j_{{\mathrm{1}}}}   )    \rbrace  }
+  % \and
+  % \inferrule[\ottdrulename{I'-Univ}]
+  %   { \ottmv{j}  <  \ottmv{i} }
+  %   %---------------------------------------%
+  % { \mathopen{\llbracket}   \kw{U} \gap   \ottmv{j}    \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \lbrace  \ottmv{z}  \mid   \exists  \ottnt{P}  \mathpunct{.}   \mathopen{\llbracket}  \ottmv{z}  \mathclose{\rrbracket}_{ \ottmv{j} } \searrow  \ottnt{P}    \rbrace  }
+\end{mathpar}
+\caption{Logical relation for open types (excerpt)}
+\label{fig:lr:open}
+\end{figure}
+
+\Cref{fig:lr:open} gives two rules from the new logical relation.
+Both interpret types as a set of terms that include all weakly neutral terms,
+which we require for adequacy.
+For the interpretation of a neutral type in \rref{I'-Ne},
+we have no further information about the type,
+so its interpretation contains nothing else.
+In the case of a level type, it may be an open term,
+so we generalize the bound from a concrete level to a normal level term in \rref{I'-Level<}.
+A term in its interpretation is either weakly neutral,
+or it and the bounding level term both reduce to concrete levels
+that satisfy the bounding constraint, similar to the original \rref{I-Level<}.
+
+Before we define an interpretation for open universe types,
+let us consider what we need from it when proving the fundamental theorem.
+The cases involving levels go through with some modification;
+we examine the case involving universes.
+The definition of semantic typing remains unchanged.
+
+\begin{claim}[Soundness]
+  If $ \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $, then $ \Gamma  \vDash  \ottnt{a}  :  \ottnt{A} $.
+\end{claim}
+
+\begin{proof}[Proof attempt]
+  By induction on the typing derivation.
+  Suppose that $ \sigma  \vDash  \Gamma $.
+  \begin{itemize}[topsep=0pt]
+    \item \textit{\Rref{Univ}}
+      The premise is $ \Gamma  \vdash  \ottnt{k}  \mathrel{:}   \kw{Level}\texttt{<} \gap  \ell  $,
+      concluding with $ \Gamma  \vdash   \kw{U} \gap  \ottnt{k}   \mathrel{:}   \kw{U} \gap  \ell  $.
+      By the induction hypothesis on the premise,
+      followed by inversion on the interpretation of level types,
+      we know that $ \mathbf{wnf} \gap   \ell [  \sigma  ]  $, and either $ \mathbf{wne} \gap   \ottnt{k} [  \sigma  ]  $,
+      or both $ \ottnt{k} [  \sigma  ] $ and $ \ell [  \sigma  ] $ reduce to concrete levels related by inequality.
+      The latter is the same situation as before,
+      so we focus on the former.
+      Our goal is to show that $ \kw{U} \gap   (  \ell [  \sigma  ]  )  $ has an interpretation,
+      and that $ \kw{U} \gap   (  \ottnt{k} [  \sigma  ]  )  $ belongs to it.
+      We know that to satisfy adequacy,
+      the interpretation must include weakly neutral terms,
+      but $ \kw{U} \gap   (  \ottnt{k} [  \sigma  ]  )  $ is not an eliminator form and therefore not weakly neutral.
+      Furthermore, there is no more information about the relationship
+      between $ \ottnt{k} [  \sigma  ] $ and $ \ell [  \sigma  ] $.
+      \textcolor{red}{\textsc{Stuck!}} \qedhere
+    % \item \textit{\Rref{Cumul}}
+    %   Depends on \nameref{lem:lr:cumul} for the new logical relation.
+  \end{itemize}
+\end{proof}
+
+As a concrete example,
+suppose we have $\Gamma =   \ottmv{x}  \mathbin{:}   \kw{Level}\texttt{<} \gap   0    ,  \ottmv{y}  \mathbin{:}   \kw{Level}\texttt{<} \gap  \ottmv{x}  $,
+and consider $ \Gamma  \vdash   \kw{U} \gap  \ottmv{y}   \mathrel{:}   \kw{U} \gap  \ottmv{x}  $.
+While it is a derivable typing judgement,
+$ \kw{U} \gap  \ottmv{x} $ could not possibly be interpreted as a semantic universe,
+since there are no levels strictly smaller than $0$,
+and it is unclear what it would mean for $ \kw{U} \gap  \ottmv{y} $ to be in its interpretation.
+
+It is also unclear whether the issue is finding the correct semantic model,
+or if normalization does not hold at all,
+because it depends on the syntactic presentation:
+if we remove type annotations from our type theory
 and present it Curry-style, is not normalizing.
 While directly declaring an ill-founded level $ \ottmv{x}  \mathbin{:}   \kw{Level}\texttt{<} \gap  \ottmv{x}  $ is impossible,
 we can construct such a level in an inconsistent context
@@ -1431,21 +1571,9 @@ $ \kw{U} \gap   (  \kw{absurd}_{  (  \kw{Level}\texttt{<} \gap   (  \kw{absurd}_
 which cannot be used as type-in-type.
 For similar reasons, we cannot use $\ottmv{x} :  \Pi  A  \mathbin{:}   \kw{U} \gap  i   \mathpunct{.}  A $
 to construct the ill-founded level, as the type arguments will be incomparable.
-
-While we have not found other counterexamples to normalization in our Church-style presentation,
-it is also unclear how to define extend the logical relation to prove normalization
-by generalizing it to open types and terms.
-The issue lies in the interpretation of a universe at a level that is a neutral term.
-
-Consider for example $   \ottmv{x}  \mathbin{:}   \kw{Level}\texttt{<} \gap   \omega    ,  \ottmv{y}  \mathbin{:}   \kw{Level}\texttt{<} \gap  \ottmv{x}    \vdash   \kw{U} \gap  \ottmv{y}   \mathrel{:}   \kw{U} \gap  \ottmv{x}  $.
-What types live in $ \kw{U} \gap  \ottmv{y} $?
-If $\ottmv{x}$ is $0$, then there is no possible $\ottmv{y}$,
-and $ \kw{U} \gap  \ottmv{y} $ has no interpretation as a universe;
-otherwise, it \emph{could} have an interpretation.
-Without assuming that $\ottmv{x}$ reduces to a canonical, concrete level,
-we have no way of interpreting $ \kw{U} \gap  \ottmv{y} $.
-We cannot simply say that universes with neutral levels only contain neutral terms, either,
-as $ \kw{U} \gap  \ottmv{x} $ is such a universe that contains the normal term $ \kw{U} \gap  \ottmv{y} $.
+In contrast, type annotations have no influence on consistency,
+as it remains provable via the logical relation on closed types
+even when annotations are removed.
 
 \section{Extensions} \label{sec:extensions}
 
