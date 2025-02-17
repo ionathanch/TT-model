@@ -83,6 +83,9 @@ a, b, c, A, B, C, k, l {{ tex \ell }} :: 'tm_' ::= {{ com terms }}
   | k ++ :: S :: PlusOne
     {{ com level meta successor }}
     {{ tex [[k]] + 1 }}
+  | k + a :: S :: PlusMany
+    {{ com level meta addition }}
+    {{ tex [[k]] + [[a]] }}
   | k ⊔ l :: :: Sup
     {{ com level maximum }}
     {{ tex [[k]] \sqcup [[l]] }}

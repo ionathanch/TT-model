@@ -140,9 +140,9 @@
 TODO: say what $[[Type _]]$ mean
 
 Girard showed that the type-in-type axiom makes type theory logically inconsistent:
-if the type of a universe is itself, all types are inhabited.
-Therefore, in Martin-L\"of's type theory (MLTT)~\citep{mltt},
-he stratified the universe into a countably infinite hierarchy of universes
+if the type of a universe is itself, all types are inhabited~\citep{systemf}.
+Therefore, Martin-L\"of stratified the universe in his type theory (MLTT)~\citep{mltt}
+into a countably infinite hierarchy of universes
 $[[U 0]] : [[U 1]] : [[U 2]] : \dots$
 indexed by universe levels spanning the naturals.
 Many contemporary proof assistants based on dependent types feature such a hierarchy,
@@ -155,14 +155,16 @@ would need to be redefined for each universe level $[[i]]$ at which it is needed
 Universe level polymorphism addresses this issue by abstracting over level variables,
 used to index universes alongside concrete levels.
 Its simplest form is prenex level polymorphism,
-which restricts the abstraction to top-level definitions,
-is well studied~\citep{anon-univ,univ-poly-coq},
-as well as its extension to abstractions over (in)equality constraints on levels
-and with notions of level operators and expressions~\citep{explicit}.
+introduced by Harper and Pollack~\citep{anon-univ},
+which restricts the abstraction to top-level definitions.
+Courant extends their implicit system to an explicit system
+with (in)equality constraints, level operators, and level expressions.
+This extension is implemented in Rocq~\citep{univ-poly-coq}.
 
-Prenex level polymorphism does not augment the proof power of the type theory,
-as uses of level-polymorphic definitions require instantiating its levels
-and thus have level-monomorphic types.
+In the absence of level-polymorphic recursion,
+prenex level polymorphism does not augment the proof power of the type theory,
+as uses of level-polymorphic definitions
+can be specialized away to level-monomorphic terms.
 Indeed, Favonia, Angiuli, and Mullanix note that it
 ``is as consistent as standard (monomorphic) type theory [\dots]
 because any given proof can only mention finitely many universes'',
@@ -178,7 +180,7 @@ Going further, rather than keeping universe levels distinct from terms,
 we can define level expressions as a subset of terms,
 and add a type of levels;
 such first-class levels are found in Agda.
-Level quantification is subsumed by dependent functions whose domain is the level type.
+Level quantification is subsumed by dependent functions whose domain is this level type.
 The codomain can also be the level type,
 which describes functions that compute levels.
 
@@ -191,7 +193,7 @@ and supports features such as level constraints,
 maxima of levels, and induction on levels.
 
 The syntax of TTFL is considered to be the initial model in the category of cwfs,
-but a concrete syntax and typing rules are not given,
+but an explicit syntax and typing rules are not given,
 and proving initiality even for MLTT is a colossal task~\citep{initiality}.
 Furthermore, while a syntax may satisfy semantic properties such as logical consistency,
 it may not necessarily satisfy desirable syntactic properties.
@@ -200,32 +202,41 @@ that of TTFL without making levels first class,
 yet fails to satisfy substitution properties and therefore violates subject reduction.
 
 In this work, we give an end-to-end account of first-class levels in type theory,
-mechanized entirely in Lean.
-The development consists of just under 1600 lines of Lean code,
-which can be found in the supplementary materials at \url{\repo}.
-The definitions and theorems in this paper
-are hyperlinked to the corresponding Lean files.
-
+beginning with an explicit syntax and typing rules,
+and proving that they satisfy desirable metatheoretic properties.
 Our contributions are as follows:
 
 \begin{itemize}[topsep=0pt]
-  \item We state a concrete syntax and typing rules for \textbf{\lang},
+  \item We present \textbf{\lang},
     a dependent type theory with bounded, first-class universe levels.
     Our bounds differ from level constraints in that
     they are inherent to the type of a level,
     rather than a separate predicate on them.
-    We compare our system to existing implementations of level polymorphism in the next section
-    before proceeding to the formal definition of the type theory in \cref{sec:ttbfl}.
-  \item We prove subject reduction (\ie preservation),
-    progress, and type safety in \cref{sec:safety}.
+    Examples in the next section build up from monomorphic levels to level polymorphism
+    before we proceed to the formal definition of the type theory in \cref{sec:ttbfl}.
+  \item We prove subject reduction (\ie preservation) in \cref{sec:safety},
+    an improvement upon the metatheoretic properties of BCDE.
+    We also prove progress and thus type safety,
+    demonstrating that these universe level features do not impact execution.
+    This property is important for implementing proof assistants in themselves,
+    as is (partially) done in Lean and undergoing work for Rocq~\citep{coq-in-coq}.
   \item Using a syntactic logical relation,
     we prove logical consistency and canonicity
     via the fundamental soundness theorem in \cref{sec:lr}.
-  \item Normalization remains an open problem.
+    Consistency ensures that the type theory is suitable
+    as a basis for logical reasoning in a proof assistant,
+    while canonicity ensures that closed terms evaluate to the values we expect.
+  \item Normalization of open terms remains an open problem.
     \cref{sec:normalization} provides first steps towards proving it,
     and we discuss where the proof gets stuck.
 \end{itemize}
 %
+All results are mechanized in Lean.
+The development consists of just under 1600 lines of code,
+which can be found in the supplementary materials at \url{\repo}.
+The definitions and theorems in this paper
+are hyperlinked to the corresponding Lean files.
+
 As our system is intentionally very minimal,
 we discuss some further extensions in \cref{sec:extensions},
 including level operators and subtyping.
@@ -237,7 +248,7 @@ To motivate the range of features in \lang,
 we look at examples starting from monomorphic universe levels
 and build up to first-class levels and bounding in this section.
 Although not found in our minimal language,
-we additionally use dependent pair types, equality types, and list types
+we additionally use dependent pairs, propositional equality, the naturals, and lists
 for more illuminating examples.
 
 Let us start by revisiting the identity function and its type,
@@ -295,6 +306,18 @@ simplifying level expressions at the cost of an additional level variable.
 \begin{align*}
   [[!Const]] &: [[:concrete: ∀k < o. ∀i < k. ∀j < k. U k]] \\
   [[!Const]] &\coloneqq [[:concrete: Λk. Λi. Λj. ΠA : U i. Π B : U j. A → B → A]]
+\end{align*}
+
+While nonrecursive prenex level polymorphism can be monomorphized away,
+this is not the case once we introduce recursive definitions
+whose recursive calls may vary in the level.
+This lets us define universes with levels incremented by fixed amount,
+\ie $[[:concrete: U (# k + n #)]]$.
+%
+\begin{align*}
+  &[[!incr]] : [[:concrete: ∀k < o. !Nat → U o]] \\
+  &[[!incr k !zero]] \coloneqq [[:concrete: U k]] \\
+  &[[!incr k (!succ n)]] \coloneqq [[!incr n [k++] ]]
 \end{align*}
 
 Generalizing from prenex level polymorphism to higher-rank level polymorphism affords even more reusability.
@@ -403,7 +426,7 @@ and we omit the details of manipulating substitutions for concision.
 We write single substitutions of a variable $[[x]]$
 in a term $[[b]]$ by another term $[[a]]$ as $[[b{x ↦ a}]]$.
 
-\begin{figure}[b]
+\begin{figure}
 \vspace{-\baselineskip}
 \begin{align*}
   i, j & \Coloneqq \texttt{<external universe levels>} \\
@@ -598,7 +621,7 @@ only listing some of the key lemmas required.
 
 \subsection{Reduction and conversion}
 
-\begin{figure}
+\begin{figure}[b]
 \begin{mathpar}
   \inferrule[\ottdrulename{P-Beta}]
     {[[b ⇒ b']] \and
