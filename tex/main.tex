@@ -429,7 +429,7 @@ in a term $\ottnt{b}$ by another term $\ottnt{a}$ as $ \ottnt{b} [  \ottmv{x}  \
 \begin{figure}
 \vspace{-\baselineskip}
 \begin{align*}
-  i, j & \Coloneqq \texttt{<external universe levels>} \\
+  i, j & \Coloneqq \texttt{<concrete universe levels>} \\
   x, y, z & \Coloneqq \texttt{<term variables>} \\
   a, b, c, A, B, C, k, \ell & \Coloneqq \ottmv{x} \mid \ottmv{i}
     \mid  \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}  \mid  \lambda  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{b}  \mid  \ottnt{b}  \gap  \ottnt{a} 
@@ -575,7 +575,7 @@ it is impossible to declare a level variable strictly less than itself.
 The level type itself can be typed at any universe by \rref{Level<}
 regardless of what the bounding level is.
 For example, we can construct a derivation for $  \cdot   \vdash   \kw{Level}\texttt{<} \gap   2    \mathrel{:}   \kw{U} \gap   0   $
-solely knowing that $  \cdot   \vdash   2   \mathrel{:}   \kw{Level}\texttt{<} \gap   3   $ and $  \cdot   \vdash   \kw{U} \gap   0    \mathrel{:}   \kw{U} \gap   1   $.
+solely knowing that $  \cdot   \vdash   2   \mathrel{:}   \kw{Level}\texttt{<} \gap   3   $, $  \cdot   \vdash   \kw{U} \gap   0    \mathrel{:}   \kw{U} \gap   1   $, and $ 0  <  1 $.
 
 \Rref{Trans} internalizes transitivity of the order on levels,
 which is now required since levels are terms in general and not only concrete levels.
@@ -1608,7 +1608,7 @@ and others which present additional challenges.
 
 \subsection{Level operators and eliminators}
 
-The only features that we do not have but Agda does are a zeroth level,
+The only features missing from \lang that Agda has are a zeroth level,
 a level successor operator, and a level maximum operator.
 To justify them semantically,
 we would impose the first two as additional existence conditions on the metalevel levels;
@@ -1642,7 +1642,7 @@ they do not for arbitrary level expressions,
 \eg $   0   \sqcup   \mathop{\uparrow}   (  \ottmv{x}  \sqcup   \mathop{\uparrow}  \ottmv{x}   )     \equiv   \mathop{\uparrow}   \mathop{\uparrow}  \ottmv{x}   $.
 Our notions of reduction then need to pick a direction for each equality
 to reduce levels to some chosen canonical form.
-We believe the mechanization to be doable, but tedious and uninteresting.
+We believe the mechanization to be doable but tedious.
 
 Meanwhile, well-founded induction on levels already holds semantically,
 as we need it to define our logical relation in the first place.
