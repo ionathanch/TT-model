@@ -1717,21 +1717,25 @@ We have presented \lang, a type theory with first-class universe levels.
 In contrast to existing work,
 rather than level constraints being separate from the type of levels,
 we combine them such that every level explicitly has a bound.
-We have proven our type theory to be type safe and logically consistent.
+We have proven our type theory to be type safe,
+and in particular that subject reduction holds.
+This is in contrast to BCDE~\citep{univ-poly},
+the only other formal syntactic system we know of
+with universe level polymorphism beyond prenex polymorphism,
+which violates subject reduction.
+We have also proven our type theory to be logically consistent,
+and therefore useable as a logic for writing proofs.
 
 Proving normalization and decidability of type checking
 is the next step in showing that our type theory is effectively type checkable
 and thus has the potential to be a basis for theorem proving.
-Whether the normalization issues discussed in \cref{sec:paradox}
-are inherent to the system is unclear.
-The only formal syntactic system we know of
-with universe level polymorphism beyond prenex polymorphism
-is BCDE~\citep{univ-poly}.
-However, their system does not satisfy subject reduction,
-and their proposed amendment to allow looping level constraints of the form $\ottnt{k} < \ottnt{k}$
-to fix the issue would permit type-in-type in a looping context
-and break normalization.
-Even so, we are hopeful that normalization holds,
+Whether the extended logical relation presented in \cref{sec:normalization}
+can be repaired to prove normalization is unclear,
+as is whether well-typed terms are normalizing at all.
+Looking to existing work,
+BCDE proposes allowing looping level constraints of the form $\ottnt{k} < \ottnt{k}$ to admit subject reduction,
+but this would also permit type-in-type in a looping context and violate normalization.
+Even so, we are hopeful that it holds,
 as no issues with cumulative first-class levels have yet arisen in Agda.
 
 Decidability of type checking does not hold straightforwardly from normalization,
