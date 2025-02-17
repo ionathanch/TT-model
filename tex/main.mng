@@ -15,7 +15,7 @@
 
 \newcommand{\citep}[1]{\cite{#1}}
 \newcommand{\citet}[1]{\cite{#1}}
-\newcommand{\repo}{\url{https://github.com/ionathanch/TTBFL}}
+\newcommand{\repo}{https://github.com/ionathanch/TTBFL}
 \newcommand{\lang}{TTBFL\@\xspace}
 \newcommand{\titlebreak}{\texorpdfstring{\\}{}}
 \newcommand{\ie}{\textit{i.e.}\@\xspace}
@@ -39,6 +39,9 @@
 \newcommand{\footfilethm}[2]{%
   \raggedright
   \href{\repo{}/tree/main/TTBFL/#1}{\texttt{#1}}\texttt{:#2}
+}
+\newcommand{\thmref}[2]{%
+  $\langle$\href{\repo/tree/main/src/#1}{\texttt{#1}}\texttt{:#2}$\rangle$%
 }
 
 \newlength{\punctwidth}
@@ -96,7 +99,7 @@
 
 \supplementdetails[subcategory={source code},
   swhid={swh:1:dir:} % see https://archive.softwareheritage.org/
-]{Software}{https://github.com/ionathanch/TTBFL}
+]{Software}{\repo}
 
 \inputott{rules}
 
@@ -199,7 +202,7 @@ yet fails to satisfy substitution properties and therefore violates subject redu
 In this work, we give an end-to-end account of first-class levels in type theory,
 mechanized entirely in Lean.
 The development consists of just under 1600 lines of Lean code,
-which can be found in the supplementary materials at \repo{}.
+which can be found in the supplementary materials at \url{\repo}.
 The definitions and theorems in this paper
 are hyperlinked to the corresponding Lean files.
 
@@ -411,7 +414,7 @@ in a term $[[b]]$ by another term $[[a]]$ as $[[b{x ↦ a}]]$.
     \mid [[Type k]] \mid [[Level< l]] \\
   [[G]], [[D]] & \Coloneqq [[•]] \mid [[G, x : A]]
 \end{align*}
-\caption{Syntax}
+\caption{Syntax \thmref{syntactics.lean}{Term,Ctxt}}
 \label{fig:syntax}
 \end{figure}
 
@@ -486,7 +489,7 @@ These metalevel levels are internalized directly in system as terms $[[i]]$.
   \inferrule[\ottdrulename{E-Trans}]{[[a = b]] \and [[b = c]]}{[[a = c]]} \and
   \cdots
 \end{mathpar}
-\caption{Typing and selected equality rules (no universes or levels)}
+\caption{Typing and selected equality rules (no universes or levels) \thmref{typing.lean}{Wtf,Eqv}}
 \label{fig:typing:basic}
 \end{figure}
 
@@ -590,7 +593,7 @@ defined below.
 The proof is standard, so we omit most details,
 only listing some of the key lemmas required.
 \begin{equation*}
-  [[v]] \Coloneqq [[i]] \mid [[Πx : A. B]] \mid [[λx : A. b]] \mid [[⊥]] \mid [[Type k]] \mid [[Level< l]]
+  [[v]] \Coloneqq [[i]] \mid [[Πx : A. B]] \mid [[λx : A. b]] \mid [[⊥]] \mid [[Type k]] \mid [[Level< l]] \quad \text{\thmref{safety.lean}{Value}}
 \end{equation*}
 
 \subsection{Reduction and conversion}
@@ -643,7 +646,7 @@ only listing some of the key lemmas required.
   \quad
   \inferrule[\ottdrulename{P-Mty}]{~}{[[⊥ ⇒ ⊥]]}
 \end{mathpar}
-\caption{Parallel reduction rules}
+\caption{Parallel reduction rules \thmref{reduction.lean}{Par,Pars}}
 \label{fig:par}
 \end{figure}
 
@@ -654,26 +657,19 @@ and its reflexive, transitive closure \fbox{$[[a ⇒* b]]$},
 into which call-by-name evaluation embeds.
 We begin with simple lemmas about parallel reduction.
 
-\begin{lemma}[Substitution (p.r.)] \label{lem:pars:subst}
+\begin{lemma}[Substitution (p.r.)] \thmref{reduction.lean}{parsSubst} \label{lem:pars:subst} \\
   If $[[a ⇒* a']]$ and $[[b ⇒* b']]$,
   then $[[b{x ↦ a} ⇒* b'{x ↦ a'}]]$.
 \end{lemma}
 
-\begin{lemma}[Congruence (p.r.)] \label{lem:pars:cong}
-  Parallel reduction is congruent,
-  \eg if $[[A ⇒* A']]$ and $[[B ⇒* B']]$,
-  then $[[Πx: A. B ⇒ Πx: A'. B']]$,
-  and so on for all terms.
-\end{lemma}
-
-\begin{lemma}[Construction (p.r.)] \label{lem:pars:cons}
+\begin{lemma}[Construction (p.r.)] \thmref{reduction.lean}{pars\{$\beta$,Pi,Abs,$\mathcal{U}$,App,Exf,Lvl\}} \label{lem:pars:cons} \\
   Analogous constructors of parallel reduction hold
   for its reflexive, transitive closure,
   \eg if $[[b ⇒* b']]$ and $[[a ⇒* a']]$,
   then $[[(λx : A. b) a ⇒* b'{x ↦ a'}]]$.
 \end{lemma}
 
-\begin{lemma}[Inversion (p.r.)] \label{lem:pars:inv}
+\begin{lemma}[Inversion (p.r.)] \thmref{reduction.lean}{pars\{Pi,Abs,$\mathcal{U}$,App,Exf,Lvl,Lof,Mty\}Inv} \label{lem:pars:inv} \\
   If $[[v ⇒* c]]$, then $[[c]]$ is also a value of the same syntactic shape
   such that the reduction is congruent,
   \eg if $[[λx : A. b ⇒* c]]$, then $[[c]]$ is syntactically equal to $[[λx : A'. b']]$
@@ -684,7 +680,7 @@ Similarly, rather than working directly with definitional equality,
 we use conversion \fbox{$[[a ⇔ b]]$},
 which is defined in terms of parallel reduction.
 
-\begin{definition}[Conversion]
+\begin{definition}[Conversion] \thmref{reduction.lean}{Conv} \\
   $[[a ⇔ b]]$ iff there exists a $[[c]]$ such that
   $[[a ⇒* c]]$ and $[[b ⇒* c]]$
 \end{definition}
@@ -715,7 +711,7 @@ which is defined in terms of parallel reduction.
     &
   \end{aligned}
 \end{alignat*}
-\caption{Complete development}
+\caption{Complete development \thmref{reduction.lean}{taka}}
 \label{fig:taka}
 \end{figure}
 \fi
@@ -726,23 +722,23 @@ which joins parallel reduction and proves the diamond property.
 Its definition is omitted here,
 but corresponds to simultaneous reduction of all redexes.
 
-\begin{lemma}[Completion (p.r.)] \label{lem:par:compl}
+\begin{lemma}[Completion (p.r.)] \thmref{reduction.lean}{parTaka} \label{lem:par:compl}
   If $[[a ⇒ b]]$, then $[[b ⇒ a ^ T]]$.
 \end{lemma}
 
-\begin{corollary}[Diamond (p.r.)] \label{lem:par:diamond}
+\begin{corollary}[Diamond (p.r.)] \thmref{reduction.lean}{diamond} \label{lem:par:diamond}
   If $[[a ⇒ b]]$ and $[[a ⇒ c]]$,
   then there exists some $[[d]]$ such that $[[b ⇒ d]]$ and $[[c ⇒ d]]$.
   In particular, $[[d]]$ is $[[a ^ T]]$,
   with the reductions given by \nameref{lem:par:compl}.
 \end{corollary}
 
-\begin{theorem}[Confluence (p.r.)] \label{lem:par:confl}
+\begin{theorem}[Confluence (p.r.)] \thmref{reduction.lean}{confluence} \label{lem:par:confl} \\
   If $[[a ⇒* b]]$ and $[[a ⇒* c]]$,
   then there exists some $[[d]]$ such that $[[b ⇒* d]]$ and $[[c ⇒* d]]$.
 \end{theorem}
 
-\begin{corollary}[Properties of conversion] \label{lem:conv}
+\begin{corollary}[Properties of conversion] \thmref{reduction.lean}{conv*} \label{lem:conv}
   Conversion is reflexive, symmetric, transitive, substitutive, and congruent.
   Transitivity requires \nameref{lem:par:confl};
   the remaining properties are straightforward
@@ -751,12 +747,12 @@ but corresponds to simultaneous reduction of all redexes.
 
 Inversion on parallel reduction gives syntactic consistency and injectivity of conversion.
 
-\begin{lemma}[Syntactic consistency] \label{lem:par:consistency}
+\begin{lemma}[Syntactic consistency] \thmref{reduction.lean}{conv\{$\mathcal{U}$,Pi,Mty,Lvl\}\{$\mathcal{U}$,Pi,Mty,Lvl\}} \label{lem:par:consistency}
   If $[[v1]]$ and $[[v2]]$ have different syntactic shapes,
   then $[[v1 ⇔ v2]]$ is impossible.
 \end{lemma}
 
-\begin{lemma}[Injectivity (conv.)] ~
+\begin{lemma}[Injectivity (conv.)] \thmref{reduction.lean}{conv\{Pi,$\mathcal{U}$,Lvl\}Inv}
   \begin{enumerate}[topsep=0pt]
     \item If $[[Πx: A1. B1 ⇔ Πx: A2. B2]]$, then $[[A1 ⇔ A2]]$ and $[[B1 ⇔ B2]]$.
     \item If $[[Type k1 ⇔ Type k2]]$, then $[[k1 ⇔ k2]]$.
@@ -770,7 +766,7 @@ which allows us to use them interchangeably later on.
 % while the left-to-right direction is proven by induction on definitional equality,
 % using the various properties of conversion.
 
-\begin{theorem} \label{lem:eq-conv}
+\begin{theorem} \thmref{typing.lean}{convEqv,eqvConv} \label{lem:eq-conv}
   $[[a = b]]$ iff $[[a ⇔ b]]$.
 \end{theorem}
 
@@ -781,11 +777,11 @@ we need the usual weakening, substitution, replacement, and regularity lemmas.
 They follow from stronger forms of these lemmas involving simultaneous renaming and substitution,
 whose details we omit.
 
-\begin{lemma}[Context well-formedness] \label{lem:wt:wf}
+\begin{lemma}[Context well-formedness] \thmref{typing.lean}{wtWf} \label{lem:wt:wf}
   If $[[G ⊢ a : A]]$, then $[[⊢ G]]$.  
 \end{lemma}
 
-\begin{lemma}[Weakening (w.t.)] \label{lem:wt:weak}
+\begin{lemma}[Weakening (w.t.)] \thmref{safety.lean}{wtWeaken} \label{lem:wt:weak} \\
   If $[[⊢ G]]$, $[[G ⊢ B : Type k]]$, and $[[G ⊢ a : A]]$,
   then $[[G, x : B ⊢ a : A]]$, where $[[x]]$ is not in $[[a]]$ or $[[A]]$.
 \end{lemma}
@@ -796,7 +792,7 @@ whose details we omit.
 %   Weakening is then the special case of a single renaming by $[[x]]$ to avoid capture.
 % \end{proof}
 
-\begin{lemma}[Substitution (w.t.)] \label{lem:wt:subst}
+\begin{lemma}[Substitution (w.t.)] \thmref{safety.lean}{wtSubst} \label{lem:wt:subst} \\
   If $[[G ⊢ b : B]]$ and $[[G, x : B ⊢ a : A]]$,
   then $[[G ⊢ a{x ↦ b} : A{x ↦ b}]]$.
 \end{lemma}
@@ -807,7 +803,7 @@ whose details we omit.
 %   Substitution is then the special case of a single substitution of $[[x]]$.
 % \end{proof}
 
-\begin{lemma}[Replacement (w.t.)] \label{lem:wt:replace}
+\begin{lemma}[Replacement (w.t.)] \thmref{safety.lean}{wtReplace} \label{lem:wt:replace} \\
   If $[[A = B]]$, $[[G ⊢ B : Type k]]$, and $[[G, x : A ⊢ c : C]]$,
   then $[[G, x : B ⊢ c : C]]$.
 \end{lemma}
@@ -822,7 +818,7 @@ whose details we omit.
 %   and \nameref{lem:wt:weak} to weaken it.
 % \end{proof}
 
-\begin{lemma}[Context well-typedness] \label{lem:wt:ctxt}
+\begin{lemma}[Context well-typedness] \thmref{safety.lean}{wtMem} \label{lem:wt:ctxt} \\
   If $[[⊢ G]]$ and $[[x : A ∈ G]]$,
   then there exists some $[[k]]$ such that $[[G ⊢ A : Type k]]$.
 \end{lemma}
@@ -834,7 +830,7 @@ whose details we omit.
 %   by the variable itself, followed by any other variables after it.
 % \end{proof}
 
-\begin{lemma}[Regularity] \label{lem:wt:reg}
+\begin{lemma}[Regularity] \thmref{safety.lean}{wtRegularity} \label{lem:wt:reg} \\
   If $[[G ⊢ a : A]]$, then there exists some $[[k]]$ such that
   $[[G ⊢ A : Type k]]$.
 \end{lemma}
@@ -847,7 +843,7 @@ whose details we omit.
 At this point, we are able to prove admissibility of \rref{Lam}
 without its first premise. (This is not required for subject reduction.)
 
-\begin{corollary}[\textsc{Lam'}] \label{Lam'}
+\begin{corollary}[\textsc{Lam'}] \thmref{safety.lean}{wtfAbs} \label{Lam'} \\
   Given $[[G ⊢ Πx : A. B : Type k]]$ and $[[G, x : A ⊢ b : B]]$,
   we have $[[G ⊢ λx : A. b : Πx : A. B]]$.
   % Inversion on the first hypothesis yields $[[G ⊢ A : Type k']]$
@@ -860,7 +856,7 @@ without its first premise. (This is not required for subject reduction.)
 
 The proof of subject reduction requires most of the above lemmas.
 
-\begin{theorem}[Subject reduction] \label{lem:preservation}
+\begin{theorem}[Subject reduction] \thmref{safety.lean}{wtPar} \label{lem:preservation} \\
   If $[[a ⇒ b]]$ and $[[G ⊢ a : A]]$, then $[[G ⊢ b : A]]$.
 \end{theorem}
 
@@ -883,12 +879,12 @@ a single step of parallel reduction by induction,
 which allows us to use \nameref{lem:preservation}.
 These proofs are also standard.
 
-\begin{lemma}[Progress] \label{lem:progress}
+\begin{lemma}[Progress] \thmref{safety.lean}{wtProgress} \label{lem:progress} \\
   If $[[• ⊢ a : A]]$, then either $[[a]]$ is a value,
   or $[[a ⇝ b]]$ for some $[[b]]$.
 \end{lemma}
 
-\begin{theorem}[Type safety]
+\begin{theorem}[Type safety] \thmref{safety.lean}{wtSafety} \\
   If $[[• ⊢ a : A]]$ and $[[a ⇝* b]]$,
   then either $[[b]]$ is a value,
   or $[[b ⇝ c]]$ for some $[[c]]$.
@@ -912,7 +908,7 @@ These proofs are also standard.
     %------------------------%
     {[[abs' A b ⇝ abs' A b']]}
 \end{mathpar}
-\caption{Call by name reduction}
+\caption{Call by name reduction \thmref{safety.lean}{CBN}}
 \label{fig:cbn}
 \end{figure}
 
@@ -924,7 +920,7 @@ which reduces $\beta$-redexes and head positions.
 A single step of cbn reduction embeds into
 a single step of parallel reduction by induction.
 
-\begin{lemma}
+\begin{lemma} \thmref{safety.lean}{CBNpar} \\
   If $[[a ⇝ b]]$ then $[[a ⇒ b]]$.
 \end{lemma}
 
@@ -933,19 +929,19 @@ we need to know what values of function and empty types are.
 The following lemmas are proven by induction,
 using inversion lemmas on typing derivations as needed.
 
-\begin{lemma}[Canonical function values] \label{lem:canon:fun}
+\begin{lemma}[Canonical function values] \thmref{safety.lean}{wtAbs} \label{lem:canon:fun} \\
   If $[[G ⊢ v : Πx: A. B]]$,
   then $[[v]]$ has the syntactic shape $[[λx : A. b]]$ for some $[[A]], [[b]]$.
 \end{lemma}
 
-\begin{lemma}[Canonical false values] \label{lem:canon:false}
+\begin{lemma}[Canonical false values] \thmref{safety.lean}{wtMty} \label{lem:canon:false}
   There is no $[[v]]$ such that $[[G ⊢ v : ⊥]]$.
 \end{lemma}
 
 Finally, we prove progress, which with subject reduction we show type safety:
 closed, well-typed terms either reduce to a value, or must continue reducing.
 
-\begin{theorem}[Progress] \label{lem:progress}
+\begin{theorem}[Progress] \thmref{safety.lean}{wtProgress} \label{lem:progress} \\
   If $[[• ⊢ a : A]]$, then either $[[a]]$ is a value,
   or $[[a ⇝ b]]$ for some $[[b]]$.
 \end{theorem}
@@ -956,7 +952,7 @@ closed, well-typed terms either reduce to a value, or must continue reducing.
   in the cases for \rref{App,Abs}, respectively.
 \end{proof}
 
-\begin{theorem}[Type safety]
+\begin{theorem}[Type safety] \thmref{safety.lean}{wtSafety} \\
   If $[[• ⊢ a : A]]$ and $[[a ⇝* b]]$,
   then either $[[b]]$ is a value,
   or $[[b ⇝ c]]$ for some $[[c]]$.
@@ -1040,7 +1036,7 @@ without worrying about well-foundedness.
     %-------------------------------------------------------------------%
     {[[⟦ Πx : A. B ⟧ i ↘ {f | ∀ y. ∀ P2. R(y, P2) → y ∈ P1 → f y ∈ P2}]]}
 \end{mathpar}
-\caption{Logical relation for closed types}
+\caption{Logical relation for closed types \thmref{semantics.lean}{Interps}}
 \label{fig:lr:closed}
 \end{figure}
 
@@ -1071,7 +1067,7 @@ the interpretation of the codomain varies with the argument,
 so we need to ensure first that the interpretation exists
 for \emph{every} argument in the interpretation of the domain,
 and that $[[f y]]$ is in the \emph{particular} interpretation of the codomain.
-It then sounds like we would want \rref{I-Pi'} below.
+It then sounds like we would want \rref{I-Pi'} below \thmref{semantics.lean}{interpsPi}.
 %
 \begin{mathpar}
   \inferrule*[right=\ottdrulename{I-Pi'}]
@@ -1096,7 +1092,7 @@ A key intermediate lemma is functionality,
 \ie that the interpretation of a type is deterministic.
 We begin with closures over reductions to prove conversion.
 
-\begin{lemma}[Forward and backward closure (l.r.)] \label{lem:lr:pars} ~
+\begin{lemma}[Forward and backward closure (l.r.)] \thmref{semantics.lean}{interps\{Fwds,Bwds\}} \label{lem:lr:pars} ~
   \begin{enumerate}[topsep=0pt]
     \item If $[[⟦A⟧ i ↘ P]]$ and either $[[A ⇒ B]]$ or $[[A ⇒* B]]$,
       then $[[⟦B⟧ i ↘ P]]$.
@@ -1117,7 +1113,7 @@ We begin with closures over reductions to prove conversion.
   \end{enumerate}
 \end{proof}
 
-\begin{corollary}[Conversion (l.r.)]
+\begin{corollary}[Conversion (l.r.)] \thmref{semantics.lean}{interpsConv} \\
   If $[[⟦A⟧ i ↘ P]]$ and $[[A ⇔ B]]$,
   then $[[⟦B⟧ i ↘ P]]$,
   using forward and backward closure.
@@ -1128,7 +1124,7 @@ When proving the fundamental theorem,
 we encounter situations where our goal requires inclusion of a reduced term in an interpretation,
 while induction hypotheses only piece together inclusion of the term before reduction.
 
-\begin{lemma}[Backward closure] \label{lem:lr:back}
+\begin{lemma}[Backward closure] \thmref{semantics.lean}{interpsBwdsP} \label{lem:lr:back} \\
   If $[[⟦A⟧ i ↘ P]]$ and $[[a ⇒* b]]$,
   then $[[b ∈ P]]$ implies $[[a ∈ P]]$.
 \end{lemma}
@@ -1141,7 +1137,7 @@ while induction hypotheses only piece together inclusion of the term before redu
 
 Cumulativity holds directly by induction on the logical relation.
 
-\begin{lemma}[Cumulativity (l.r.)] \label{lem:lr:cumul}
+\begin{lemma}[Cumulativity (l.r.)] \thmref{semantics.lean}{interpsCumul} \label{lem:lr:cumul} \\
   Suppose $[[i < j]]$. If $[[⟦A⟧ i ↘ P]]$, then $[[⟦A⟧ j ↘ P]]$.
 \end{lemma}
 
@@ -1154,7 +1150,7 @@ then inversion on \rref{I-Pi} gives \emph{some} interpretation $[[P1]]$ of the c
 but we do not know whether it is \emph{the} interpretation that is required.
 We solve this by proving functionality.
 
-\begin{lemma}[Fixed-level functionality (l.r.)]$\!\!{\dagger}$ \label{lem:lr:fixed-func}
+\begin{lemma}[Fixed-level functionality (l.r.)]$\!\!{\dagger}$ \thmref{semantics.lean}{interpsDet'} \label{lem:lr:fixed-func} \\
   If $[[⟦A⟧ i ↘ P]]$ and $[[⟦A⟧ i ↘ Q]]$, then $[[P]] = [[Q]]$.
 \end{lemma}
 
@@ -1180,7 +1176,7 @@ the idea being that the interpretation of a type is independent
 of the level at which it lives.
 We are then finally able to prove the inversion property for \rref{I-Pi'}.
 
-\begin{lemma}[Functionality (l.r.)] \label{lem:lr:func}
+\begin{lemma}[Functionality (l.r.)] \thmref{semantics.lean}{interpsDet} \label{lem:lr:func} \\
   If $[[⟦A⟧ i ↘ P]]$ and $[[⟦A⟧ j ↘ Q]]$, then $[[P]] = [[Q]]$.
 \end{lemma}
 
@@ -1193,7 +1189,7 @@ We are then finally able to prove the inversion property for \rref{I-Pi'}.
   Then the sets are equal by \nameref{lem:lr:fixed-func}.
 \end{proof}
 
-\begin{lemma}[Inversion on function types (l.r.)]$\!\!{\dagger}$ \label{lem:lr:inv-pi}
+\begin{lemma}[Inversion on function types (l.r.)]$\!\!{\dagger}$ \thmref{semantics.lean}{interpsPiInv} \label{lem:lr:inv-pi} \\
   If $[[⟦Πx: A. B⟧ i ↘ P]]$,
   then there exists a $[[P1]]$ such that:
   \begin{enumerate}[topsep=0pt]
@@ -1241,7 +1237,7 @@ We however explicitly state here the inversion principle
 asserting that types that have interpretations are indeed one of the four types,
 proven by induction on the logical relation.
 
-\begin{lemma}[Inversion (l.r.)] \label{lem:lr:inv}
+\begin{lemma}[Inversion (l.r.)] \thmref{semantics.lean}{interpsStepInv} \label{lem:lr:inv} \\
   If $[[⟦C⟧ i ↘ P]]$, then one of the following holds:
   \begin{itemize}[topsep=0pt]
     \item There exist $[[A]]$ and $[[B]]$ such that $[[C ⇒* Πx: A. B]]$;
@@ -1267,9 +1263,9 @@ In the mechanization, semantic well-typedness of a substitution \fbox{$[[s ⊧ G
 is defined similarly to semantic typing \fbox{$[[G ⊢ a : A]]$},
 but the admissible rules defined in \cref{fig:sem:subst} are more convenient.
 
-\begin{definition}
+\begin{definition} \thmref{semantics.lean}{semSubst}
   A substitution $[[s]]$ is semantically well typed
-  with respect to a context $[[G]]$ iff for every $[[x : A ∈ G]]$,
+  for context $[[G]]$ iff for every $[[x : A ∈ G]]$,
   there exist $[[i]], [[P]]$ such that
   $[[⟦A{s}⟧ i ↘ P]]$ and $[[x{s} ∈ P]]$.
 \end{definition}
@@ -1286,11 +1282,11 @@ but the admissible rules defined in \cref{fig:sem:subst} are more convenient.
     %-----------------------%
     {[[s, x ↦ a ⊧ G, x : A]]}
 \end{mathpar}
-\caption{Semantically well-typed substitutions}
+\caption{Semantically well-typed substitutions \thmref{semantics.lean}{semSubst\{Nil,Cons\}}}
 \label{fig:sem:subst}
 \end{figure}
 
-\begin{definition}[Semantic typing]
+\begin{definition}[Semantic typing] \thmref{semantics.lean}{semWt}
   A term $[[a]]$ is semantically well typed with type $[[A]]$ under context $[[G]]$,
   written $[[G ⊧ a : A]]$, iff for every $[[s]]$ such that $[[s ⊧ G]]$,
   there exist $[[i]], [[P]]$ such that
@@ -1308,7 +1304,7 @@ followed by the cases for the rules in \cref{fig:typing:univ}
 that are unique to our system.
 For concision, we skip steps involving massaging substitutions into the right shape.
 
-\begin{theorem}[Soundness] \label{thm:soundness}
+\begin{theorem}[Soundness] \thmref{soundness.lean}{soundness} \label{thm:soundness}
   If $[[G ⊢ a : A]]$, then $[[G ⊧ a : A]]$.
 \end{theorem}
 
@@ -1386,16 +1382,16 @@ For concision, we skip steps involving massaging substitutions into the right sh
 
 Consistency and canonicity results then follow from the fundamental theorem as corollaries.
 
-\begin{corollary}[Consistency]
+\begin{corollary}[Consistency] \thmref{soundness.lean}{consistency}
   There is no $[[b]]$ such that $[[• ⊢ b : ⊥]]$ holds.
   If there were, by \nameref{thm:soundness},
-  we would have $[[• ⊧ b : ⊥]]$.
+  we get have $[[• ⊧ b : ⊥]]$.
   Instantiating with the identity substitution,
   then inverting on the interpretation of $[[⊥]]$,
-  we would have that $[[b ∈ ∅]]$, which is a contradiction.
+  we get $[[b ∈ ∅]]$, which is a contradiction.
 \end{corollary}
 
-\begin{corollary}[Canonicity of types] \label{lem:canon:univ}
+\begin{corollary}[Canonicity of types] \thmref{soundness.lean}{canon$\mathcal{U}$} \label{lem:canon:univ}
   If $[[• ⊢ C : Type k]]$,
   then either $[[C ⇒* Πx: A. B]]$, $[[C ⇒* Type i]]$, $[[C ⇒* Level< i]]$, or $[[C ⇒* ⊥]]$.
   By \nameref{thm:soundness},
@@ -1406,7 +1402,7 @@ Consistency and canonicity results then follow from the fundamental theorem as c
   Then the goal holds by \nameref{lem:lr:inv}.
 \end{corollary}
 
-\begin{corollary}[Canonicity of levels]
+\begin{corollary}[Canonicity of levels] \thmref{soundness.lean}{canonLvl}
   If $[[• ⊢ k : Level< l]]$,
   then $[[k ⇒* i]]$ for some concrete level $[[i]]$.
   By \nameref{thm:soundness},
@@ -1429,11 +1425,11 @@ where neutral forms $[[e]]$ are elimination forms that do not reduce,
 and normal forms $[[n]]$ are all terms that do not reduce.
 %
 \begin{align*}
-  [[e, E]] &\Coloneqq [[x]] \mid [[e n]] \mid [[abs' N e]] \\
-  [[n, N]] &\Coloneqq [[i]] \mid [[Πx : N. N]] \mid [[λx : N. n]] \mid [[⊥]] \mid [[Type n]] \mid [[Level< n]] \mid [[e]]
+  [[e, E]] &\Coloneqq [[x]] \mid [[e n]] \mid [[abs' N e]] &\text{\thmref{normal.lean}{ne}} \\
+  [[n, N]] &\Coloneqq [[i]] \mid [[Πx : N. N]] \mid [[λx : N. n]] \mid [[⊥]] \mid [[Type n]] \mid [[Level< n]] \mid [[e]] &\text{\thmref{normal.lean}{nf}}
 \end{align*}
 
-\begin{definition}[Weak normalization] ~
+\begin{definition}[Weak normalization] \thmref{normal.lean}{wne,wnf}
   \begin{itemize}[topsep=0pt]
     \item A term weakly reduces to neutral form,
       written $[[wne a]]$, if there exists $[[e]]$ such that $[[a ⇒* e]]$.

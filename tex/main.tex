@@ -15,7 +15,7 @@
 
 \newcommand{\citep}[1]{\cite{#1}}
 \newcommand{\citet}[1]{\cite{#1}}
-\newcommand{\repo}{\url{https://github.com/ionathanch/TTBFL}}
+\newcommand{\repo}{https://github.com/ionathanch/TTBFL}
 \newcommand{\lang}{TTBFL\@\xspace}
 \newcommand{\titlebreak}{\texorpdfstring{\\}{}}
 \newcommand{\ie}{\textit{i.e.}\@\xspace}
@@ -39,6 +39,9 @@
 \newcommand{\footfilethm}[2]{%
   \raggedright
   \href{\repo{}/tree/main/TTBFL/#1}{\texttt{#1}}\texttt{:#2}
+}
+\newcommand{\thmref}[2]{%
+  $\langle$\href{\repo/tree/main/src/#1}{\texttt{#1}}\texttt{:#2}$\rangle$%
 }
 
 \newlength{\punctwidth}
@@ -96,7 +99,7 @@
 
 \supplementdetails[subcategory={source code},
   swhid={swh:1:dir:} % see https://archive.softwareheritage.org/
-]{Software}{https://github.com/ionathanch/TTBFL}
+]{Software}{\repo}
 
 \inputott{rules}
 
@@ -199,7 +202,7 @@ yet fails to satisfy substitution properties and therefore violates subject redu
 In this work, we give an end-to-end account of first-class levels in type theory,
 mechanized entirely in Lean.
 The development consists of just under 1600 lines of Lean code,
-which can be found in the supplementary materials at \repo{}.
+which can be found in the supplementary materials at \url{\repo}.
 The definitions and theorems in this paper
 are hyperlinked to the corresponding Lean files.
 
@@ -411,7 +414,7 @@ in a term $\ottnt{b}$ by another term $\ottnt{a}$ as $ \ottnt{b} [  \ottmv{x}  \
     \mid  \kw{U} \gap  \ottnt{k}  \mid  \kw{Level}\texttt{<} \gap  \ell  \\
   \Gamma, \Delta & \Coloneqq  \cdot  \mid  \Gamma ,  \ottmv{x}  \mathbin{:}  \ottnt{A} 
 \end{align*}
-\caption{Syntax}
+\caption{Syntax \thmref{syntactics.lean}{Term,Ctxt}}
 \label{fig:syntax}
 \end{figure}
 
@@ -486,7 +489,7 @@ These metalevel levels are internalized directly in system as terms $\ottmv{i}$.
   \inferrule[\ottdrulename{E-Trans}]{ \ottnt{a}  \equiv  \ottnt{b}  \and  \ottnt{b}  \equiv  \ottnt{c} }{ \ottnt{a}  \equiv  \ottnt{c} } \and
   \cdots
 \end{mathpar}
-\caption{Typing and selected equality rules (no universes or levels)}
+\caption{Typing and selected equality rules (no universes or levels) \thmref{typing.lean}{Wtf,Eqv}}
 \label{fig:typing:basic}
 \end{figure}
 
@@ -590,7 +593,7 @@ defined below.
 The proof is standard, so we omit most details,
 only listing some of the key lemmas required.
 \begin{equation*}
-  \ottnt{v} \Coloneqq \ottmv{i} \mid  \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}  \mid  \lambda  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{b}  \mid  \bot  \mid  \kw{U} \gap  \ottnt{k}  \mid  \kw{Level}\texttt{<} \gap  \ell 
+  \ottnt{v} \Coloneqq \ottmv{i} \mid  \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}  \mid  \lambda  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{b}  \mid  \bot  \mid  \kw{U} \gap  \ottnt{k}  \mid  \kw{Level}\texttt{<} \gap  \ell  \quad \text{\thmref{safety.lean}{Value}}
 \end{equation*}
 
 \subsection{Reduction and conversion}
@@ -643,7 +646,7 @@ only listing some of the key lemmas required.
   \quad
   \inferrule[\ottdrulename{P-Mty}]{~}{  \bot   \Rightarrow   \bot  }
 \end{mathpar}
-\caption{Parallel reduction rules}
+\caption{Parallel reduction rules \thmref{reduction.lean}{Par,Pars}}
 \label{fig:par}
 \end{figure}
 
@@ -654,26 +657,19 @@ and its reflexive, transitive closure \fbox{$ \ottnt{a}  \Rightarrow^\ast  \ottn
 into which call-by-name evaluation embeds.
 We begin with simple lemmas about parallel reduction.
 
-\begin{lemma}[Substitution (p.r.)] \label{lem:pars:subst}
+\begin{lemma}[Substitution (p.r.)] \thmref{reduction.lean}{parsSubst} \label{lem:pars:subst} \\
   If $ \ottnt{a}  \Rightarrow^\ast  \ottnt{a'} $ and $ \ottnt{b}  \Rightarrow^\ast  \ottnt{b'} $,
   then $  \ottnt{b} [  \ottmv{x}  \mapsto  \ottnt{a}  ]   \Rightarrow^\ast   \ottnt{b'} [  \ottmv{x}  \mapsto  \ottnt{a'}  ]  $.
 \end{lemma}
 
-\begin{lemma}[Congruence (p.r.)] \label{lem:pars:cong}
-  Parallel reduction is congruent,
-  \eg if $ \ottnt{A}  \Rightarrow^\ast  \ottnt{A'} $ and $ \ottnt{B}  \Rightarrow^\ast  \ottnt{B'} $,
-  then $  \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \Rightarrow   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A'}  \mathpunct{.}  \ottnt{B'}  $,
-  and so on for all terms.
-\end{lemma}
-
-\begin{lemma}[Construction (p.r.)] \label{lem:pars:cons}
+\begin{lemma}[Construction (p.r.)] \thmref{reduction.lean}{pars\{$\beta$,Pi,Abs,$\mathcal{U}$,App,Exf,Lvl\}} \label{lem:pars:cons} \\
   Analogous constructors of parallel reduction hold
   for its reflexive, transitive closure,
   \eg if $ \ottnt{b}  \Rightarrow^\ast  \ottnt{b'} $ and $ \ottnt{a}  \Rightarrow^\ast  \ottnt{a'} $,
   then $   (  \lambda  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{b}  )   \gap  \ottnt{a}   \Rightarrow^\ast   \ottnt{b'} [  \ottmv{x}  \mapsto  \ottnt{a'}  ]  $.
 \end{lemma}
 
-\begin{lemma}[Inversion (p.r.)] \label{lem:pars:inv}
+\begin{lemma}[Inversion (p.r.)] \thmref{reduction.lean}{pars\{Pi,Abs,$\mathcal{U}$,App,Exf,Lvl,Lof,Mty\}Inv} \label{lem:pars:inv} \\
   If $ \ottnt{v}  \Rightarrow^\ast  \ottnt{c} $, then $\ottnt{c}$ is also a value of the same syntactic shape
   such that the reduction is congruent,
   \eg if $  \lambda  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{b}   \Rightarrow^\ast  \ottnt{c} $, then $\ottnt{c}$ is syntactically equal to $ \lambda  \ottmv{x}  \mathbin{:}  \ottnt{A'}  \mathpunct{.}  \ottnt{b'} $
@@ -684,7 +680,7 @@ Similarly, rather than working directly with definitional equality,
 we use conversion \fbox{$ \ottnt{a}  \Leftrightarrow  \ottnt{b} $},
 which is defined in terms of parallel reduction.
 
-\begin{definition}[Conversion]
+\begin{definition}[Conversion] \thmref{reduction.lean}{Conv} \\
   $ \ottnt{a}  \Leftrightarrow  \ottnt{b} $ iff there exists a $\ottnt{c}$ such that
   $ \ottnt{a}  \Rightarrow^\ast  \ottnt{c} $ and $ \ottnt{b}  \Rightarrow^\ast  \ottnt{c} $
 \end{definition}
@@ -715,7 +711,7 @@ which is defined in terms of parallel reduction.
     &
   \end{aligned}
 \end{alignat*}
-\caption{Complete development}
+\caption{Complete development \thmref{reduction.lean}{taka}}
 \label{fig:taka}
 \end{figure}
 \fi
@@ -726,23 +722,23 @@ which joins parallel reduction and proves the diamond property.
 Its definition is omitted here,
 but corresponds to simultaneous reduction of all redexes.
 
-\begin{lemma}[Completion (p.r.)] \label{lem:par:compl}
+\begin{lemma}[Completion (p.r.)] \thmref{reduction.lean}{parTaka} \label{lem:par:compl}
   If $ \ottnt{a}  \Rightarrow  \ottnt{b} $, then $ \ottnt{b}  \Rightarrow   \ottnt{a} ^{ \mathsf{T} }  $.
 \end{lemma}
 
-\begin{corollary}[Diamond (p.r.)] \label{lem:par:diamond}
+\begin{corollary}[Diamond (p.r.)] \thmref{reduction.lean}{diamond} \label{lem:par:diamond}
   If $ \ottnt{a}  \Rightarrow  \ottnt{b} $ and $ \ottnt{a}  \Rightarrow  \ottnt{c} $,
   then there exists some $d$ such that $ \ottnt{b}  \Rightarrow  d $ and $ \ottnt{c}  \Rightarrow  d $.
   In particular, $d$ is $ \ottnt{a} ^{ \mathsf{T} } $,
   with the reductions given by \nameref{lem:par:compl}.
 \end{corollary}
 
-\begin{theorem}[Confluence (p.r.)] \label{lem:par:confl}
+\begin{theorem}[Confluence (p.r.)] \thmref{reduction.lean}{confluence} \label{lem:par:confl} \\
   If $ \ottnt{a}  \Rightarrow^\ast  \ottnt{b} $ and $ \ottnt{a}  \Rightarrow^\ast  \ottnt{c} $,
   then there exists some $d$ such that $ \ottnt{b}  \Rightarrow^\ast  d $ and $ \ottnt{c}  \Rightarrow^\ast  d $.
 \end{theorem}
 
-\begin{corollary}[Properties of conversion] \label{lem:conv}
+\begin{corollary}[Properties of conversion] \thmref{reduction.lean}{conv*} \label{lem:conv}
   Conversion is reflexive, symmetric, transitive, substitutive, and congruent.
   Transitivity requires \nameref{lem:par:confl};
   the remaining properties are straightforward
@@ -751,12 +747,12 @@ but corresponds to simultaneous reduction of all redexes.
 
 Inversion on parallel reduction gives syntactic consistency and injectivity of conversion.
 
-\begin{lemma}[Syntactic consistency] \label{lem:par:consistency}
+\begin{lemma}[Syntactic consistency] \thmref{reduction.lean}{conv\{$\mathcal{U}$,Pi,Mty,Lvl\}\{$\mathcal{U}$,Pi,Mty,Lvl\}} \label{lem:par:consistency}
   If $\ottnt{v_{{\mathrm{1}}}}$ and $\ottnt{v_{{\mathrm{2}}}}$ have different syntactic shapes,
   then $ \ottnt{v_{{\mathrm{1}}}}  \Leftrightarrow  \ottnt{v_{{\mathrm{2}}}} $ is impossible.
 \end{lemma}
 
-\begin{lemma}[Injectivity (conv.)] ~
+\begin{lemma}[Injectivity (conv.)] \thmref{reduction.lean}{conv\{Pi,$\mathcal{U}$,Lvl\}Inv}
   \begin{enumerate}[topsep=0pt]
     \item If $  \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A_{{\mathrm{1}}}}  \mathpunct{.}  \ottnt{B_{{\mathrm{1}}}}   \Leftrightarrow   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A_{{\mathrm{2}}}}  \mathpunct{.}  \ottnt{B_{{\mathrm{2}}}}  $, then $ \ottnt{A_{{\mathrm{1}}}}  \Leftrightarrow  \ottnt{A_{{\mathrm{2}}}} $ and $ \ottnt{B_{{\mathrm{1}}}}  \Leftrightarrow  \ottnt{B_{{\mathrm{2}}}} $.
     \item If $  \kw{U} \gap  \ottnt{k_{{\mathrm{1}}}}   \Leftrightarrow   \kw{U} \gap  \ottnt{k_{{\mathrm{2}}}}  $, then $ \ottnt{k_{{\mathrm{1}}}}  \Leftrightarrow  \ottnt{k_{{\mathrm{2}}}} $.
@@ -770,7 +766,7 @@ which allows us to use them interchangeably later on.
 % while the left-to-right direction is proven by induction on definitional equality,
 % using the various properties of conversion.
 
-\begin{theorem} \label{lem:eq-conv}
+\begin{theorem} \thmref{typing.lean}{convEqv,eqvConv} \label{lem:eq-conv}
   $ \ottnt{a}  \equiv  \ottnt{b} $ iff $ \ottnt{a}  \Leftrightarrow  \ottnt{b} $.
 \end{theorem}
 
@@ -781,11 +777,11 @@ we need the usual weakening, substitution, replacement, and regularity lemmas.
 They follow from stronger forms of these lemmas involving simultaneous renaming and substitution,
 whose details we omit.
 
-\begin{lemma}[Context well-formedness] \label{lem:wt:wf}
+\begin{lemma}[Context well-formedness] \thmref{typing.lean}{wtWf} \label{lem:wt:wf}
   If $ \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $, then $ \mathop{\vdash}  \Gamma $.  
 \end{lemma}
 
-\begin{lemma}[Weakening (w.t.)] \label{lem:wt:weak}
+\begin{lemma}[Weakening (w.t.)] \thmref{safety.lean}{wtWeaken} \label{lem:wt:weak} \\
   If $ \mathop{\vdash}  \Gamma $, $ \Gamma  \vdash  \ottnt{B}  \mathrel{:}   \kw{U} \gap  \ottnt{k}  $, and $ \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $,
   then $  \Gamma ,  \ottmv{x}  \mathbin{:}  \ottnt{B}   \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $, where $\ottmv{x}$ is not in $\ottnt{a}$ or $\ottnt{A}$.
 \end{lemma}
@@ -796,7 +792,7 @@ whose details we omit.
 %   Weakening is then the special case of a single renaming by $\ottmv{x}$ to avoid capture.
 % \end{proof}
 
-\begin{lemma}[Substitution (w.t.)] \label{lem:wt:subst}
+\begin{lemma}[Substitution (w.t.)] \thmref{safety.lean}{wtSubst} \label{lem:wt:subst} \\
   If $ \Gamma  \vdash  \ottnt{b}  \mathrel{:}  \ottnt{B} $ and $  \Gamma ,  \ottmv{x}  \mathbin{:}  \ottnt{B}   \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $,
   then $ \Gamma  \vdash   \ottnt{a} [  \ottmv{x}  \mapsto  \ottnt{b}  ]   \mathrel{:}   \ottnt{A} [  \ottmv{x}  \mapsto  \ottnt{b}  ]  $.
 \end{lemma}
@@ -807,7 +803,7 @@ whose details we omit.
 %   Substitution is then the special case of a single substitution of $\ottmv{x}$.
 % \end{proof}
 
-\begin{lemma}[Replacement (w.t.)] \label{lem:wt:replace}
+\begin{lemma}[Replacement (w.t.)] \thmref{safety.lean}{wtReplace} \label{lem:wt:replace} \\
   If $ \ottnt{A}  \equiv  \ottnt{B} $, $ \Gamma  \vdash  \ottnt{B}  \mathrel{:}   \kw{U} \gap  \ottnt{k}  $, and $  \Gamma ,  \ottmv{x}  \mathbin{:}  \ottnt{A}   \vdash  \ottnt{c}  \mathrel{:}  \ottnt{C} $,
   then $  \Gamma ,  \ottmv{x}  \mathbin{:}  \ottnt{B}   \vdash  \ottnt{c}  \mathrel{:}  \ottnt{C} $.
 \end{lemma}
@@ -822,7 +818,7 @@ whose details we omit.
 %   and \nameref{lem:wt:weak} to weaken it.
 % \end{proof}
 
-\begin{lemma}[Context well-typedness] \label{lem:wt:ctxt}
+\begin{lemma}[Context well-typedness] \thmref{safety.lean}{wtMem} \label{lem:wt:ctxt} \\
   If $ \mathop{\vdash}  \Gamma $ and $ \ottmv{x}  \mathrel{:}  \ottnt{A}  \in  \Gamma $,
   then there exists some $\ottnt{k}$ such that $ \Gamma  \vdash  \ottnt{A}  \mathrel{:}   \kw{U} \gap  \ottnt{k}  $.
 \end{lemma}
@@ -834,7 +830,7 @@ whose details we omit.
 %   by the variable itself, followed by any other variables after it.
 % \end{proof}
 
-\begin{lemma}[Regularity] \label{lem:wt:reg}
+\begin{lemma}[Regularity] \thmref{safety.lean}{wtRegularity} \label{lem:wt:reg} \\
   If $ \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $, then there exists some $\ottnt{k}$ such that
   $ \Gamma  \vdash  \ottnt{A}  \mathrel{:}   \kw{U} \gap  \ottnt{k}  $.
 \end{lemma}
@@ -847,7 +843,7 @@ whose details we omit.
 At this point, we are able to prove admissibility of \rref{Lam}
 without its first premise. (This is not required for subject reduction.)
 
-\begin{corollary}[\textsc{Lam'}] \label{Lam'}
+\begin{corollary}[\textsc{Lam'}] \thmref{safety.lean}{wtfAbs} \label{Lam'} \\
   Given $ \Gamma  \vdash   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \mathrel{:}   \kw{U} \gap  \ottnt{k}  $ and $  \Gamma ,  \ottmv{x}  \mathbin{:}  \ottnt{A}   \vdash  \ottnt{b}  \mathrel{:}  \ottnt{B} $,
   we have $ \Gamma  \vdash   \lambda  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{b}   \mathrel{:}   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}  $.
   % Inversion on the first hypothesis yields $ \Gamma  \vdash  \ottnt{A}  \mathrel{:}   \kw{U} \gap  \ottnt{k'}  $
@@ -860,7 +856,7 @@ without its first premise. (This is not required for subject reduction.)
 
 The proof of subject reduction requires most of the above lemmas.
 
-\begin{theorem}[Subject reduction] \label{lem:preservation}
+\begin{theorem}[Subject reduction] \thmref{safety.lean}{wtPar} \label{lem:preservation} \\
   If $ \ottnt{a}  \Rightarrow  \ottnt{b} $ and $ \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $, then $ \Gamma  \vdash  \ottnt{b}  \mathrel{:}  \ottnt{A} $.
 \end{theorem}
 
@@ -883,12 +879,12 @@ a single step of parallel reduction by induction,
 which allows us to use \nameref{lem:preservation}.
 These proofs are also standard.
 
-\begin{lemma}[Progress] \label{lem:progress}
+\begin{lemma}[Progress] \thmref{safety.lean}{wtProgress} \label{lem:progress} \\
   If $  \cdot   \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $, then either $\ottnt{a}$ is a value,
   or $ \ottnt{a}  \rightsquigarrow  \ottnt{b} $ for some $\ottnt{b}$.
 \end{lemma}
 
-\begin{theorem}[Type safety]
+\begin{theorem}[Type safety] \thmref{safety.lean}{wtSafety} \\
   If $  \cdot   \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $ and $ \ottnt{a}  \rightsquigarrow^\ast  \ottnt{b} $,
   then either $\ottnt{b}$ is a value,
   or $ \ottnt{b}  \rightsquigarrow  \ottnt{c} $ for some $\ottnt{c}$.
@@ -912,7 +908,7 @@ These proofs are also standard.
     %------------------------%
     {  \kw{absurd}_{ \ottnt{A} } \gap  \ottnt{b}   \rightsquigarrow   \kw{absurd}_{ \ottnt{A} } \gap  \ottnt{b'}  }
 \end{mathpar}
-\caption{Call by name reduction}
+\caption{Call by name reduction \thmref{safety.lean}{CBN}}
 \label{fig:cbn}
 \end{figure}
 
@@ -924,7 +920,7 @@ which reduces $\beta$-redexes and head positions.
 A single step of cbn reduction embeds into
 a single step of parallel reduction by induction.
 
-\begin{lemma}
+\begin{lemma} \thmref{safety.lean}{CBNpar} \\
   If $ \ottnt{a}  \rightsquigarrow  \ottnt{b} $ then $ \ottnt{a}  \Rightarrow  \ottnt{b} $.
 \end{lemma}
 
@@ -933,19 +929,19 @@ we need to know what values of function and empty types are.
 The following lemmas are proven by induction,
 using inversion lemmas on typing derivations as needed.
 
-\begin{lemma}[Canonical function values] \label{lem:canon:fun}
+\begin{lemma}[Canonical function values] \thmref{safety.lean}{wtAbs} \label{lem:canon:fun} \\
   If $ \Gamma  \vdash  \ottnt{v}  \mathrel{:}   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}  $,
   then $\ottnt{v}$ has the syntactic shape $ \lambda  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{b} $ for some $\ottnt{A}, \ottnt{b}$.
 \end{lemma}
 
-\begin{lemma}[Canonical false values] \label{lem:canon:false}
+\begin{lemma}[Canonical false values] \thmref{safety.lean}{wtMty} \label{lem:canon:false}
   There is no $\ottnt{v}$ such that $ \Gamma  \vdash  \ottnt{v}  \mathrel{:}   \bot  $.
 \end{lemma}
 
 Finally, we prove progress, which with subject reduction we show type safety:
 closed, well-typed terms either reduce to a value, or must continue reducing.
 
-\begin{theorem}[Progress] \label{lem:progress}
+\begin{theorem}[Progress] \thmref{safety.lean}{wtProgress} \label{lem:progress} \\
   If $  \cdot   \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $, then either $\ottnt{a}$ is a value,
   or $ \ottnt{a}  \rightsquigarrow  \ottnt{b} $ for some $\ottnt{b}$.
 \end{theorem}
@@ -956,7 +952,7 @@ closed, well-typed terms either reduce to a value, or must continue reducing.
   in the cases for \rref{App,Abs}, respectively.
 \end{proof}
 
-\begin{theorem}[Type safety]
+\begin{theorem}[Type safety] \thmref{safety.lean}{wtSafety} \\
   If $  \cdot   \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $ and $ \ottnt{a}  \rightsquigarrow^\ast  \ottnt{b} $,
   then either $\ottnt{b}$ is a value,
   or $ \ottnt{b}  \rightsquigarrow  \ottnt{c} $ for some $\ottnt{c}$.
@@ -1040,7 +1036,7 @@ without worrying about well-foundedness.
     %-------------------------------------------------------------------%
     { \mathopen{\llbracket}   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow   \lbrace  f  \mid    \forall  \ottmv{y}  \mathpunct{.}   \forall  \ottnt{P_{{\mathrm{2}}}}  \mathpunct{.}   \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )     \to    \ottmv{y}  \in  \ottnt{P_{{\mathrm{1}}}}   \to    f  \gap  \ottmv{y}   \in  \ottnt{P_{{\mathrm{2}}}}     \rbrace  }
 \end{mathpar}
-\caption{Logical relation for closed types}
+\caption{Logical relation for closed types \thmref{semantics.lean}{Interps}}
 \label{fig:lr:closed}
 \end{figure}
 
@@ -1071,7 +1067,7 @@ the interpretation of the codomain varies with the argument,
 so we need to ensure first that the interpretation exists
 for \emph{every} argument in the interpretation of the domain,
 and that $ f  \gap  \ottmv{y} $ is in the \emph{particular} interpretation of the codomain.
-It then sounds like we would want \rref{I-Pi'} below.
+It then sounds like we would want \rref{I-Pi'} below \thmref{semantics.lean}{interpsPi}.
 %
 \begin{mathpar}
   \inferrule*[right=\ottdrulename{I-Pi'}]
@@ -1096,7 +1092,7 @@ A key intermediate lemma is functionality,
 \ie that the interpretation of a type is deterministic.
 We begin with closures over reductions to prove conversion.
 
-\begin{lemma}[Forward and backward closure (l.r.)] \label{lem:lr:pars} ~
+\begin{lemma}[Forward and backward closure (l.r.)] \thmref{semantics.lean}{interps\{Fwds,Bwds\}} \label{lem:lr:pars} ~
   \begin{enumerate}[topsep=0pt]
     \item If $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $ and either $ \ottnt{A}  \Rightarrow  \ottnt{B} $ or $ \ottnt{A}  \Rightarrow^\ast  \ottnt{B} $,
       then $ \mathopen{\llbracket}  \ottnt{B}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $.
@@ -1117,7 +1113,7 @@ We begin with closures over reductions to prove conversion.
   \end{enumerate}
 \end{proof}
 
-\begin{corollary}[Conversion (l.r.)]
+\begin{corollary}[Conversion (l.r.)] \thmref{semantics.lean}{interpsConv} \\
   If $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $ and $ \ottnt{A}  \Leftrightarrow  \ottnt{B} $,
   then $ \mathopen{\llbracket}  \ottnt{B}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $,
   using forward and backward closure.
@@ -1128,7 +1124,7 @@ When proving the fundamental theorem,
 we encounter situations where our goal requires inclusion of a reduced term in an interpretation,
 while induction hypotheses only piece together inclusion of the term before reduction.
 
-\begin{lemma}[Backward closure] \label{lem:lr:back}
+\begin{lemma}[Backward closure] \thmref{semantics.lean}{interpsBwdsP} \label{lem:lr:back} \\
   If $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $ and $ \ottnt{a}  \Rightarrow^\ast  \ottnt{b} $,
   then $ \ottnt{b}  \in  \ottnt{P} $ implies $ \ottnt{a}  \in  \ottnt{P} $.
 \end{lemma}
@@ -1141,7 +1137,7 @@ while induction hypotheses only piece together inclusion of the term before redu
 
 Cumulativity holds directly by induction on the logical relation.
 
-\begin{lemma}[Cumulativity (l.r.)] \label{lem:lr:cumul}
+\begin{lemma}[Cumulativity (l.r.)] \thmref{semantics.lean}{interpsCumul} \label{lem:lr:cumul} \\
   Suppose $ \ottmv{i}  <  \ottmv{j} $. If $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $, then $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{j} } \searrow  \ottnt{P} $.
 \end{lemma}
 
@@ -1154,7 +1150,7 @@ then inversion on \rref{I-Pi} gives \emph{some} interpretation $\ottnt{P_{{\math
 but we do not know whether it is \emph{the} interpretation that is required.
 We solve this by proving functionality.
 
-\begin{lemma}[Fixed-level functionality (l.r.)]$\!\!{\dagger}$ \label{lem:lr:fixed-func}
+\begin{lemma}[Fixed-level functionality (l.r.)]$\!\!{\dagger}$ \thmref{semantics.lean}{interpsDet'} \label{lem:lr:fixed-func} \\
   If $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $ and $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{Q} $, then $\ottnt{P} = \ottnt{Q}$.
 \end{lemma}
 
@@ -1180,7 +1176,7 @@ the idea being that the interpretation of a type is independent
 of the level at which it lives.
 We are then finally able to prove the inversion property for \rref{I-Pi'}.
 
-\begin{lemma}[Functionality (l.r.)] \label{lem:lr:func}
+\begin{lemma}[Functionality (l.r.)] \thmref{semantics.lean}{interpsDet} \label{lem:lr:func} \\
   If $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $ and $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{j} } \searrow  \ottnt{Q} $, then $\ottnt{P} = \ottnt{Q}$.
 \end{lemma}
 
@@ -1193,7 +1189,7 @@ We are then finally able to prove the inversion property for \rref{I-Pi'}.
   Then the sets are equal by \nameref{lem:lr:fixed-func}.
 \end{proof}
 
-\begin{lemma}[Inversion on function types (l.r.)]$\!\!{\dagger}$ \label{lem:lr:inv-pi}
+\begin{lemma}[Inversion on function types (l.r.)]$\!\!{\dagger}$ \thmref{semantics.lean}{interpsPiInv} \label{lem:lr:inv-pi} \\
   If $ \mathopen{\llbracket}   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $,
   then there exists a $\ottnt{P_{{\mathrm{1}}}}$ such that:
   \begin{enumerate}[topsep=0pt]
@@ -1241,7 +1237,7 @@ We however explicitly state here the inversion principle
 asserting that types that have interpretations are indeed one of the four types,
 proven by induction on the logical relation.
 
-\begin{lemma}[Inversion (l.r.)] \label{lem:lr:inv}
+\begin{lemma}[Inversion (l.r.)] \thmref{semantics.lean}{interpsStepInv} \label{lem:lr:inv} \\
   If $ \mathopen{\llbracket}  \ottnt{C}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $, then one of the following holds:
   \begin{itemize}[topsep=0pt]
     \item There exist $\ottnt{A}$ and $\ottnt{B}$ such that $ \ottnt{C}  \Rightarrow^\ast   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}  $;
@@ -1267,9 +1263,9 @@ In the mechanization, semantic well-typedness of a substitution \fbox{$ \sigma  
 is defined similarly to semantic typing \fbox{$ \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $},
 but the admissible rules defined in \cref{fig:sem:subst} are more convenient.
 
-\begin{definition}
+\begin{definition} \thmref{semantics.lean}{semSubst}
   A substitution $\sigma$ is semantically well typed
-  with respect to a context $\Gamma$ iff for every $ \ottmv{x}  \mathrel{:}  \ottnt{A}  \in  \Gamma $,
+  for context $\Gamma$ iff for every $ \ottmv{x}  \mathrel{:}  \ottnt{A}  \in  \Gamma $,
   there exist $\ottmv{i}, \ottnt{P}$ such that
   $ \mathopen{\llbracket}   \ottnt{A} [  \sigma  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $ and $  \ottmv{x} [  \sigma  ]   \in  \ottnt{P} $.
 \end{definition}
@@ -1286,11 +1282,11 @@ but the admissible rules defined in \cref{fig:sem:subst} are more convenient.
     %-----------------------%
     {  \sigma ,  \ottmv{x}  \mapsto  \ottnt{a}   \vDash   \Gamma ,  \ottmv{x}  \mathbin{:}  \ottnt{A}  }
 \end{mathpar}
-\caption{Semantically well-typed substitutions}
+\caption{Semantically well-typed substitutions \thmref{semantics.lean}{semSubst\{Nil,Cons\}}}
 \label{fig:sem:subst}
 \end{figure}
 
-\begin{definition}[Semantic typing]
+\begin{definition}[Semantic typing] \thmref{semantics.lean}{semWt}
   A term $\ottnt{a}$ is semantically well typed with type $\ottnt{A}$ under context $\Gamma$,
   written $ \Gamma  \vDash  \ottnt{a}  :  \ottnt{A} $, iff for every $\sigma$ such that $ \sigma  \vDash  \Gamma $,
   there exist $\ottmv{i}, \ottnt{P}$ such that
@@ -1308,7 +1304,7 @@ followed by the cases for the rules in \cref{fig:typing:univ}
 that are unique to our system.
 For concision, we skip steps involving massaging substitutions into the right shape.
 
-\begin{theorem}[Soundness] \label{thm:soundness}
+\begin{theorem}[Soundness] \thmref{soundness.lean}{soundness} \label{thm:soundness}
   If $ \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $, then $ \Gamma  \vDash  \ottnt{a}  :  \ottnt{A} $.
 \end{theorem}
 
@@ -1386,16 +1382,16 @@ For concision, we skip steps involving massaging substitutions into the right sh
 
 Consistency and canonicity results then follow from the fundamental theorem as corollaries.
 
-\begin{corollary}[Consistency]
+\begin{corollary}[Consistency] \thmref{soundness.lean}{consistency}
   There is no $\ottnt{b}$ such that $  \cdot   \vdash  \ottnt{b}  \mathrel{:}   \bot  $ holds.
   If there were, by \nameref{thm:soundness},
-  we would have $  \cdot   \vDash  \ottnt{b}  :   \bot  $.
+  we get have $  \cdot   \vDash  \ottnt{b}  :   \bot  $.
   Instantiating with the identity substitution,
   then inverting on the interpretation of $ \bot $,
-  we would have that $ \ottnt{b}  \in   \varnothing  $, which is a contradiction.
+  we get $ \ottnt{b}  \in   \varnothing  $, which is a contradiction.
 \end{corollary}
 
-\begin{corollary}[Canonicity of types] \label{lem:canon:univ}
+\begin{corollary}[Canonicity of types] \thmref{soundness.lean}{canon$\mathcal{U}$} \label{lem:canon:univ}
   If $  \cdot   \vdash  \ottnt{C}  \mathrel{:}   \kw{U} \gap  \ottnt{k}  $,
   then either $ \ottnt{C}  \Rightarrow^\ast   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}  $, $ \ottnt{C}  \Rightarrow^\ast   \kw{U} \gap   \ottmv{i}   $, $ \ottnt{C}  \Rightarrow^\ast   \kw{Level}\texttt{<} \gap   \ottmv{i}   $, or $ \ottnt{C}  \Rightarrow^\ast   \bot  $.
   By \nameref{thm:soundness},
@@ -1406,7 +1402,7 @@ Consistency and canonicity results then follow from the fundamental theorem as c
   Then the goal holds by \nameref{lem:lr:inv}.
 \end{corollary}
 
-\begin{corollary}[Canonicity of levels]
+\begin{corollary}[Canonicity of levels] \thmref{soundness.lean}{canonLvl}
   If $  \cdot   \vdash  \ottnt{k}  \mathrel{:}   \kw{Level}\texttt{<} \gap  \ell  $,
   then $ \ottnt{k}  \Rightarrow^\ast   \ottmv{i}  $ for some concrete level $\ottmv{i}$.
   By \nameref{thm:soundness},
@@ -1429,11 +1425,11 @@ where neutral forms $\ottnt{e}$ are elimination forms that do not reduce,
 and normal forms $\ottnt{n}$ are all terms that do not reduce.
 %
 \begin{align*}
-   \ottnt{e}  ,  \ottnt{E}  &\Coloneqq \ottmv{x} \mid  \ottnt{e}  \gap  \ottnt{n}  \mid  \kw{absurd}_{ \ottnt{N} } \gap  \ottnt{e}  \\
-   \ottnt{n}  ,  \ottnt{N}  &\Coloneqq \ottmv{i} \mid  \Pi  \ottmv{x}  \mathbin{:}  \ottnt{N}  \mathpunct{.}  \ottnt{N}  \mid  \lambda  \ottmv{x}  \mathbin{:}  \ottnt{N}  \mathpunct{.}  \ottnt{n}  \mid  \bot  \mid  \kw{U} \gap  \ottnt{n}  \mid  \kw{Level}\texttt{<} \gap  \ottnt{n}  \mid \ottnt{e}
+   \ottnt{e}  ,  \ottnt{E}  &\Coloneqq \ottmv{x} \mid  \ottnt{e}  \gap  \ottnt{n}  \mid  \kw{absurd}_{ \ottnt{N} } \gap  \ottnt{e}  &\text{\thmref{normal.lean}{ne}} \\
+   \ottnt{n}  ,  \ottnt{N}  &\Coloneqq \ottmv{i} \mid  \Pi  \ottmv{x}  \mathbin{:}  \ottnt{N}  \mathpunct{.}  \ottnt{N}  \mid  \lambda  \ottmv{x}  \mathbin{:}  \ottnt{N}  \mathpunct{.}  \ottnt{n}  \mid  \bot  \mid  \kw{U} \gap  \ottnt{n}  \mid  \kw{Level}\texttt{<} \gap  \ottnt{n}  \mid \ottnt{e} &\text{\thmref{normal.lean}{nf}}
 \end{align*}
 
-\begin{definition}[Weak normalization] ~
+\begin{definition}[Weak normalization] \thmref{normal.lean}{wne,wnf}
   \begin{itemize}[topsep=0pt]
     \item A term weakly reduces to neutral form,
       written $ \mathbf{wne} \gap  \ottnt{a} $, if there exists $\ottnt{e}$ such that $ \ottnt{a}  \Rightarrow^\ast  \ottnt{e} $.
