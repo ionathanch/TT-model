@@ -371,8 +371,7 @@ we can define its type as a bounded level quantification,
 and use the bound for the universe.
 %
 \begin{align*}
-  [[!Id]] &: [[U o]] \\
-  [[!Id]] &\coloneqq [[:concrete: ∀i < o. ΠA : U i. A → A]]
+  [[!Id]] &: [[U o]] & [[!Id]] &\coloneqq [[:concrete: ∀i < o. ΠA : U i. A → A]]
 \end{align*}
 
 So far, our notions of level polymorphism treat levels as syntactically separate from terms,
@@ -425,7 +424,6 @@ and $[[k]], [[l]]$ for level terms.
 The syntax is presented in \cref{fig:syntax};
 we additionally use $[[A → B]]$ as sugar for nondependent functions
 $[[Πx : A. B]]$ where $[[x]]$ does not occur in $[[B]]$.
-
 While the mechanization uses de Bruijn indexing and simultaneous substitutions,
 this paper presents the syntax in nominal form for clarity,
 and we omit the details of manipulating substitutions for concision.
@@ -528,14 +526,12 @@ a typing judgement \fbox{$[[G ⊢ a : A]]$},
 and an untyped definitional equality \fbox{$[[a = b]]$}.
 We use $\beta$-conversion as our equality,
 and omit the usual congruence rules.
-
 Unusually, \rref{Lam} includes well-typedness premises 
 of both the function's type and the domain type alone.
 The former is necessary to strengthen the induction hypotheses
 when proving the fundamental soundness theorem,
 and the latter to strengthen them when proving subject reduction.
-We later prove admissible a rule \nameref{Lam'}
-that omits the first premise, as it can be deduced from the second.
+We later prove admissible a rule \nameref{Lam'} that omits the first premise.
 The other typing rules are otherwise typical.
 
 \begin{figure}
@@ -590,7 +586,6 @@ solely knowing that $[[• ⊢ 2 : Level< 3]]$, $[[• ⊢ Type 0 : Type 1]]$, a
 which is now required since levels are terms in general and not only concrete levels.
 For example, we can construct a derivation for $[[x : Level< o, y : Level< x ⊢ x : Level< o]]$,
 where the levels $[[x]], [[y]]$ are variables.
-
 \Rref{Cumul} is a cumulativity rule that permits lifting a type
 from one universe to a higher universe.
 This rule is weaker than a full subtyping rule that accounts for
@@ -603,15 +598,11 @@ Finally, \rref{Univ} asserts that a universe at level $[[k]]$
 lives in the universe at level $[[l]]$ when $[[k]]$ is strictly bounded by $[[l]]$.
 Allowing universes with general level terms and not just concrete levels
 to be well typed is what permits typing level-polymorphic types.
-For example, we can derive a typing judgement for
-the following level-polymorphic identity function type:
-\begin{equation*}
-  [[• ⊢ Πx : Level< o. Πy : Type x. y → y : Type o]]
-\end{equation*}
+For example, the level-polymorphic identity function type
+$[[Πx : Level< o. Πy : Type x. y → y]]$ is typeable.
 $[[Level< o]]$ can be assigned an arbitrary type by \rref{Level},
 $[[Type x]]$ has type $[[Type o]]$ by \rref{Univ} and \rref{Var},
-and $[[y]]$ can be assigned type $[[Type o]]$ transitively
-via \rref{Trans,Var}.
+and $[[y]]$ can be assigned type $[[Type o]]$ transitively via \rref{Trans,Var}.
 Then the entire term has type $[[Type o]]$ by repeated application of \rref{Pi}.
 
 \section{Type safety} \label{sec:safety}
@@ -630,7 +621,7 @@ only listing some of the key lemmas required.
 
 \subsection{Reduction and conversion}
 
-\begin{figure}[b]
+\begin{figure}[h]
 \begin{mathpar}
   \inferrule[\ottdrulename{P-Beta}]
     {[[b ⇒ b']] \and
@@ -687,7 +678,15 @@ we use parallel reduction \fbox{$[[a ⇒ b]]$},
 defined in \cref{fig:par},
 and its reflexive, transitive closure \fbox{$[[a ⇒* b]]$},
 into which call-by-name evaluation embeds.
+Similarly, instead of definitional equality,
+we use conversion \fbox{$[[a ⇔ b]]$},
+which is defined in terms of parallel reduction.
 We begin with simple lemmas about parallel reduction.
+
+\begin{definition}[Conversion] \thmref{reduction.lean}{Conv} \\
+  $[[a ⇔ b]]$ iff there exists a $[[c]]$ such that
+  $[[a ⇒* c]]$ and $[[b ⇒* c]]$
+\end{definition}
 
 \begin{lemma}[Substitution (p.r.)] \thmref{reduction.lean}{parsSubst} \label{lem:pars:subst} \\
   If $[[a ⇒* a']]$ and $[[b ⇒* b']]$,
@@ -707,15 +706,6 @@ We begin with simple lemmas about parallel reduction.
   \eg if $[[λx : A. b ⇒* c]]$, then $[[c]]$ is syntactically equal to $[[λx : A'. b']]$
   for some $[[A']], [[b']]$ such that $[[A ⇒* A']], [[b ⇒* b']]$.
 \end{lemma}
-
-Similarly, rather than working directly with definitional equality,
-we use conversion \fbox{$[[a ⇔ b]]$},
-which is defined in terms of parallel reduction.
-
-\begin{definition}[Conversion] \thmref{reduction.lean}{Conv} \\
-  $[[a ⇔ b]]$ iff there exists a $[[c]]$ such that
-  $[[a ⇒* c]]$ and $[[b ⇒* c]]$
-\end{definition}
 
 \iffalse
 \begin{figure}
@@ -778,6 +768,11 @@ but corresponds to simultaneous reduction of all redexes.
 \end{corollary}
 
 Inversion on parallel reduction gives syntactic consistency and injectivity of conversion.
+Finally, definitional equality is equivalent to conversion,
+which allows us to use them interchangeably later on.
+% The right-to-left direction is proven using induction on parallel reduction,
+% while the left-to-right direction is proven by induction on definitional equality,
+% using the various properties of conversion.
 
 \begin{lemma}[Syntactic consistency] \thmref{reduction.lean}{conv\{$\mathcal{U}$,Pi,Mty,Lvl\}\{$\mathcal{U}$,Pi,Mty,Lvl\}} \label{lem:par:consistency}
   If $[[v1]]$ and $[[v2]]$ have different syntactic shapes,
@@ -792,12 +787,6 @@ Inversion on parallel reduction gives syntactic consistency and injectivity of c
   \end{enumerate}
 \end{lemma}
 
-Finally, definitional equality is equivalent to conversion,
-which allows us to use them interchangeably later on.
-% The right-to-left direction is proven using induction on parallel reduction,
-% while the left-to-right direction is proven by induction on definitional equality,
-% using the various properties of conversion.
-
 \begin{theorem} \thmref{typing.lean}{convEqv,eqvConv} \label{lem:eq-conv}
   $[[a = b]]$ iff $[[a ⇔ b]]$.
 \end{theorem}
@@ -809,9 +798,9 @@ we need the usual weakening, substitution, replacement, and regularity lemmas.
 They follow from stronger forms of these lemmas involving simultaneous renaming and substitution,
 whose details we omit.
 
-\begin{lemma}[Context well-formedness] \thmref{typing.lean}{wtWf} \label{lem:wt:wf}
-  If $[[G ⊢ a : A]]$, then $[[⊢ G]]$.  
-\end{lemma}
+% \begin{lemma}[Context well-formedness] \thmref{typing.lean}{wtWf} \label{lem:wt:wf}
+%   If $[[G ⊢ a : A]]$, then $[[⊢ G]]$.  
+% \end{lemma}
 
 \begin{lemma}[Weakening (w.t.)] \thmref{safety.lean}{wtWeaken} \label{lem:wt:weak} \\
   If $[[⊢ G]]$, $[[G ⊢ B : Type k]]$, and $[[G ⊢ a : A]]$,
@@ -850,10 +839,10 @@ whose details we omit.
 %   and \nameref{lem:wt:weak} to weaken it.
 % \end{proof}
 
-\begin{lemma}[Context well-typedness] \thmref{safety.lean}{wtMem} \label{lem:wt:ctxt} \\
-  If $[[⊢ G]]$ and $[[x : A ∈ G]]$,
-  then there exists some $[[k]]$ such that $[[G ⊢ A : Type k]]$.
-\end{lemma}
+% \begin{lemma}[Context well-typedness] \thmref{safety.lean}{wtMem} \label{lem:wt:ctxt} \\
+%   If $[[⊢ G]]$ and $[[x : A ∈ G]]$,
+%   then there exists some $[[k]]$ such that $[[G ⊢ A : Type k]]$.
+% \end{lemma}
 
 % \begin{proof}
 %   Our context membership judgement is defined inductively,
@@ -1081,7 +1070,7 @@ as well as backward closure under reduction of the \emph{terms} in the interpret
 The interpretation of the empty type as the empty set is given by \rref{I-Mty}.
 
 Because we consider the interpretation of closed types only,
-and we explicitly have a constructor for backward closure,
+% and we explicitly have a constructor for backward closure,
 the only other constructors we need are those for normal, closed types.
 In particular, we need only consider $[[Type j]]$ and $[[Level< j1]]$
 with concrete levels rather than arbitrary level terms.
@@ -1294,12 +1283,12 @@ In the mechanization, semantic well-typedness of a substitution \fbox{$[[s ⊧ G
 is defined similarly to semantic typing \fbox{$[[G ⊢ a : A]]$},
 but the admissible rules defined in \cref{fig:sem:subst} are more convenient.
 
-\begin{definition} \thmref{semantics.lean}{semSubst}
-  A substitution $[[s]]$ is semantically well typed
-  for context $[[G]]$ iff for every $[[x : A ∈ G]]$,
-  there exist $[[i]], [[P]]$ such that
-  $[[⟦A{s}⟧ i ↘ P]]$ and $[[x{s} ∈ P]]$.
-\end{definition}
+% \begin{definition} \thmref{semantics.lean}{semSubst}
+%   A substitution $[[s]]$ is semantically well typed
+%   for context $[[G]]$ iff for every $[[x : A ∈ G]]$,
+%   there exist $[[i]], [[P]]$ such that
+%   $[[⟦A{s}⟧ i ↘ P]]$ and $[[x{s} ∈ P]]$.
+% \end{definition}
 
 \begin{figure}
 \begin{mathpar}
@@ -1427,9 +1416,9 @@ Consistency and canonicity results then follow from the fundamental theorem as c
   then either $[[C ⇒* Πx: A. B]]$, $[[C ⇒* Type i]]$, $[[C ⇒* Level< i]]$, or $[[C ⇒* ⊥]]$.
   By \nameref{thm:soundness},
   instantiating with the identity substitution,
-  we have some $[[j]], [[Q]]$ such that $[[⟦Type k⟧ j ↘ Q]]$ and $[[C ∈ Q]]$.
+  we have $[[j]], [[Q]]$ such that $[[⟦Type k⟧ j ↘ Q]]$ and $[[C ∈ Q]]$.
   By inversion on the former,
-  we then have some $[[i]], [[P]]$ such that $[[k ⇒* i]]$ and $[[⟦C⟧ i ↘ P]]$.
+  we have $[[i]], [[P]]$ such that $[[k ⇒* i]]$ and $[[⟦C⟧ i ↘ P]]$.
   Then the goal holds by \nameref{lem:lr:inv}.
 \end{corollary}
 
@@ -1438,9 +1427,9 @@ Consistency and canonicity results then follow from the fundamental theorem as c
   then $[[k ⇒* i]]$ for some concrete level $[[i]]$.
   By \nameref{thm:soundness},
   instantiating with the identity substitution,
-  we have some $[[j]], [[P]]$ such that $[[⟦Level< l⟧ j ↘ P]]$ and $[[k ∈ P]]$.
+  we have $[[j]], [[P]]$ such that $[[⟦Level< l⟧ j ↘ P]]$ and $[[k ∈ P]]$.
   By inversion on the former,
-  we then have that $[[l ⇒* i2]]$ and $[[k ⇒* i1]]$ such that $[[i1 < i2]]$.
+  we have that $[[l ⇒* i2]]$ and $[[k ⇒* i1]]$ such that $[[i1 < i2]]$.
 \end{corollary}
 
 \section{Towards normalization} \label{sec:normalization}
@@ -1628,7 +1617,7 @@ a level successor operator, and a level maximum operator.
 To justify them semantically,
 we would impose the first two as additional existence conditions on the metalevel levels;
 the third follows from the total ordering, which lets us pick the larger of two levels.
-Their typing rules are straightforward, given below.
+% Their typing rules are straightforward, given below.
 %
 \begin{mathpar}
   \inferrule[\ottdrulename{Zero}]
@@ -1648,8 +1637,8 @@ Their typing rules are straightforward, given below.
     {[[G ⊢ k1 ⊔ k2 : Level< (l1 ⊔ l2)]]}
 \end{mathpar}
 
-What complicates matters are the additional definitional equalities that need to be added
-to ensure that the maximum operator is idempotent, associative, commutative,
+What complicates matters are the additional definitional equalities that
+ensure that the maximum operator is idempotent, associative, commutative,
 distributive with respect to successors,
 and that $[[0]]$ is its identity element.
 While these properties hold automatically at the metalevel for concrete levels,

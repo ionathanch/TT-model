@@ -371,8 +371,7 @@ we can define its type as a bounded level quantification,
 and use the bound for the universe.
 %
 \begin{align*}
-   \kw{ Id }  &:  \kw{U}_{  \omega  }  \\
-   \kw{ Id }  &\coloneqq   \forall  i  <   \omega   \mathpunct{.}   \Pi  A  \mathbin{:}   \kw{U}_{ i }   \mathpunct{.}  A    \to  A 
+   \kw{ Id }  &:  \kw{U}_{  \omega  }  &  \kw{ Id }  &\coloneqq   \forall  i  <   \omega   \mathpunct{.}   \Pi  A  \mathbin{:}   \kw{U}_{ i }   \mathpunct{.}  A    \to  A 
 \end{align*}
 
 So far, our notions of level polymorphism treat levels as syntactically separate from terms,
@@ -425,7 +424,6 @@ and $\ottnt{k}, \ell$ for level terms.
 The syntax is presented in \cref{fig:syntax};
 we additionally use $ \ottnt{A}  \to  \ottnt{B} $ as sugar for nondependent functions
 $ \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B} $ where $\ottmv{x}$ does not occur in $\ottnt{B}$.
-
 While the mechanization uses de Bruijn indexing and simultaneous substitutions,
 this paper presents the syntax in nominal form for clarity,
 and we omit the details of manipulating substitutions for concision.
@@ -528,14 +526,12 @@ a typing judgement \fbox{$ \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $},
 and an untyped definitional equality \fbox{$ \ottnt{a}  \equiv  \ottnt{b} $}.
 We use $\beta$-conversion as our equality,
 and omit the usual congruence rules.
-
 Unusually, \rref{Lam} includes well-typedness premises 
 of both the function's type and the domain type alone.
 The former is necessary to strengthen the induction hypotheses
 when proving the fundamental soundness theorem,
 and the latter to strengthen them when proving subject reduction.
-We later prove admissible a rule \nameref{Lam'}
-that omits the first premise, as it can be deduced from the second.
+We later prove admissible a rule \nameref{Lam'} that omits the first premise.
 The other typing rules are otherwise typical.
 
 \begin{figure}
@@ -590,7 +586,6 @@ solely knowing that $  \cdot   \vdash   2   \mathrel{:}   \kw{Level}\texttt{<} \
 which is now required since levels are terms in general and not only concrete levels.
 For example, we can construct a derivation for $   \ottmv{x}  \mathbin{:}   \kw{Level}\texttt{<} \gap   \omega    ,  \ottmv{y}  \mathbin{:}   \kw{Level}\texttt{<} \gap  \ottmv{x}    \vdash  \ottmv{x}  \mathrel{:}   \kw{Level}\texttt{<} \gap   \omega   $,
 where the levels $\ottmv{x}, \ottmv{y}$ are variables.
-
 \Rref{Cumul} is a cumulativity rule that permits lifting a type
 from one universe to a higher universe.
 This rule is weaker than a full subtyping rule that accounts for
@@ -603,15 +598,11 @@ Finally, \rref{Univ} asserts that a universe at level $\ottnt{k}$
 lives in the universe at level $\ell$ when $\ottnt{k}$ is strictly bounded by $\ell$.
 Allowing universes with general level terms and not just concrete levels
 to be well typed is what permits typing level-polymorphic types.
-For example, we can derive a typing judgement for
-the following level-polymorphic identity function type:
-\begin{equation*}
-    \cdot   \vdash    \Pi  \ottmv{x}  \mathbin{:}   \kw{Level}\texttt{<} \gap   \omega    \mathpunct{.}   \Pi  \ottmv{y}  \mathbin{:}   \kw{U} \gap  \ottmv{x}   \mathpunct{.}  \ottmv{y}    \to  \ottmv{y}   \mathrel{:}   \kw{U} \gap   \omega   
-\end{equation*}
+For example, the level-polymorphic identity function type
+$ \Pi  \ottmv{x}  \mathbin{:}   \kw{Level}\texttt{<} \gap   \omega    \mathpunct{.}    \Pi  \ottmv{y}  \mathbin{:}   \kw{U} \gap  \ottmv{x}   \mathpunct{.}  \ottmv{y}   \to  \ottmv{y}  $ is typeable.
 $ \kw{Level}\texttt{<} \gap   \omega  $ can be assigned an arbitrary type by \rref{Level},
 $ \kw{U} \gap  \ottmv{x} $ has type $ \kw{U} \gap   \omega  $ by \rref{Univ} and \rref{Var},
-and $\ottmv{y}$ can be assigned type $ \kw{U} \gap   \omega  $ transitively
-via \rref{Trans,Var}.
+and $\ottmv{y}$ can be assigned type $ \kw{U} \gap   \omega  $ transitively via \rref{Trans,Var}.
 Then the entire term has type $ \kw{U} \gap   \omega  $ by repeated application of \rref{Pi}.
 
 \section{Type safety} \label{sec:safety}
@@ -630,7 +621,7 @@ only listing some of the key lemmas required.
 
 \subsection{Reduction and conversion}
 
-\begin{figure}[b]
+\begin{figure}[h]
 \begin{mathpar}
   \inferrule[\ottdrulename{P-Beta}]
     { \ottnt{b}  \Rightarrow  \ottnt{b'}  \and
@@ -687,7 +678,15 @@ we use parallel reduction \fbox{$ \ottnt{a}  \Rightarrow  \ottnt{b} $},
 defined in \cref{fig:par},
 and its reflexive, transitive closure \fbox{$ \ottnt{a}  \Rightarrow^\ast  \ottnt{b} $},
 into which call-by-name evaluation embeds.
+Similarly, instead of definitional equality,
+we use conversion \fbox{$ \ottnt{a}  \Leftrightarrow  \ottnt{b} $},
+which is defined in terms of parallel reduction.
 We begin with simple lemmas about parallel reduction.
+
+\begin{definition}[Conversion] \thmref{reduction.lean}{Conv} \\
+  $ \ottnt{a}  \Leftrightarrow  \ottnt{b} $ iff there exists a $\ottnt{c}$ such that
+  $ \ottnt{a}  \Rightarrow^\ast  \ottnt{c} $ and $ \ottnt{b}  \Rightarrow^\ast  \ottnt{c} $
+\end{definition}
 
 \begin{lemma}[Substitution (p.r.)] \thmref{reduction.lean}{parsSubst} \label{lem:pars:subst} \\
   If $ \ottnt{a}  \Rightarrow^\ast  \ottnt{a'} $ and $ \ottnt{b}  \Rightarrow^\ast  \ottnt{b'} $,
@@ -707,15 +706,6 @@ We begin with simple lemmas about parallel reduction.
   \eg if $  \lambda  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{b}   \Rightarrow^\ast  \ottnt{c} $, then $\ottnt{c}$ is syntactically equal to $ \lambda  \ottmv{x}  \mathbin{:}  \ottnt{A'}  \mathpunct{.}  \ottnt{b'} $
   for some $\ottnt{A'}, \ottnt{b'}$ such that $ \ottnt{A}  \Rightarrow^\ast  \ottnt{A'} ,  \ottnt{b}  \Rightarrow^\ast  \ottnt{b'} $.
 \end{lemma}
-
-Similarly, rather than working directly with definitional equality,
-we use conversion \fbox{$ \ottnt{a}  \Leftrightarrow  \ottnt{b} $},
-which is defined in terms of parallel reduction.
-
-\begin{definition}[Conversion] \thmref{reduction.lean}{Conv} \\
-  $ \ottnt{a}  \Leftrightarrow  \ottnt{b} $ iff there exists a $\ottnt{c}$ such that
-  $ \ottnt{a}  \Rightarrow^\ast  \ottnt{c} $ and $ \ottnt{b}  \Rightarrow^\ast  \ottnt{c} $
-\end{definition}
 
 \iffalse
 \begin{figure}
@@ -778,6 +768,11 @@ but corresponds to simultaneous reduction of all redexes.
 \end{corollary}
 
 Inversion on parallel reduction gives syntactic consistency and injectivity of conversion.
+Finally, definitional equality is equivalent to conversion,
+which allows us to use them interchangeably later on.
+% The right-to-left direction is proven using induction on parallel reduction,
+% while the left-to-right direction is proven by induction on definitional equality,
+% using the various properties of conversion.
 
 \begin{lemma}[Syntactic consistency] \thmref{reduction.lean}{conv\{$\mathcal{U}$,Pi,Mty,Lvl\}\{$\mathcal{U}$,Pi,Mty,Lvl\}} \label{lem:par:consistency}
   If $\ottnt{v_{{\mathrm{1}}}}$ and $\ottnt{v_{{\mathrm{2}}}}$ have different syntactic shapes,
@@ -792,12 +787,6 @@ Inversion on parallel reduction gives syntactic consistency and injectivity of c
   \end{enumerate}
 \end{lemma}
 
-Finally, definitional equality is equivalent to conversion,
-which allows us to use them interchangeably later on.
-% The right-to-left direction is proven using induction on parallel reduction,
-% while the left-to-right direction is proven by induction on definitional equality,
-% using the various properties of conversion.
-
 \begin{theorem} \thmref{typing.lean}{convEqv,eqvConv} \label{lem:eq-conv}
   $ \ottnt{a}  \equiv  \ottnt{b} $ iff $ \ottnt{a}  \Leftrightarrow  \ottnt{b} $.
 \end{theorem}
@@ -809,9 +798,9 @@ we need the usual weakening, substitution, replacement, and regularity lemmas.
 They follow from stronger forms of these lemmas involving simultaneous renaming and substitution,
 whose details we omit.
 
-\begin{lemma}[Context well-formedness] \thmref{typing.lean}{wtWf} \label{lem:wt:wf}
-  If $ \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $, then $ \mathop{\vdash}  \Gamma $.  
-\end{lemma}
+% \begin{lemma}[Context well-formedness] \thmref{typing.lean}{wtWf} \label{lem:wt:wf}
+%   If $ \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $, then $ \mathop{\vdash}  \Gamma $.  
+% \end{lemma}
 
 \begin{lemma}[Weakening (w.t.)] \thmref{safety.lean}{wtWeaken} \label{lem:wt:weak} \\
   If $ \mathop{\vdash}  \Gamma $, $ \Gamma  \vdash  \ottnt{B}  \mathrel{:}   \kw{U} \gap  \ottnt{k}  $, and $ \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $,
@@ -850,10 +839,10 @@ whose details we omit.
 %   and \nameref{lem:wt:weak} to weaken it.
 % \end{proof}
 
-\begin{lemma}[Context well-typedness] \thmref{safety.lean}{wtMem} \label{lem:wt:ctxt} \\
-  If $ \mathop{\vdash}  \Gamma $ and $ \ottmv{x}  \mathrel{:}  \ottnt{A}  \in  \Gamma $,
-  then there exists some $\ottnt{k}$ such that $ \Gamma  \vdash  \ottnt{A}  \mathrel{:}   \kw{U} \gap  \ottnt{k}  $.
-\end{lemma}
+% \begin{lemma}[Context well-typedness] \thmref{safety.lean}{wtMem} \label{lem:wt:ctxt} \\
+%   If $ \mathop{\vdash}  \Gamma $ and $ \ottmv{x}  \mathrel{:}  \ottnt{A}  \in  \Gamma $,
+%   then there exists some $\ottnt{k}$ such that $ \Gamma  \vdash  \ottnt{A}  \mathrel{:}   \kw{U} \gap  \ottnt{k}  $.
+% \end{lemma}
 
 % \begin{proof}
 %   Our context membership judgement is defined inductively,
@@ -1081,7 +1070,7 @@ as well as backward closure under reduction of the \emph{terms} in the interpret
 The interpretation of the empty type as the empty set is given by \rref{I-Mty}.
 
 Because we consider the interpretation of closed types only,
-and we explicitly have a constructor for backward closure,
+% and we explicitly have a constructor for backward closure,
 the only other constructors we need are those for normal, closed types.
 In particular, we need only consider $ \kw{U} \gap   \ottmv{j}  $ and $ \kw{Level}\texttt{<} \gap   \ottmv{j_{{\mathrm{1}}}}  $
 with concrete levels rather than arbitrary level terms.
@@ -1294,12 +1283,12 @@ In the mechanization, semantic well-typedness of a substitution \fbox{$ \sigma  
 is defined similarly to semantic typing \fbox{$ \Gamma  \vdash  \ottnt{a}  \mathrel{:}  \ottnt{A} $},
 but the admissible rules defined in \cref{fig:sem:subst} are more convenient.
 
-\begin{definition} \thmref{semantics.lean}{semSubst}
-  A substitution $\sigma$ is semantically well typed
-  for context $\Gamma$ iff for every $ \ottmv{x}  \mathrel{:}  \ottnt{A}  \in  \Gamma $,
-  there exist $\ottmv{i}, \ottnt{P}$ such that
-  $ \mathopen{\llbracket}   \ottnt{A} [  \sigma  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $ and $  \ottmv{x} [  \sigma  ]   \in  \ottnt{P} $.
-\end{definition}
+% \begin{definition} \thmref{semantics.lean}{semSubst}
+%   A substitution $\sigma$ is semantically well typed
+%   for context $\Gamma$ iff for every $ \ottmv{x}  \mathrel{:}  \ottnt{A}  \in  \Gamma $,
+%   there exist $\ottmv{i}, \ottnt{P}$ such that
+%   $ \mathopen{\llbracket}   \ottnt{A} [  \sigma  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $ and $  \ottmv{x} [  \sigma  ]   \in  \ottnt{P} $.
+% \end{definition}
 
 \begin{figure}
 \begin{mathpar}
@@ -1427,9 +1416,9 @@ Consistency and canonicity results then follow from the fundamental theorem as c
   then either $ \ottnt{C}  \Rightarrow^\ast   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}  $, $ \ottnt{C}  \Rightarrow^\ast   \kw{U} \gap   \ottmv{i}   $, $ \ottnt{C}  \Rightarrow^\ast   \kw{Level}\texttt{<} \gap   \ottmv{i}   $, or $ \ottnt{C}  \Rightarrow^\ast   \bot  $.
   By \nameref{thm:soundness},
   instantiating with the identity substitution,
-  we have some $\ottmv{j}, \ottnt{Q}$ such that $ \mathopen{\llbracket}   \kw{U} \gap  \ottnt{k}   \mathclose{\rrbracket}_{ \ottmv{j} } \searrow  \ottnt{Q} $ and $ \ottnt{C}  \in  \ottnt{Q} $.
+  we have $\ottmv{j}, \ottnt{Q}$ such that $ \mathopen{\llbracket}   \kw{U} \gap  \ottnt{k}   \mathclose{\rrbracket}_{ \ottmv{j} } \searrow  \ottnt{Q} $ and $ \ottnt{C}  \in  \ottnt{Q} $.
   By inversion on the former,
-  we then have some $\ottmv{i}, \ottnt{P}$ such that $ \ottnt{k}  \Rightarrow^\ast   \ottmv{i}  $ and $ \mathopen{\llbracket}  \ottnt{C}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $.
+  we have $\ottmv{i}, \ottnt{P}$ such that $ \ottnt{k}  \Rightarrow^\ast   \ottmv{i}  $ and $ \mathopen{\llbracket}  \ottnt{C}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $.
   Then the goal holds by \nameref{lem:lr:inv}.
 \end{corollary}
 
@@ -1438,9 +1427,9 @@ Consistency and canonicity results then follow from the fundamental theorem as c
   then $ \ottnt{k}  \Rightarrow^\ast   \ottmv{i}  $ for some concrete level $\ottmv{i}$.
   By \nameref{thm:soundness},
   instantiating with the identity substitution,
-  we have some $\ottmv{j}, \ottnt{P}$ such that $ \mathopen{\llbracket}   \kw{Level}\texttt{<} \gap  \ell   \mathclose{\rrbracket}_{ \ottmv{j} } \searrow  \ottnt{P} $ and $ \ottnt{k}  \in  \ottnt{P} $.
+  we have $\ottmv{j}, \ottnt{P}$ such that $ \mathopen{\llbracket}   \kw{Level}\texttt{<} \gap  \ell   \mathclose{\rrbracket}_{ \ottmv{j} } \searrow  \ottnt{P} $ and $ \ottnt{k}  \in  \ottnt{P} $.
   By inversion on the former,
-  we then have that $ \ell  \Rightarrow^\ast   \ottmv{i_{{\mathrm{2}}}}  $ and $ \ottnt{k}  \Rightarrow^\ast   \ottmv{i_{{\mathrm{1}}}}  $ such that $ \ottmv{i_{{\mathrm{1}}}}  <  \ottmv{i_{{\mathrm{2}}}} $.
+  we have that $ \ell  \Rightarrow^\ast   \ottmv{i_{{\mathrm{2}}}}  $ and $ \ottnt{k}  \Rightarrow^\ast   \ottmv{i_{{\mathrm{1}}}}  $ such that $ \ottmv{i_{{\mathrm{1}}}}  <  \ottmv{i_{{\mathrm{2}}}} $.
 \end{corollary}
 
 \section{Towards normalization} \label{sec:normalization}
@@ -1628,7 +1617,7 @@ a level successor operator, and a level maximum operator.
 To justify them semantically,
 we would impose the first two as additional existence conditions on the metalevel levels;
 the third follows from the total ordering, which lets us pick the larger of two levels.
-Their typing rules are straightforward, given below.
+% Their typing rules are straightforward, given below.
 %
 \begin{mathpar}
   \inferrule[\ottdrulename{Zero}]
@@ -1648,8 +1637,8 @@ Their typing rules are straightforward, given below.
     { \Gamma  \vdash   \ottnt{k_{{\mathrm{1}}}}  \sqcup  \ottnt{k_{{\mathrm{2}}}}   \mathrel{:}   \kw{Level}\texttt{<} \gap   (  \ell_{{\mathrm{1}}}  \sqcup  \ell_{{\mathrm{2}}}  )   }
 \end{mathpar}
 
-What complicates matters are the additional definitional equalities that need to be added
-to ensure that the maximum operator is idempotent, associative, commutative,
+What complicates matters are the additional definitional equalities that
+ensure that the maximum operator is idempotent, associative, commutative,
 distributive with respect to successors,
 and that $0$ is its identity element.
 While these properties hold automatically at the metalevel for concrete levels,
