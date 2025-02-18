@@ -569,9 +569,12 @@ The other typing rules are otherwise typical.
 
 The rules relating to universes and levels are given in \cref{fig:typing:univ}.
 By \rref{Lvl}, we can view the type constructor $[[Level< _]]$
-as the internalization of the order on levels.
-As the level type is combined with level bounding,
-it is impossible to declare a level variable strictly less than itself.
+as a restricted internalization of the order on levels.
+Quantifications and abstractions over a level variable
+must be bounded by some level expression,
+which cannot be the variable itself since it is not in the scope of its own type.
+In contrast, if we had more general level constraint types,
+it would be possible to declare a looping constraint $[[x]] < [[x]]$.
 The level type itself can be typed at any universe by \rref{Level<}
 regardless of what the bounding level is.
 For example, we can construct a derivation for $[[• ⊢ Level< 2 : Type 0]]$
