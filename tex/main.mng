@@ -77,7 +77,7 @@
 }
 \urlstyle{tt}
 
-\title{Bounded First-Class Universe Levels \titlebreak in Type Theory}
+\title{Bounded First-Class Universe Levels \titlebreak in Dependent Type Theory}
 \titlerunning{Bounded First-Class Universe Levels}
 \authorrunning{J. Chan, S. Weirich}
 \Copyright{Jonathan Chan, Stephanie Weirich}
@@ -137,14 +137,22 @@
 
 \section{Introduction}
 
-TODO: say what $[[Type _]]$ mean
+Dependent type theories are common foundations for proof assistants
+where theorems are manipulated as types and their proofs as terms.
+Types are often treated as terms themselves,
+providing a uniform mechanism for working with both;
+for example, quantifying over predicates is no different from quantifying over functions,
+as predicates are functions that return types.
+To merge types and terms, we need a type of types, or a \emph{universe},
+which itself must be a term with a type.
 
-Girard showed that the type-in-type axiom makes type theory logically inconsistent:
-if the type of a universe is itself, all types are inhabited~\citep{systemf}.
+Girard~\citep{systemf} showed that a type-in-type axiom makes dependent type theory logically inconsistent:
+if the type of a universe is itself, then all types are inhabited,
+rendering the type theory useless as a tool for proving.
 Therefore, Martin-L\"of stratified the universe in his type theory (MLTT)~\citep{mltt}
 into a countably infinite hierarchy of universes
 $[[U 0]] : [[U 1]] : [[U 2]] : \dots$
-indexed by universe levels spanning the naturals.
+indexed by \emph{universe levels} spanning the naturals.
 Many contemporary proof assistants based on dependent types feature such a hierarchy,
 such as Rocq~\citep{rocq}, Agda~\citep{agda}, Lean~\citep{lean}, and F$^\star$~\citep{fstar}.
 
