@@ -1070,7 +1070,7 @@ as well as backward closure under reduction of the \emph{terms} in the interpret
 The interpretation of the empty type as the empty set is given by \rref{I-Mty}.
 
 Because we consider the interpretation of closed types only,
-% and we explicitly have a constructor for backward closure,
+and we have a constructor for backward closure,
 the only other constructors we need are those for normal, closed types.
 In particular, we need only consider $[[Type j]]$ and $[[Level< j1]]$
 with concrete levels rather than arbitrary level terms.
@@ -1617,7 +1617,6 @@ a level successor operator, and a level maximum operator.
 To justify them semantically,
 we would impose the first two as additional existence conditions on the metalevel levels;
 the third follows from the total ordering, which lets us pick the larger of two levels.
-% Their typing rules are straightforward, given below.
 %
 \begin{mathpar}
   \inferrule[\ottdrulename{Zero}]
@@ -1735,7 +1734,7 @@ the independence of definitional equality from typing,
 along with its equivalence to conversion.
 By introducing a subtyping judgement that depends on typing,
 which in turn depends on subtyping, to prove consistency,
-the logical relation would have to be extended to include a semantic notion of equality,
+the logical relation would need to include a semantic notion of equality,
 similar to the reducibility judgements used by Abel, \"Ohman, and Vezzosi~\citep{dec-conv}.
 
 \section{Conclusion and future work} \label{sec:conclusion}
