@@ -113,25 +113,29 @@
 \maketitle
 
 \begin{abstract}
-  In type theory, being able to refer to a type universe as a term itself
-  increases its expressive power,
+  In dependent type theory,
+  being able to refer to a type universe as a term itself increases its expressive power,
   but requires mechanisms in place to prevent Girard's paradox
   from introducing logical inconsistency in the presence of type-in-type.
   The simplest mechanism is a hierarchy of universes indexed by a sequence of levels,
   typically the naturals.
-  To improve reusability of definitions,
-  they can be made level polymorphic,
+  To improve reusability of definitions, they can be made level polymorphic,
   abstracting over level variables and adding a notion of level expressions.
   For even more expressive power,
-  level expressions can be terms themselves,
-  and level polymorphism is subsumed by first-class levels.
-  Furthermore, bounded level polymorphism provides more precision
+  level expressions can be made first-class as terms themselves,
+  and level polymorphism is subsumed by dependent functions quantifying over levels.
+  Furthermore, bounded level polymorphism provides more expressivity
   by being able to explicitly state constraints on level variables.
   While semantics for first-class levels with constraints are known,
-  syntax and typing rules have not been concretely written down.
-  In this work, we design a concrete type theory with bounded first-class levels,
+  syntax and typing rules have not been explicitly written down.
+  Yet pinning down a well-behaved syntax is not trivial;
+  there exist prior type theories with bounded level polymorphism
+  that fail to satisfy subject reduction.
+  In this work, we design an explicit syntax for
+  a type theory with bounded first-class levels,
   parametrized over arbitrary well-founded sets of levels.
-  We prove the metatheoretic properties of type safety and consistency,
+  We prove the metatheoretic properties of subject reduction,
+  type safety, consistency, and canonicity,
   entirely mechanized from syntax to semantics in Lean.
 \end{abstract}
 
@@ -170,10 +174,9 @@ with (in)equality constraints, level operators, and level expressions.
 This extension is implemented in Rocq~\citep{univ-poly-coq}.
 
 In the absence of level-polymorphic recursion,
-prenex level polymorphism does not augment the proof power of the type theory,
-as uses of level-polymorphic definitions
+uses of prenex-polymorphic definitions
 can be specialized away to level-monomorphic terms.
-Indeed, Favonia, Angiuli, and Mullanix note that it
+Favonia, Angiuli, and Mullanix note that it
 ``is as consistent as standard (monomorphic) type theory [\dots]
 because any given proof can only mention finitely many universes'',
 and show consistency using this principle~\citep{displacement}.
