@@ -234,9 +234,7 @@ Our contributions are as follows:
     Consistency ensures that the type theory is suitable
     as a basis for logical reasoning in a proof assistant,
     while canonicity ensures that closed terms evaluate to the values we expect.
-  \item Normalization of open terms remains an open problem.
-    \cref{sec:normalization} provides first steps towards proving it,
-    and we discuss where the proof gets stuck.
+    Normalization of open terms remains an open problem (\cref{sec:normalization}).
 \end{itemize}
 %
 All results are mechanized in Lean.
@@ -1079,7 +1077,7 @@ Let us get the easier cases out of the way.
 so a type has an interpretation if it reduces to a type with an interpretation.
 We show shortly that forward closure under reduction of the type also holds,
 as well as backward closure under reduction of the \emph{terms} in the interpretations.%
-\footnote{We will not require forward closure.}
+\footnote{We do not require forward closure.}
 The interpretation of the empty type as the empty set is given by \rref{I-Mty}.
 
 Because we consider the interpretation of closed types only,
@@ -1124,7 +1122,12 @@ along with properties that hold \apriori for syntactic typing:
 conversion and cumulativity.
 A key intermediate lemma is functionality,
 \ie that the interpretation of a type is deterministic.
-We begin with closures over reductions to prove conversion.
+Cumulativity holds directly by induction on the logical relation.
+To prove conversion, we begin with closures over reductions.
+
+\begin{lemma}[Cumulativity (l.r.)] \thmref{semantics.lean}{interpsCumul} \label{lem:lr:cumul} \\
+  Suppose $[[i < j]]$. If $[[⟦A⟧ i ↘ P]]$, then $[[⟦A⟧ j ↘ P]]$.
+\end{lemma}
 
 \begin{lemma}[Forward and backward closure (l.r.)] \thmref{semantics.lean}{interps\{Fwds,Bwds\}} \label{lem:lr:pars} ~
   \begin{enumerate}[topsep=0pt]
@@ -1168,12 +1171,6 @@ while induction hypotheses only piece together inclusion of the term before redu
   In the \rref*{I-Univ} case, where $[[a]]$ and $[[b]]$ are types,
   we use backward closure from \cref{lem:lr:pars}.
 \end{proof}
-
-Cumulativity holds directly by induction on the logical relation.
-
-\begin{lemma}[Cumulativity (l.r.)] \thmref{semantics.lean}{interpsCumul} \label{lem:lr:cumul} \\
-  Suppose $[[i < j]]$. If $[[⟦A⟧ i ↘ P]]$, then $[[⟦A⟧ j ↘ P]]$.
-\end{lemma}
 
 The inversion principles for each constructor of the logical relation
 hold by induction, using properties of parallel reduction as needed.
@@ -1451,6 +1448,12 @@ Consistency and canonicity results then follow from the fundamental theorem as c
 One conventional way to prove normalization,
 given that we already have a syntactic logical relation,
 is to extend it from closed to open types and terms.
+However, we have not yet found the correct interpretation for open universe types
+that continues to satisfy the same properties we need
+(inversion, conversion, cumulativity, functionality)
+while being strong enough for the soundness proof to go through.
+
+\iffalse
 However, we quickly run into issues proving
 the fundamental soundness theorem following this technique.
 For now, we consider only weak normalization,
@@ -1554,6 +1557,7 @@ While it is a derivable typing judgement,
 $[[Type x]]$ could not possibly be interpreted as a semantic universe,
 since there are no levels strictly smaller than $[[0]]$,
 and it is unclear what it would mean for $[[Type y]]$ to be in its interpretation.
+\fi
 
 It is also unclear whether the issue is finding the correct semantic model,
 or if normalization does not hold at all,
