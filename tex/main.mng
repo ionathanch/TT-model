@@ -775,7 +775,7 @@ but corresponds to simultaneous reduction of all redexes.
 \begin{corollary}[Properties of conversion] \thmref{reduction.lean}{conv*} \label{lem:conv}
   Conversion is reflexive, symmetric, transitive, substitutive, and congruent.
   Transitivity requires \nameref{lem:par:confl};
-  the remaining properties are straightforward
+  the remaining are straightforward
   from the corresponding properties of parallel reduction.
 \end{corollary}
 
@@ -810,71 +810,99 @@ we need the usual weakening, substitution, replacement, and regularity lemmas.
 They follow from stronger forms of these lemmas involving simultaneous renaming and substitution,
 whose details we omit.
 
-% \begin{lemma}[Context well-formedness] \thmref{typing.lean}{wtWf} \label{lem:wt:wf}
-%   If $[[G ⊢ a : A]]$, then $[[⊢ G]]$.  
-% \end{lemma}
+\begin{lemma} \thmref{safety.lean}{wtWeaken,wtSubst,wtReplace,wtRegularity} \label{lem:wt:preservation}
+  \begin{itemize}
+    \item \textit{Weakening.} If $[[⊢ G]]$, $[[G ⊢ B : Type k]]$, and $[[G ⊢ a : A]]$,
+      then $[[G, x : B ⊢ a : A]]$, where $[[x]]$ not in $[[a]]$, $[[A]]$.
+    \item \textit{Substitution.} If $[[G ⊢ b : B]]$ and $[[G, x : B ⊢ a : A]]$,
+      then $[[G ⊢ a{x ↦ b} : A{x ↦ b}]]$.
+    \item \textit{Replacement.} If $[[A = B]]$, $[[G ⊢ B : Type k]]$, and $[[G, x : A ⊢ c : C]]$,
+      then $[[G, x : B ⊢ c : C]]$.
+    \item \textit{Regularity.} If $[[G ⊢ a : A]]$, then there exists some $[[k]]$ such that
+      $[[G ⊢ A : Type k]]$.
+  \end{itemize}
+\end{lemma}
+
+\iffalse
+\begin{lemma}[Context well-formedness] \thmref{typing.lean}{wtWf} \label{lem:wt:wf}
+  If $[[G ⊢ a : A]]$, then $[[⊢ G]]$.  
+\end{lemma}
 
 \begin{lemma}[Weakening (w.t.)] \thmref{safety.lean}{wtWeaken} \label{lem:wt:weak} \\
   If $[[⊢ G]]$, $[[G ⊢ B : Type k]]$, and $[[G ⊢ a : A]]$,
   then $[[G, x : B ⊢ a : A]]$, where $[[x]]$ is not in $[[a]]$ or $[[A]]$.
 \end{lemma}
 
-% \begin{proof}
-%   A renaming lemma is proven by induction on the typing derivation of $[[a]]$,
-%   showing that applying well-scoped renamings preserves typing.
-%   Weakening is then the special case of a single renaming by $[[x]]$ to avoid capture.
-% \end{proof}
+\begin{proof}
+  A renaming lemma is proven by induction on the typing derivation of $[[a]]$,
+  showing that applying well-scoped renamings preserves typing.
+  Weakening is then the special case of a single renaming by $[[x]]$ to avoid capture.
+\end{proof}
 
 \begin{lemma}[Substitution (w.t.)] \thmref{safety.lean}{wtSubst} \label{lem:wt:subst} \\
   If $[[G ⊢ b : B]]$ and $[[G, x : B ⊢ a : A]]$,
   then $[[G ⊢ a{x ↦ b} : A{x ↦ b}]]$.
 \end{lemma}
 
-% \begin{proof}
-%   A morphing lemma is proven by induction on the typing derivation of $[[a]]$,
-%   showing that applying well-typed substitutions preserves typing.
-%   Substitution is then the special case of a single substitution of $[[x]]$.
-% \end{proof}
+\begin{proof}
+  A morphing lemma is proven by induction on the typing derivation of $[[a]]$,
+  showing that applying well-typed substitutions preserves typing.
+  Substitution is then the special case of a single substitution of $[[x]]$.
+\end{proof}
 
 \begin{lemma}[Replacement (w.t.)] \thmref{safety.lean}{wtReplace} \label{lem:wt:replace} \\
   If $[[A = B]]$, $[[G ⊢ B : Type k]]$, and $[[G, x : A ⊢ c : C]]$,
   then $[[G, x : B ⊢ c : C]]$.
 \end{lemma}
 
-% \begin{proof}
-%   The morphing lemma allows us to change the context from one to the other
-%   as long as there is a well-typed substitution between them.
-%   We can show that the identity substitution is such a substitution
-%   by proving $[[G, x : B ⊢ x : A]]$.
-%   This follows from \rref{Conv},
-%   \nameref{lem:wt:wf} for well-typedness of $[[A]]$,
-%   and \nameref{lem:wt:weak} to weaken it.
-% \end{proof}
+\begin{proof}
+  The morphing lemma allows us to change the context from one to the other
+  as long as there is a well-typed substitution between them.
+  We can show that the identity substitution is such a substitution
+  by proving $[[G, x : B ⊢ x : A]]$.
+  This follows from \rref{Conv},
+  \nameref{lem:wt:wf} for well-typedness of $[[A]]$,
+  and \nameref{lem:wt:weak} to weaken it.
+\end{proof}
 
-% \begin{lemma}[Context well-typedness] \thmref{safety.lean}{wtMem} \label{lem:wt:ctxt} \\
-%   If $[[⊢ G]]$ and $[[x : A ∈ G]]$,
-%   then there exists some $[[k]]$ such that $[[G ⊢ A : Type k]]$.
-% \end{lemma}
+\begin{lemma}[Context well-typedness] \thmref{safety.lean}{wtMem} \label{lem:wt:ctxt} \\
+  If $[[⊢ G]]$ and $[[x : A ∈ G]]$,
+  then there exists some $[[k]]$ such that $[[G ⊢ A : Type k]]$.
+\end{lemma}
 
-% \begin{proof}
-%   Our context membership judgement is defined inductively,
-%   so we proceed by induction on its derivation.
-%   We require \nameref{lem:wt:weak} to weaken the context of the type of the variable
-%   by the variable itself, followed by any other variables after it.
-% \end{proof}
+\begin{proof}
+  Our context membership judgement is defined inductively,
+  so we proceed by induction on its derivation.
+  We require \nameref{lem:wt:weak} to weaken the context of the type of the variable
+  by the variable itself, followed by any other variables after it.
+\end{proof}
 
 \begin{lemma}[Regularity] \thmref{safety.lean}{wtRegularity} \label{lem:wt:reg} \\
   If $[[G ⊢ a : A]]$, then there exists some $[[k]]$ such that
   $[[G ⊢ A : Type k]]$.
 \end{lemma}
 
-% \begin{proof}
-%   By straightforward induction on the typing derivation of $[[a]]$,
-%   using \nameref{lem:wt:ctxt} in the \rref*{Var} case.
-% \end{proof}
+\begin{proof}
+  By straightforward induction on the typing derivation of $[[a]]$,
+  using \nameref{lem:wt:ctxt} in the \rref*{Var} case.
+\end{proof}
+\fi
+
+\begin{theorem}[Subject reduction] \thmref{safety.lean}{wtPar} \label{lem:preservation} \\
+  If $[[a ⇒ b]]$ and $[[G ⊢ a : A]]$, then $[[G ⊢ b : A]]$.
+\end{theorem}
+
+\begin{proof}
+  By induction on the typing derivation of $[[a]]$.
+  The most complex case is when the reduction is \rref*{P-Beta},
+  requiring \cref{lem:conv} and \cref{lem:wt:preservation}.
+  Even so, the proof is standard,
+  and the cases for the universe and level rules in \cref{fig:typing:univ}
+  follow from the induction hypotheses.
+\end{proof}
 
 At this point, we are able to prove admissibility of \rref{Lam}
-without its first premise. (This is not required for subject reduction.)
+without its first premise, which depends only on regularity.
 
 \begin{corollary}[\textsc{Lam'}] \thmref{safety.lean}{wtfAbs} \label{Lam'} \\
   Given $[[G ⊢ Πx : A. B : Type k]]$ and $[[G, x : A ⊢ b : B]]$,
@@ -886,22 +914,6 @@ without its first premise. (This is not required for subject reduction.)
   % which lets us use \rref{Conv} to show $[[G ⊢ A : Type k]]$.
   % The goal then holds by \rref{Lam}.
 \end{corollary}
-
-The proof of subject reduction requires most of the above lemmas.
-
-\begin{theorem}[Subject reduction] \thmref{safety.lean}{wtPar} \label{lem:preservation} \\
-  If $[[a ⇒ b]]$ and $[[G ⊢ a : A]]$, then $[[G ⊢ b : A]]$.
-\end{theorem}
-
-\begin{proof}
-  By induction on the typing derivation of $[[a]]$.
-  The most complex case is when the reduction is \rref*{P-Beta},
-  requiring \cref{lem:conv}, \nameref{lem:wt:subst},
-  \nameref{lem:wt:replace}, and \nameref{lem:wt:reg}.
-  Even so, the proof is standard,
-  and the cases for the universe and level rules in \cref{fig:typing:univ}
-  follow directly from the induction hypotheses.
-\end{proof}
 
 For progress and type safety, our notion of evaluation is
 the reflexive, transitive closure \fbox{$[[a ⇝* b]]$}
@@ -1264,8 +1276,8 @@ We are then finally able to prove the inversion property for \rref{I-Pi'}.
   \end{itemize}
 \end{proof}
 
-Inversion principles for the other types hold as well,
-proven by induction on the logical relation.
+Inversion principles also hold for the other types
+by induction on the logical relation.
 
 \begin{lemma}[Inversion on universes (l.r.)] \thmref{semantics.lean}{interps$\mathcal{U}$Inv} \label{lem:lr:inv-univ} \\
   If $[[⟦Type k⟧ i ↘ P]]$ and $[[A ∈ P]]$,
@@ -1301,12 +1313,12 @@ In the mechanization, semantic well-typedness of a substitution \fbox{$[[s ⊧ G
 is defined similarly to semantic typing \fbox{$[[G ⊢ a : A]]$},
 but the admissible rules defined in \cref{fig:sem:subst} are more convenient.
 
-% \begin{definition} \thmref{semantics.lean}{semSubst}
-%   A substitution $[[s]]$ is semantically well typed
-%   for context $[[G]]$ iff for every $[[x : A ∈ G]]$,
-%   there exist $[[i]], [[P]]$ such that
-%   $[[⟦A{s}⟧ i ↘ P]]$ and $[[x{s} ∈ P]]$.
-% \end{definition}
+\begin{definition} \thmref{semantics.lean}{semSubst}
+  A substitution $[[s]]$ is semantically well typed
+  for context $[[G]]$ iff for every $[[x : A ∈ G]]$,
+  there exist $[[i]], [[P]]$ such that
+  $[[⟦A{s}⟧ i ↘ P]]$ and $[[x{s} ∈ P]]$.
+\end{definition}
 
 \begin{figure}
 \begin{mathpar}
@@ -1659,14 +1671,12 @@ We believe the mechanization to be doable but tedious.
 
 Meanwhile, well-founded induction on levels already holds semantically,
 as we need it to define our logical relation in the first place.
-We can internalize it by syntactically introducing an eliminator for levels,
-but it is unclear whether such an eliminator would be useful.
-
-\iffalse
-The eliminator states that a predicate $[[B]]$ holds on arbitrary levels
+We can internalize it by syntactically introducing an eliminator $[[wf _]]$ for levels,
+which states that a predicate $[[B]]$ holds on arbitrary levels
 if we can show that it holds for a given level
 when we know it holds for all smaller levels.
-
+However, it is unclear whether such an eliminator would be useful.
+%
 \begin{mathpar}
   \inferrule[ElimLvl]
     {[[G, z : Level< k ⊢ B : Type l]] \\\\
@@ -1677,6 +1687,7 @@ when we know it holds for all smaller levels.
   \inferrule[E-ElimLvl]{~}{[[wf b k = b k (λy. wf b y)]]}
 \end{mathpar}
 
+\iffalse
 For universes, the simplest form of an eliminator is a typecase operator,
 matching on a type as a function type, the empty type, a universe, or a level type.
 Such an operator is justified by \nameref{lem:canon:univ}.
