@@ -210,7 +210,7 @@ Furthermore, while a syntax may satisfy semantic properties such as logical cons
 it may not necessarily satisfy desirable syntactic properties.
 In particular, BCDE's semantics can conceivably be viewed as
 that of TTFL without making levels first class,
-yet fails to satisfy subject reduction.
+yet its syntax fails to satisfy subject reduction.
 
 In this work, we give an end-to-end account of first-class levels in type theory,
 beginning with an explicit syntax and typing rules,
