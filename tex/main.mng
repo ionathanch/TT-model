@@ -622,7 +622,6 @@ Then the entire term has type $[[Type o]]$ by repeated application of \rref{Pi}.
 
 Type safety is proven using standard syntactic methods
 to show progress and preservation (\ie subject reduction).
-% The theorem is stated in terms of a call-by-name evaluation strategy, which we define shortly.
 In essence, closed, well-typed terms evaluate (if they terminate) to values,
 which are type formers and constructors,
 defined below.
@@ -1031,8 +1030,9 @@ though we to write $[[a ∈ P]]$ in lieu of $[[P]]([[a]])$
 to say that $[[a]]$ is in the set,
 and we use set-builder notation in lieu of explicit abstractions.
 When proving properties of the logical relation,
-we require no other axioms than function extensionality and propositional extensionality;
-for transparency, we mark the lemmas in which they are used with $\dagger$.
+we require no other axioms than predicate extensionality,
+which follows from function and propositional extensionality;
+we explicitly mark the lemmas in which they are used with $\dagger$.
 
 Because universes are interpreted as sets of types
 which themselves have interpretations at a lower universe level,
@@ -1198,8 +1198,7 @@ We solve this by proving functionality.
   knowing by the induction hypotheses
   that the interpretations of the domain and codomain yield equal sets.
   Because sets are encoded as predicates,
-  we need to use predicate extensionality,
-  \ie function extensionality followed by propositional extensionality.
+  we need to use predicate extensionality.
   It then suffices to show that membership in one set implies membership in the other,
   which holds using the induction hypotheses.
 \end{proof}
@@ -1257,26 +1256,32 @@ We are then finally able to prove the inversion property for \rref{I-Pi'}.
       Supposing $[[y]]$ and $[[P2]]$,
       we have three hypotheses $[[R(y, P2) → y ∈ P1 → f y ∈ P2]]$,
       $[[⟦ B{x ↦ y} ⟧ i ↘ P2]]$, and $[[y ∈ P1]]$.
-      Instantiating the first hypothesis using \ref{lem:inv-pi:hyp:R},
-      we know there exists a $[[P2']]$ such that $[[f y ∈ P2']]$.
-      From \ref{lem:inv-pi:hyp:B}, we also know that $[[⟦ B{x ↦ y} ⟧ i ↘ P2']]$.
+      By the first hypothesis on the second and on \ref{lem:inv-pi:hyp:R},
+      there exists a $[[P2']]$ such that $[[f y ∈ P2']]$.
+      From \ref{lem:inv-pi:hyp:B}, we also have $[[⟦ B{x ↦ y} ⟧ i ↘ P2']]$.
       Then by \nameref{lem:lr:func}, we have $[[P2]] = [[P2']]$, so $[[f y ∈ P2]]$.
       \qedhere
   \end{itemize}
 \end{proof}
 
-Inversion principles for the other types hold as well, omitted here.
-We however explicitly state here the inversion principle
-asserting that types that have interpretations are indeed one of the four types,
+Inversion principles for the other types hold as well,
 proven by induction on the logical relation.
 
+\begin{lemma}[Inversion on universes (l.r.)] \thmref{semantics.lean}{interps$\mathcal{U}$Inv} \label{lem:lr:inv-univ} \\
+  If $[[⟦Type k⟧ i ↘ P]]$ and $[[A ∈ P]]$,
+  then there exists $[[j]], [[Q]]$ such that $[[k ⇒* j]]$ and $[[⟦A⟧ j ↘ Q]]$.
+\end{lemma}
+
+\begin{lemma}[Inversion on level types (l.r.)] \thmref{semantics.lean}{interpLvlInv} \label{lem:lr:inv-lvl} \\
+  If $[[⟦Level< l⟧ i ↘ P]]$ and $[[k ∈ P]]$,
+  then there exist $[[j2]] < [[j1]]$ such that $[[l ⇒* j1]]$ and $[[k ⇒* j2]]$.
+\end{lemma}
+
 \begin{lemma}[Inversion (l.r.)] \thmref{semantics.lean}{interpsStepInv} \label{lem:lr:inv} \\
-  If $[[⟦C⟧ i ↘ P]]$, then one of the following holds:
+  If $[[⟦C⟧ i ↘ P]]$, then one of the following holds: $[[C ⇒* ⊥]]$; or
   \begin{itemize}[topsep=0pt]
-    \item There exist $[[A]]$ and $[[B]]$ such that $[[C ⇒* Πx: A. B]]$;
-    \item There exists $[[i]]$ such that $[[C ⇒* Type i]]$;
-    \item There exists $[[i]]$ such that $[[C ⇒* Level< i]]$; or
-    \item $[[C ⇒* ⊥]]$.
+    \item There exist $[[A]]$ and $[[B]]$ such that $[[C ⇒* Πx: A. B]]$; or
+    \item There exists $[[i]]$ such that $[[C ⇒* Type i]]$ or $[[C ⇒* Level< i]]$.
   \end{itemize}
 \end{lemma}
 
@@ -1349,10 +1354,8 @@ For concision, we skip steps involving massaging substitutions into the right sh
       The relevant premises are $[[G ⊢ Πx: A. B : Type k]]$ and $[[G, x : A ⊢ b : B]]$,
       concluding with $[[G ⊢ λx : A. b : Πx: A. B]]$.
       By the induction hypothesis on the first premise,
-      the function type is in the interpretation of a universe,
-      so it also has an interpretation by inversion,
-      allowing us to apply \nameref{lem:lr:inv-pi}.
-      This gives $[[⟦A{s}⟧ i ↘ P1]]$, $[[⟦ B{s, x ↦ a} ⟧ i ↘ P2]]$, and $[[a ∈ P1]]$,
+      \cref{lem:lr:inv-univ}, and \cref{lem:lr:inv-pi},
+      we have $[[⟦A{s}⟧ i ↘ P1]]$, $[[⟦ B{s, x ↦ a} ⟧ i ↘ P2]]$, and $[[a ∈ P1]]$,
       where the goal is now to show that $[[(λx : A. b) a ∈ P2]]$.
       By \rref{I-Cons} and the induction hypothesis on the second premise,
       we have $[[⟦B{s, x ↦ a}⟧ i' ↘ P2']]$ and $[[b{x ↦ a} ∈ P2']]$ for some $[[i']], [[P2']]$.
@@ -1362,31 +1365,27 @@ For concision, we skip steps involving massaging substitutions into the right sh
     \item \textit{\Rref{Univ}.}
       The premise is $[[G ⊢ k : Level< l]]$,
       concluding with $[[G ⊢ Type k : Type l]]$.
-      By the induction hypothesis on the premise,
-      followed by inversion on the interpretation of level types,
-      we know that $[[k{s} ⇒* i1]]$ and $[[l{s} ⇒* i2]]$ such that $[[i1 < i2]]$.
-      By cofinality, we also know that there must exist a $[[j]]$ such that $[[i2 < j]]$.
+      By the induction hypothesis and \cref{lem:lr:inv-lvl},
+      we have $[[i1 < i2]]$ such that $[[k{s} ⇒* i1]]$ and $[[l{s} ⇒* i2]]$.
+      By cofinality, there must exist a $[[j]]$ such that $[[i2 < j]]$.
       The goal is now to show that $[[⟦Type (l{s})⟧ j ↘ {z | ∃ P. ⟦ z ⟧ i2 ↘ P}]]$
       and $[[⟦Type (k{s})⟧ i2 ↘ {z | ∃ P. ⟦ z ⟧ i1 ↘ P}]]$.
       These are both constructed using \rref{I-Univ} and \cref{lem:lr:pars}.
     \item \textit{\Rref{Level<}.}
       The premises are $[[G ⊢ Type k1 : Type l1]]$ and $[[G ⊢ k0 : Level< l0]]$,
       concluding with $[[G ⊢ Level< k0 : Type k1]]$.
-      By the induction hypothesis on the first premises,
-      $[[Type (k1{s})]]$ is in the interpretation of a universe.
-      By inversion, we know that it too has an interpretation as a universe,
-      so it remains to show that $[[⟦Level< (k0{s})⟧ j ↘ P]]$ for some $[[P]]$,
+      By the induction hypothesis on the first premise and \cref{lem:lr:inv-univ},
+      $[[Type (k1{s})]]$ has an interpretation as a universe,
+      so it remains to find a $[[P]]$ such that $[[⟦Level< (k0{s})⟧ j ↘ P]]$,
       where $[[k1{s} ⇒* j]]$.
-      By the induction on the second premise,
-      followed by inversion on the interpretation of level types,
-      we know that $[[k0{s} ⇒* i]]$ for some $[[i]]$.
+      By the induction on the second premise and \cref{lem:lr:inv-lvl},
+      we have $[[k0{s} ⇒* i]]$ for some $[[i]]$.
       Then the goal is constructed using \rref{I-Level<} and \cref{lem:lr:pars}.
     \item \textit{\Rref{Lvl}.} Straightforward by construction using \rref{I-Level<}.
     \item \textit{\Rref{Trans}.}
       The premises are $[[G ⊢ k1 : Level< k2]]$ and $[[G ⊢ k2 : Level< k3]]$,
       concluding with $[[G ⊢ k1 : Level< k3]]$.
-      By the induction hypotheses on the two premises,
-      followed by inversion on the interpretation of level types,
+      By the induction hypotheses on the two premises and \cref{lem:lr:inv-lvl},
       we know that $[[k1{s} ⇒* i1]]$, $[[k2{s} ⇒* i2]]$, $[[k2{s} ⇒* i2']]$, and $[[k3{s} ⇒* i3]]$
       such that $[[i1 < i2]]$ and $[[i2' < i3]]$.
       By \nameref{lem:par:confl} and \nameref{lem:par:consistency},
@@ -1397,17 +1396,15 @@ For concision, we skip steps involving massaging substitutions into the right sh
     \item \textit{\Rref{Cumul}.}
       The premises are $[[G ⊢ A : Type k]]$ and $[[G ⊢ k : Level< l]]$,
       concluding with $[[G ⊢ A : Type l]]$.
-      By induction on the first premise,
-      followed by inversion on the interpretation of universes,
-      we know that $[[k{s} ⇒* i]]$ and $[[⟦A{s}⟧ i ↘ P]]$ for some $[[P]]$.
-      By induction on the second premise,
-      followed by inversion on the interpretation of levels,
-      we know that $[[k{s} ⇒* i']]$ and $[[l{s} ⇒* j]]$ such that $[[i' < j]]$.
+      By induction on the first premise and \cref{lem:lr:inv-univ},
+      we have some $[[P]]$ such that $[[⟦A{s}⟧ i ↘ P]]$ and $[[k{s} ⇒* i]]$.
+      By induction on the second premise and \cref{lem:lr:inv-lvl},
+      we have some $[[i' < j]]$ such that $[[k{s} ⇒* i']]$ and $[[l{s} ⇒* j]]$.
       By \nameref{lem:par:confl} and \nameref{lem:par:consistency},
       it must be that $[[i]] = [[i']]$.
-      Similar to the \rref{Univ} case,
-      we can show that $[[Type (l{s})]]$ has an interpretation as a universe.
-      The final goal is then to show that $[[⟦A{s}⟧ j ↘ P]]$,
+      By cofinality and \cref{lem:lr:pars},
+      $[[Type (l{s})]]$ has an interpretation as a universe.
+      It remains to show that $[[⟦A{s}⟧ j ↘ P]]$,
       which holds by \nameref{lem:lr:cumul} on $[[i < j]]$.
       \qedhere
   \end{itemize}
@@ -1573,8 +1570,8 @@ Then it becomes possible to type the universe at this level as its own type.
 \Cref{fig:type-in-type} explicitly constructs the key part of the typing derivation
 for $[[Type (abs x)]] : [[Type (abs x)]]$ where $[[x]] : [[⊥]]$.
 With an instance of type-in-type,
-it is possible to construct a nonnormalizing lambda term,
-for instance via Hurkens' paradox~\citep{hurkens}.
+we can construct a nonnormalizing lambda term via
+\eg Hurkens' paradox~\citep{hurkens}.
 
 \begin{figure}
 \begin{mathpar}
@@ -1662,12 +1659,14 @@ We believe the mechanization to be doable but tedious.
 
 Meanwhile, well-founded induction on levels already holds semantically,
 as we need it to define our logical relation in the first place.
-We can internalize it by syntactically introducing an eliminator,
-which states that a predicate $[[B]]$ holds on arbitrary levels
+We can internalize it by syntactically introducing an eliminator for levels,
+but it is unclear whether such an eliminator would be useful.
+
+\iffalse
+The eliminator states that a predicate $[[B]]$ holds on arbitrary levels
 if we can show that it holds for a given level
 when we know it holds for all smaller levels.
-However, it is unclear whether this eliminator would be useful.
-%
+
 \begin{mathpar}
   \inferrule[ElimLvl]
     {[[G, z : Level< k ⊢ B : Type l]] \\\\
@@ -1678,7 +1677,6 @@ However, it is unclear whether this eliminator would be useful.
   \inferrule[E-ElimLvl]{~}{[[wf b k = b k (λy. wf b y)]]}
 \end{mathpar}
 
-\iffalse
 For universes, the simplest form of an eliminator is a typecase operator,
 matching on a type as a function type, the empty type, a universe, or a level type.
 Such an operator is justified by \nameref{lem:canon:univ}.
@@ -1696,12 +1694,12 @@ yields a proof of $\kw{Void}$%
 
 Because levels are now terms,
 subtyping necessarily involves typing to compare two levels.
-In particular, a universe at a smaller level is a subtype of a universe at a larger level,
-while a level type bounded by a smaller level is a subtype of a level bounded by a larger level.
+In particular, a universe at a smaller level is a subtype of a one at a larger level,
+while a level type bounded by a smaller level is a subtype of a one bounded by a larger level.
 The former is already expressed by \rref{Cumul}, the latter by \rref{Trans}.
-In this sense, the sole benefit of subtyping is being able to subtype function types,
-making function domains contravariant and codomains covariant with respect to subtyping.
-A number of these subtyping rules are given below,
+The additional benefit of subtyping making
+function domains contravariant and codomains covariant with respect to subtyping.
+Selected subtyping rules are given below,
 along with an updated \rref{Conv'} rule.
 %
 \begin{mathpar}

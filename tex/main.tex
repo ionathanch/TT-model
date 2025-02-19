@@ -622,7 +622,6 @@ Then the entire term has type $ \kw{U} \gap   \omega  $ by repeated application 
 
 Type safety is proven using standard syntactic methods
 to show progress and preservation (\ie subject reduction).
-% The theorem is stated in terms of a call-by-name evaluation strategy, which we define shortly.
 In essence, closed, well-typed terms evaluate (if they terminate) to values,
 which are type formers and constructors,
 defined below.
@@ -1031,8 +1030,9 @@ though we to write $ \ottnt{a}  \in  \ottnt{P} $ in lieu of $\ottnt{P}(\ottnt{a}
 to say that $\ottnt{a}$ is in the set,
 and we use set-builder notation in lieu of explicit abstractions.
 When proving properties of the logical relation,
-we require no other axioms than function extensionality and propositional extensionality;
-for transparency, we mark the lemmas in which they are used with $\dagger$.
+we require no other axioms than predicate extensionality,
+which follows from function and propositional extensionality;
+we explicitly mark the lemmas in which they are used with $\dagger$.
 
 Because universes are interpreted as sets of types
 which themselves have interpretations at a lower universe level,
@@ -1198,8 +1198,7 @@ We solve this by proving functionality.
   knowing by the induction hypotheses
   that the interpretations of the domain and codomain yield equal sets.
   Because sets are encoded as predicates,
-  we need to use predicate extensionality,
-  \ie function extensionality followed by propositional extensionality.
+  we need to use predicate extensionality.
   It then suffices to show that membership in one set implies membership in the other,
   which holds using the induction hypotheses.
 \end{proof}
@@ -1257,26 +1256,32 @@ We are then finally able to prove the inversion property for \rref{I-Pi'}.
       Supposing $\ottmv{y}$ and $\ottnt{P_{{\mathrm{2}}}}$,
       we have three hypotheses $  \ottnt{R} ( \ottmv{y} ,  \ottnt{P_{{\mathrm{2}}}} )   \to     \mathit{ \ottmv{y} }   \in  \ottnt{P_{{\mathrm{1}}}}   \to     \mathit{ f }   \gap   \mathit{ \ottmv{y} }    \in  \ottnt{P_{{\mathrm{2}}}}   $,
       $ \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto   \mathit{ \ottmv{y} }   ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}} $, and $  \mathit{ \ottmv{y} }   \in  \ottnt{P_{{\mathrm{1}}}} $.
-      Instantiating the first hypothesis using \ref{lem:inv-pi:hyp:R},
-      we know there exists a $\ottnt{P'_{{\mathrm{2}}}}$ such that $   \mathit{ f }   \gap   \mathit{ \ottmv{y} }    \in  \ottnt{P'_{{\mathrm{2}}}} $.
-      From \ref{lem:inv-pi:hyp:B}, we also know that $ \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto   \mathit{ \ottmv{y} }   ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P'_{{\mathrm{2}}}} $.
+      By the first hypothesis on the second and on \ref{lem:inv-pi:hyp:R},
+      there exists a $\ottnt{P'_{{\mathrm{2}}}}$ such that $   \mathit{ f }   \gap   \mathit{ \ottmv{y} }    \in  \ottnt{P'_{{\mathrm{2}}}} $.
+      From \ref{lem:inv-pi:hyp:B}, we also have $ \mathopen{\llbracket}   \ottnt{B} [  \ottmv{x}  \mapsto   \mathit{ \ottmv{y} }   ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P'_{{\mathrm{2}}}} $.
       Then by \nameref{lem:lr:func}, we have $\ottnt{P_{{\mathrm{2}}}} = \ottnt{P'_{{\mathrm{2}}}}$, so $   \mathit{ f }   \gap   \mathit{ \ottmv{y} }    \in  \ottnt{P_{{\mathrm{2}}}} $.
       \qedhere
   \end{itemize}
 \end{proof}
 
-Inversion principles for the other types hold as well, omitted here.
-We however explicitly state here the inversion principle
-asserting that types that have interpretations are indeed one of the four types,
+Inversion principles for the other types hold as well,
 proven by induction on the logical relation.
 
+\begin{lemma}[Inversion on universes (l.r.)] \thmref{semantics.lean}{interps$\mathcal{U}$Inv} \label{lem:lr:inv-univ} \\
+  If $ \mathopen{\llbracket}   \kw{U} \gap  \ottnt{k}   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $ and $ \ottnt{A}  \in  \ottnt{P} $,
+  then there exists $\ottmv{j}, \ottnt{Q}$ such that $ \ottnt{k}  \Rightarrow^\ast   \ottmv{j}  $ and $ \mathopen{\llbracket}  \ottnt{A}  \mathclose{\rrbracket}_{ \ottmv{j} } \searrow  \ottnt{Q} $.
+\end{lemma}
+
+\begin{lemma}[Inversion on level types (l.r.)] \thmref{semantics.lean}{interpLvlInv} \label{lem:lr:inv-lvl} \\
+  If $ \mathopen{\llbracket}   \kw{Level}\texttt{<} \gap  \ell   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $ and $ \ottnt{k}  \in  \ottnt{P} $,
+  then there exist $\ottmv{j_{{\mathrm{2}}}} < \ottmv{j_{{\mathrm{1}}}}$ such that $ \ell  \Rightarrow^\ast   \ottmv{j_{{\mathrm{1}}}}  $ and $ \ottnt{k}  \Rightarrow^\ast   \ottmv{j_{{\mathrm{2}}}}  $.
+\end{lemma}
+
 \begin{lemma}[Inversion (l.r.)] \thmref{semantics.lean}{interpsStepInv} \label{lem:lr:inv} \\
-  If $ \mathopen{\llbracket}  \ottnt{C}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $, then one of the following holds:
+  If $ \mathopen{\llbracket}  \ottnt{C}  \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $, then one of the following holds: $ \ottnt{C}  \Rightarrow^\ast   \bot  $; or
   \begin{itemize}[topsep=0pt]
-    \item There exist $\ottnt{A}$ and $\ottnt{B}$ such that $ \ottnt{C}  \Rightarrow^\ast   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}  $;
-    \item There exists $\ottmv{i}$ such that $ \ottnt{C}  \Rightarrow^\ast   \kw{U} \gap   \ottmv{i}   $;
-    \item There exists $\ottmv{i}$ such that $ \ottnt{C}  \Rightarrow^\ast   \kw{Level}\texttt{<} \gap   \ottmv{i}   $; or
-    \item $ \ottnt{C}  \Rightarrow^\ast   \bot  $.
+    \item There exist $\ottnt{A}$ and $\ottnt{B}$ such that $ \ottnt{C}  \Rightarrow^\ast   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}  $; or
+    \item There exists $\ottmv{i}$ such that $ \ottnt{C}  \Rightarrow^\ast   \kw{U} \gap   \ottmv{i}   $ or $ \ottnt{C}  \Rightarrow^\ast   \kw{Level}\texttt{<} \gap   \ottmv{i}   $.
   \end{itemize}
 \end{lemma}
 
@@ -1349,10 +1354,8 @@ For concision, we skip steps involving massaging substitutions into the right sh
       The relevant premises are $ \Gamma  \vdash   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}   \mathrel{:}   \kw{U} \gap  \ottnt{k}  $ and $  \Gamma ,  \ottmv{x}  \mathbin{:}  \ottnt{A}   \vdash  \ottnt{b}  \mathrel{:}  \ottnt{B} $,
       concluding with $ \Gamma  \vdash   \lambda  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{b}   \mathrel{:}   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}  $.
       By the induction hypothesis on the first premise,
-      the function type is in the interpretation of a universe,
-      so it also has an interpretation by inversion,
-      allowing us to apply \nameref{lem:lr:inv-pi}.
-      This gives $ \mathopen{\llbracket}   \ottnt{A} [  \sigma  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{1}}}} $, $ \mathopen{\llbracket}   \ottnt{B} [   \sigma ,  \ottmv{x}  \mapsto  \ottnt{a}   ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}} $, and $ \ottnt{a}  \in  \ottnt{P_{{\mathrm{1}}}} $,
+      \cref{lem:lr:inv-univ}, and \cref{lem:lr:inv-pi},
+      we have $ \mathopen{\llbracket}   \ottnt{A} [  \sigma  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{1}}}} $, $ \mathopen{\llbracket}   \ottnt{B} [   \sigma ,  \ottmv{x}  \mapsto  \ottnt{a}   ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P_{{\mathrm{2}}}} $, and $ \ottnt{a}  \in  \ottnt{P_{{\mathrm{1}}}} $,
       where the goal is now to show that $   (  \lambda  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{b}  )   \gap  \ottnt{a}   \in  \ottnt{P_{{\mathrm{2}}}} $.
       By \rref{I-Cons} and the induction hypothesis on the second premise,
       we have $ \mathopen{\llbracket}   \ottnt{B} [   \sigma ,  \ottmv{x}  \mapsto  \ottnt{a}   ]   \mathclose{\rrbracket}_{ \ottmv{i'} } \searrow  \ottnt{P'_{{\mathrm{2}}}} $ and $  \ottnt{b} [  \ottmv{x}  \mapsto  \ottnt{a}  ]   \in  \ottnt{P'_{{\mathrm{2}}}} $ for some $\ottmv{i'}, \ottnt{P'_{{\mathrm{2}}}}$.
@@ -1362,31 +1365,27 @@ For concision, we skip steps involving massaging substitutions into the right sh
     \item \textit{\Rref{Univ}.}
       The premise is $ \Gamma  \vdash  \ottnt{k}  \mathrel{:}   \kw{Level}\texttt{<} \gap  \ell  $,
       concluding with $ \Gamma  \vdash   \kw{U} \gap  \ottnt{k}   \mathrel{:}   \kw{U} \gap  \ell  $.
-      By the induction hypothesis on the premise,
-      followed by inversion on the interpretation of level types,
-      we know that $  \ottnt{k} [  \sigma  ]   \Rightarrow^\ast   \ottmv{i_{{\mathrm{1}}}}  $ and $  \ell [  \sigma  ]   \Rightarrow^\ast   \ottmv{i_{{\mathrm{2}}}}  $ such that $ \ottmv{i_{{\mathrm{1}}}}  <  \ottmv{i_{{\mathrm{2}}}} $.
-      By cofinality, we also know that there must exist a $\ottmv{j}$ such that $ \ottmv{i_{{\mathrm{2}}}}  <  \ottmv{j} $.
+      By the induction hypothesis and \cref{lem:lr:inv-lvl},
+      we have $ \ottmv{i_{{\mathrm{1}}}}  <  \ottmv{i_{{\mathrm{2}}}} $ such that $  \ottnt{k} [  \sigma  ]   \Rightarrow^\ast   \ottmv{i_{{\mathrm{1}}}}  $ and $  \ell [  \sigma  ]   \Rightarrow^\ast   \ottmv{i_{{\mathrm{2}}}}  $.
+      By cofinality, there must exist a $\ottmv{j}$ such that $ \ottmv{i_{{\mathrm{2}}}}  <  \ottmv{j} $.
       The goal is now to show that $ \mathopen{\llbracket}   \kw{U} \gap   (  \ell [  \sigma  ]  )    \mathclose{\rrbracket}_{ \ottmv{j} } \searrow   \lbrace  \ottmv{z}  \mid   \exists  \ottnt{P}  \mathpunct{.}   \mathopen{\llbracket}   \mathit{ \ottmv{z} }   \mathclose{\rrbracket}_{ \ottmv{i_{{\mathrm{2}}}} } \searrow  \ottnt{P}    \rbrace  $
       and $ \mathopen{\llbracket}   \kw{U} \gap   (  \ottnt{k} [  \sigma  ]  )    \mathclose{\rrbracket}_{ \ottmv{i_{{\mathrm{2}}}} } \searrow   \lbrace  \ottmv{z}  \mid   \exists  \ottnt{P}  \mathpunct{.}   \mathopen{\llbracket}   \mathit{ \ottmv{z} }   \mathclose{\rrbracket}_{ \ottmv{i_{{\mathrm{1}}}} } \searrow  \ottnt{P}    \rbrace  $.
       These are both constructed using \rref{I-Univ} and \cref{lem:lr:pars}.
     \item \textit{\Rref{Level<}.}
       The premises are $ \Gamma  \vdash   \kw{U} \gap  \ottnt{k_{{\mathrm{1}}}}   \mathrel{:}   \kw{U} \gap  \ell_{{\mathrm{1}}}  $ and $ \Gamma  \vdash  \ottnt{k_{{\mathrm{0}}}}  \mathrel{:}   \kw{Level}\texttt{<} \gap  \ell_{{\mathrm{0}}}  $,
       concluding with $ \Gamma  \vdash   \kw{Level}\texttt{<} \gap  \ottnt{k_{{\mathrm{0}}}}   \mathrel{:}   \kw{U} \gap  \ottnt{k_{{\mathrm{1}}}}  $.
-      By the induction hypothesis on the first premises,
-      $ \kw{U} \gap   (  \ottnt{k_{{\mathrm{1}}}} [  \sigma  ]  )  $ is in the interpretation of a universe.
-      By inversion, we know that it too has an interpretation as a universe,
-      so it remains to show that $ \mathopen{\llbracket}   \kw{Level}\texttt{<} \gap   (  \ottnt{k_{{\mathrm{0}}}} [  \sigma  ]  )    \mathclose{\rrbracket}_{ \ottmv{j} } \searrow  \ottnt{P} $ for some $\ottnt{P}$,
+      By the induction hypothesis on the first premise and \cref{lem:lr:inv-univ},
+      $ \kw{U} \gap   (  \ottnt{k_{{\mathrm{1}}}} [  \sigma  ]  )  $ has an interpretation as a universe,
+      so it remains to find a $\ottnt{P}$ such that $ \mathopen{\llbracket}   \kw{Level}\texttt{<} \gap   (  \ottnt{k_{{\mathrm{0}}}} [  \sigma  ]  )    \mathclose{\rrbracket}_{ \ottmv{j} } \searrow  \ottnt{P} $,
       where $  \ottnt{k_{{\mathrm{1}}}} [  \sigma  ]   \Rightarrow^\ast   \ottmv{j}  $.
-      By the induction on the second premise,
-      followed by inversion on the interpretation of level types,
-      we know that $  \ottnt{k_{{\mathrm{0}}}} [  \sigma  ]   \Rightarrow^\ast   \ottmv{i}  $ for some $\ottmv{i}$.
+      By the induction on the second premise and \cref{lem:lr:inv-lvl},
+      we have $  \ottnt{k_{{\mathrm{0}}}} [  \sigma  ]   \Rightarrow^\ast   \ottmv{i}  $ for some $\ottmv{i}$.
       Then the goal is constructed using \rref{I-Level<} and \cref{lem:lr:pars}.
     \item \textit{\Rref{Lvl}.} Straightforward by construction using \rref{I-Level<}.
     \item \textit{\Rref{Trans}.}
       The premises are $ \Gamma  \vdash  \ottnt{k_{{\mathrm{1}}}}  \mathrel{:}   \kw{Level}\texttt{<} \gap  \ottnt{k_{{\mathrm{2}}}}  $ and $ \Gamma  \vdash  \ottnt{k_{{\mathrm{2}}}}  \mathrel{:}   \kw{Level}\texttt{<} \gap  \ottnt{k_{{\mathrm{3}}}}  $,
       concluding with $ \Gamma  \vdash  \ottnt{k_{{\mathrm{1}}}}  \mathrel{:}   \kw{Level}\texttt{<} \gap  \ottnt{k_{{\mathrm{3}}}}  $.
-      By the induction hypotheses on the two premises,
-      followed by inversion on the interpretation of level types,
+      By the induction hypotheses on the two premises and \cref{lem:lr:inv-lvl},
       we know that $  \ottnt{k_{{\mathrm{1}}}} [  \sigma  ]   \Rightarrow^\ast   \ottmv{i_{{\mathrm{1}}}}  $, $  \ottnt{k_{{\mathrm{2}}}} [  \sigma  ]   \Rightarrow^\ast   \ottmv{i_{{\mathrm{2}}}}  $, $  \ottnt{k_{{\mathrm{2}}}} [  \sigma  ]   \Rightarrow^\ast   \ottmv{i'_{{\mathrm{2}}}}  $, and $  \ottnt{k_{{\mathrm{3}}}} [  \sigma  ]   \Rightarrow^\ast   \ottmv{i_{{\mathrm{3}}}}  $
       such that $ \ottmv{i_{{\mathrm{1}}}}  <  \ottmv{i_{{\mathrm{2}}}} $ and $ \ottmv{i'_{{\mathrm{2}}}}  <  \ottmv{i_{{\mathrm{3}}}} $.
       By \nameref{lem:par:confl} and \nameref{lem:par:consistency},
@@ -1397,17 +1396,15 @@ For concision, we skip steps involving massaging substitutions into the right sh
     \item \textit{\Rref{Cumul}.}
       The premises are $ \Gamma  \vdash  \ottnt{A}  \mathrel{:}   \kw{U} \gap  \ottnt{k}  $ and $ \Gamma  \vdash  \ottnt{k}  \mathrel{:}   \kw{Level}\texttt{<} \gap  \ell  $,
       concluding with $ \Gamma  \vdash  \ottnt{A}  \mathrel{:}   \kw{U} \gap  \ell  $.
-      By induction on the first premise,
-      followed by inversion on the interpretation of universes,
-      we know that $  \ottnt{k} [  \sigma  ]   \Rightarrow^\ast   \ottmv{i}  $ and $ \mathopen{\llbracket}   \ottnt{A} [  \sigma  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $ for some $\ottnt{P}$.
-      By induction on the second premise,
-      followed by inversion on the interpretation of levels,
-      we know that $  \ottnt{k} [  \sigma  ]   \Rightarrow^\ast   \ottmv{i'}  $ and $  \ell [  \sigma  ]   \Rightarrow^\ast   \ottmv{j}  $ such that $ \ottmv{i'}  <  \ottmv{j} $.
+      By induction on the first premise and \cref{lem:lr:inv-univ},
+      we have some $\ottnt{P}$ such that $ \mathopen{\llbracket}   \ottnt{A} [  \sigma  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $ and $  \ottnt{k} [  \sigma  ]   \Rightarrow^\ast   \ottmv{i}  $.
+      By induction on the second premise and \cref{lem:lr:inv-lvl},
+      we have some $ \ottmv{i'}  <  \ottmv{j} $ such that $  \ottnt{k} [  \sigma  ]   \Rightarrow^\ast   \ottmv{i'}  $ and $  \ell [  \sigma  ]   \Rightarrow^\ast   \ottmv{j}  $.
       By \nameref{lem:par:confl} and \nameref{lem:par:consistency},
       it must be that $\ottmv{i} = \ottmv{i'}$.
-      Similar to the \rref{Univ} case,
-      we can show that $ \kw{U} \gap   (  \ell [  \sigma  ]  )  $ has an interpretation as a universe.
-      The final goal is then to show that $ \mathopen{\llbracket}   \ottnt{A} [  \sigma  ]   \mathclose{\rrbracket}_{ \ottmv{j} } \searrow  \ottnt{P} $,
+      By cofinality and \cref{lem:lr:pars},
+      $ \kw{U} \gap   (  \ell [  \sigma  ]  )  $ has an interpretation as a universe.
+      It remains to show that $ \mathopen{\llbracket}   \ottnt{A} [  \sigma  ]   \mathclose{\rrbracket}_{ \ottmv{j} } \searrow  \ottnt{P} $,
       which holds by \nameref{lem:lr:cumul} on $ \ottmv{i}  <  \ottmv{j} $.
       \qedhere
   \end{itemize}
@@ -1573,8 +1570,8 @@ Then it becomes possible to type the universe at this level as its own type.
 \Cref{fig:type-in-type} explicitly constructs the key part of the typing derivation
 for $ \kw{U} \gap   (  \kw{absurd} \gap   \mathit{ \ottmv{x} }   )   :  \kw{U} \gap   (  \kw{absurd} \gap   \mathit{ \ottmv{x} }   )  $ where $\ottmv{x} :  \bot $.
 With an instance of type-in-type,
-it is possible to construct a nonnormalizing lambda term,
-for instance via Hurkens' paradox~\citep{hurkens}.
+we can construct a nonnormalizing lambda term via
+\eg Hurkens' paradox~\citep{hurkens}.
 
 \begin{figure}
 \begin{mathpar}
@@ -1662,12 +1659,14 @@ We believe the mechanization to be doable but tedious.
 
 Meanwhile, well-founded induction on levels already holds semantically,
 as we need it to define our logical relation in the first place.
-We can internalize it by syntactically introducing an eliminator,
-which states that a predicate $\ottnt{B}$ holds on arbitrary levels
+We can internalize it by syntactically introducing an eliminator for levels,
+but it is unclear whether such an eliminator would be useful.
+
+\iffalse
+The eliminator states that a predicate $\ottnt{B}$ holds on arbitrary levels
 if we can show that it holds for a given level
 when we know it holds for all smaller levels.
-However, it is unclear whether this eliminator would be useful.
-%
+
 \begin{mathpar}
   \inferrule[ElimLvl]
     {  \Gamma ,  \ottmv{z}  \mathbin{:}   \kw{Level}\texttt{<} \gap  \ottnt{k}    \vdash  \ottnt{B}  \mathrel{:}   \kw{U} \gap  \ell   \\\\
@@ -1678,7 +1677,6 @@ However, it is unclear whether this eliminator would be useful.
   \inferrule[E-ElimLvl]{~}{   \kw{wf} \gap  \ottnt{b}   \gap  \ottnt{k}   \equiv    \ottnt{b}  \gap  \ottnt{k}   \gap   (   \lambda  \ottmv{y}  \mathpunct{.}   \kw{wf} \gap  \ottnt{b}    \gap   \mathit{ \ottmv{y} }   )   }
 \end{mathpar}
 
-\iffalse
 For universes, the simplest form of an eliminator is a typecase operator,
 matching on a type as a function type, the empty type, a universe, or a level type.
 Such an operator is justified by \nameref{lem:canon:univ}.
@@ -1696,12 +1694,12 @@ yields a proof of $\kw{Void}$%
 
 Because levels are now terms,
 subtyping necessarily involves typing to compare two levels.
-In particular, a universe at a smaller level is a subtype of a universe at a larger level,
-while a level type bounded by a smaller level is a subtype of a level bounded by a larger level.
+In particular, a universe at a smaller level is a subtype of a one at a larger level,
+while a level type bounded by a smaller level is a subtype of a one bounded by a larger level.
 The former is already expressed by \rref{Cumul}, the latter by \rref{Trans}.
-In this sense, the sole benefit of subtyping is being able to subtype function types,
-making function domains contravariant and codomains covariant with respect to subtyping.
-A number of these subtyping rules are given below,
+The additional benefit of subtyping making
+function domains contravariant and codomains covariant with respect to subtyping.
+Selected subtyping rules are given below,
 along with an updated \rref{Conv'} rule.
 %
 \begin{mathpar}
