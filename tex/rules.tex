@@ -36,7 +36,7 @@
 
 \newcommand{\otta}{
 \ottrulehead{\ottnt{a}  ,\ \ottnt{b}  ,\ \ottnt{c}  ,\ \ottnt{A}  ,\ \ottnt{B}  ,\ \ottnt{C}  ,\ \ottnt{k}  ,\ \ell}{::=}{\ottcom{terms}}\ottprodnewline
-\ottfirstprodline{|}{\ottmv{x}}{}{}{}{\ottcom{variable}}\ottprodnewline
+\ottfirstprodline{|}{ \mathit{ \ottmv{x} } }{}{}{}{\ottcom{variable}}\ottprodnewline
 \ottprodline{|}{ \kw{ \ottmv{x} } }{}{}{}{\ottcom{constant}}\ottprodnewline
 \ottprodline{|}{ \lambda  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{b} }{}{\textsf{bind}\; \ottmv{x}\; \textsf{in}\; \ottnt{b}}{}{\ottcom{function}}\ottprodnewline
 \ottprodline{|}{ \lambda  \ottmv{x}  \mathpunct{.}  \ottnt{b} } {\textsf{S}}{}{}{\ottcom{unannotated functions}}\ottprodnewline
@@ -87,13 +87,13 @@
 
 \newcommand{\otte}{
 \ottrulehead{\ottnt{e}  ,\ \ottnt{E}}{::=}{\ottcom{neutrals}}\ottprodnewline
-\ottfirstprodline{|}{\ottmv{x}}{}{}{}{}\ottprodnewline
+\ottfirstprodline{|}{ \mathit{ \ottmv{x} } }{}{}{}{}\ottprodnewline
 \ottprodline{|}{ \ottnt{e}  \gap  \ottnt{n} }{}{}{}{}\ottprodnewline
 \ottprodline{|}{ \kw{absurd}_{ \ottnt{N} } \gap  \ottnt{e} }{}{}{}{}}
 
 \newcommand{\ottn}{
 \ottrulehead{\ottnt{n}  ,\ \ottnt{N}}{::=}{\ottcom{normals}}\ottprodnewline
-\ottfirstprodline{|}{\ottmv{x}}{}{}{}{}\ottprodnewline
+\ottfirstprodline{|}{ \mathit{ \ottmv{x} } }{}{}{}{}\ottprodnewline
 \ottprodline{|}{ \Pi  \ottmv{x}  \mathbin{:}  \ottnt{N_{{\mathrm{1}}}}  \mathpunct{.}  \ottnt{N_{{\mathrm{2}}}} }{}{\textsf{bind}\; \ottmv{x}\; \textsf{in}\; \ottnt{N_{{\mathrm{2}}}}}{}{}\ottprodnewline
 \ottprodline{|}{ \lambda  \ottmv{x}  \mathbin{:}  \ottnt{N}  \mathpunct{.}  \ottnt{n} }{}{\textsf{bind}\; \ottmv{x}\; \textsf{in}\; \ottnt{n}}{}{}\ottprodnewline
 \ottprodline{|}{ \ottnt{e}  \gap  \ottnt{n} }{}{}{}{}\ottprodnewline

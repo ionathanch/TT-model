@@ -141,7 +141,7 @@
 
 \section{Introduction}
 
-Dependent type theories are common foundations for proof assistants
+Dependent type theories are common foundations for proof assistants,
 where theorems are manipulated as types and their proofs as terms.
 Types are often treated as terms themselves,
 providing a uniform mechanism for working with both;
@@ -161,7 +161,7 @@ Many contemporary proof assistants based on dependent types feature such a hiera
 such as Rocq~\citep{rocq}, Agda~\citep{agda}, Lean~\citep{lean}, and F$^\star$~\citep{fstar}.
 
 Having only a concrete universe hierarchy, however,
-limits reusability of definitions that are not inherently tied to particular universe levels.
+limits the reusability of definitions that are not inherently tied to particular universe levels.
 For example, the identity function $\kw{id} : [[:concrete: ΠA: U i. A → A]]$
 would need to be redefined for each universe level $[[i]]$ at which it is needed.
 Universe level polymorphism addresses this issue by abstracting over level variables,
@@ -169,17 +169,17 @@ used to index universes alongside concrete levels.
 Its simplest form is prenex level polymorphism,
 introduced by Harper and Pollack~\citep{anon-univ},
 which restricts the abstraction to top-level definitions.
-Courant extends their implicit system to an explicit system
+Courant~\citep{explicit} extends their implicit system to an explicit system
 with (in)equality constraints, level operators, and level expressions.
 This extension is implemented in Rocq~\citep{univ-poly-coq}.
 
-In the absence of level-polymorphic recursion,
+If we disallow recursive definitions that vary in the level,
 uses of prenex-polymorphic definitions
-can be specialized away to level-monomorphic terms.
+can be specialized to level-monomorphic terms.
 Favonia, Angiuli, and Mullanix note that it
 ``is as consistent as standard (monomorphic) type theory [\dots]
 because any given proof can only mention finitely many universes'',
-and show consistency using this principle~\citep{displacement}.
+and show consistency using this idea~\citep{displacement}.
 
 If level quantification is added as a type former directly to the type theory,
 we obtain higher-rank level polymorphism,
@@ -188,9 +188,9 @@ For instance, Bezem, Coquand, Dybjer, and Escard\'o
 introduce such a type theory (referred to here as BCDE)
 with level constraints~\citep{univ-poly}.
 Going further, rather than keeping universe levels distinct from terms,
-we can define level expressions as a subset of terms,
+we can make them first class by defining level expressions as a subset of terms,
 and add a type of levels;
-such first-class levels are found in Agda.
+such levels are found in Agda.
 Level quantification is subsumed by dependent functions whose domain is this level type.
 The codomain can also be the level type,
 which describes functions that compute levels.
@@ -210,7 +210,7 @@ Furthermore, while a syntax may satisfy semantic properties such as logical cons
 it may not necessarily satisfy desirable syntactic properties.
 In particular, BCDE's semantics can conceivably be viewed as
 that of TTFL without making levels first class,
-yet fails to satisfy substitution properties and therefore violates subject reduction.
+yet fails to satisfy subject reduction.
 
 In this work, we give an end-to-end account of first-class levels in type theory,
 beginning with an explicit syntax and typing rules,
@@ -222,14 +222,15 @@ Our contributions are as follows:
     a dependent type theory with bounded, first-class universe levels.
     Our bounds differ from level constraints in that
     they are inherent to the type of a level,
-    rather than a separate predicate on them.
+    rather than a separate predicate on them,
+    which prevents failure of subject reduction.
     Examples in the next section build up from monomorphic levels to level polymorphism
     before we proceed to the formal definition of the type theory in \cref{sec:ttbfl}.
   \item We prove subject reduction (\ie preservation) in \cref{sec:safety},
     an improvement upon the metatheoretic properties of BCDE.
     We also prove progress and thus type safety,
-    demonstrating that these universe level features do not impact execution.
-    This property is important for implementing proof assistants in themselves,
+    which is important if we also want to use the language for writing programs that evaluate.
+    An example is implementing proof assistants in themselves,
     as is (partially) done in Lean and undergoing work for Rocq~\citep{coq-in-coq}.
   \item Using a syntactic logical relation,
     we prove logical consistency and canonicity
@@ -257,12 +258,12 @@ To motivate the range of features in \lang,
 we look at examples starting from monomorphic universe levels
 and build up to first-class levels and bounding in this section.
 Although not found in our minimal language,
-we additionally use dependent pairs, propositional equality, the naturals, and lists
+these examples use dependent pairs, propositional equality, the naturals, and lists
 for more illuminating examples.
 
 Let us start by revisiting the identity function and its type,
 supposing $[[U 0]] : [[U 1]] : \dots [[U o]]$,
-with a limit universe at the top,
+with a limit universe $[[o]]$ at the top,
 which will come in handy later.
 %
 \begin{align*}
@@ -309,8 +310,9 @@ the algebraic expressions on levels becomes increasingly complex.
 But the precise universe in which $[[!Const]]$ lives is not as important
 as knowing that it lives in \emph{some} greater universe,
 which is all that is needed to prevent type-in-type inconsistencies.
-This is expressed by bounded level quantification,
+This can be expressed by bounded level quantification,
 simplifying level expressions at the cost of an additional level variable.
+We use the limit level $[[o]]$ to allow $[[k]]$ to range over all other levels.
 %
 \begin{align*}
   [[!Const]] &: [[:concrete: ∀k < o. ∀i < k. ∀j < k. U k]] \\
@@ -330,9 +332,11 @@ This lets us define universes with levels incremented by fixed amount,
 \end{align*}
 
 Generalizing from prenex level polymorphism to higher-rank level polymorphism affords even more reusability.
-One application is assuming level-polymorphic axioms,
-such as function extensionality,
-explicitly as hypotheses instead of globally axiomatizing them.
+One application is when axioms are explicitly assumed
+as local hypotheses instead of globally axiomatized
+to restrict their usage to only where they are really needed.
+An example is function extensionality,
+whose type is level polymorphic.
 %
 \begin{align*}
   [[!FunExt]] &: [[:concrete: ∀k < o. ∀i < k. ∀j < k. U k]] \\
@@ -341,16 +345,17 @@ explicitly as hypotheses instead of globally axiomatizing them.
 \end{align*}
 
 Suppose we wished to prove that function extensionality for
-functions with two arguments at different universe levels follows from $[[!FunExt]]$.
+functions with two arguments at different universe levels follows from assuming $[[!FunExt]]$.
 Using only prenex polymorphism, we would need two separate instantiations,
 once for its application to the functions of type $[[Πx : A. B x → C x]]$,
 and once for its application to the functions of type $[[B x → C x]]$.
 %
 \begin{align*}
-  [[!FunExt2]] &: [[:concrete: ∀l < o. ∀i < l. ∀j < l. ∀k < l. (!FunExt [l] [i] [j ⊔ k]) → (!Funext [l] [j] [k]) → _]] \\
+  [[!lemma]] &: [[:concrete: ∀l < o. ∀i < l. ∀j < l. ∀k < l. (!FunExt [l] [i] [j ⊔ k]) → (!Funext [l] [j] [k]) → _]] \\
   &\phantom{{} : {}} [[:concrete: ΠA : U i. ΠB : (A → U j). ΠC : (A → U k). _]] \\
   &\phantom{{} : {}} [[:concrete: Πf : (Πx : A. B x → C x). Πg : (Πx : A. B x → C x). _]] \\
-  &\phantom{{} : {}} [[:concrete: (Πx : A. Πy : B x. f x y = g x y) → (# f = g #)]]
+  &\phantom{{} : {}} [[:concrete: (Πx : A. Πy : B x. f x y = g x y) → (# f = g #)]] \\
+  [[!lemma]] &\coloneqq [[:concrete: Λl. Λi. Λj. Λk. λfe1. λfe2. _]] \dots
 \end{align*}
 
 Once more universe levels get involved,
@@ -360,21 +365,26 @@ we can quantify over a polymorphic function extensionality principle once and fo
 and instantiate its levels within the proof as needed.
 %
 \begin{align*}
-  [[!FunExt2]] &: [[:concrete: (∀k < o. ∀i < k. ∀j < k. !FunExt [i] [j] [k]) → _]] \\
+  [[!lemma]] &: [[:concrete: (∀k < o. ∀i < k. ∀j < k. !FunExt [i] [j] [k]) → _]] \\
   &\phantom{{} : {}} [[:concrete: ∀l < o. ∀i < l. ∀j < l. ∀k < l. ΠA : U i. ΠB : (A → U j). ΠC : (A → U k). _]] \\
   &\phantom{{} : {}} [[:concrete: Πf : (Πx : A. B x → C x). Πg : (Πx : A. B x → C x). _]] \\
-  &\phantom{{} : {}} [[:concrete: (Πx : A. Πy : B x. f x y = g x y) → (# f = g #)]]
+  &\phantom{{} : {}} [[:concrete: (Πx : A. Πy : B x. f x y = g x y) → (# f = g #)]] \\
+  [[!lemma]] &\coloneqq [[:concrete: λfe. Λl. Λi. Λj. Λk. _]] \dots
 \end{align*}
 
 With higher-rank level polymorphism,
 a level-polymorphic type itself must live in some universe,
 which is often that of the bounding level.
 Coming back to the identity function,
-we can define its type as a bounded level quantification,
+we can impose a bound on its level by bounded quantification,
 and use the bound for the universe.
+Self-applications such as $[[!id [2] [1] (!Id [1]) (!id [1])]]$ still hold.
 %
 \begin{align*}
-  [[!Id]] &: [[U o]] & [[!Id]] &\coloneqq [[:concrete: ∀i < o. ΠA : U i. A → A]]
+  [[!Id]] &: [[:concrete: ∀j < o. U j]] &
+  [[!id]] &: [[:concrete: ∀j < o. !Id [j] ]] \\
+  [[!Id]] &\coloneqq [[:concrete: Λj. ∀i < j. ΠA : U i. A → A]] &
+  [[!id]] &\coloneqq [[:concrete: Λj. Λi. λA : U i. λx : A. x]]
 \end{align*}
 
 So far, our notions of level polymorphism treat levels as syntactically separate from terms,

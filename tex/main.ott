@@ -17,6 +17,7 @@ grammar
 a, b, c, A, B, C, k, l {{ tex \ell }} :: 'tm_' ::= {{ com terms }}
   | x :: :: Var
     {{ com variable }}
+    {{ tex \mathit{[[x]]} }}
   | ! x :: :: Const
     {{ com constant }}
     {{ tex \kw{[[x]]} }}
