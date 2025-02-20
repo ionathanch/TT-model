@@ -1640,7 +1640,8 @@ a level successor operator, and a level maximum operator.
 To justify them semantically,
 we would impose the first two as additional existence conditions on the metalevel levels;
 the third follows from the total ordering, which lets us pick the larger of two levels.
-%
+
+\vspace{-0.75\baselineskip}
 \begin{mathpar}
   \inferrule[\ottdrulename{Zero}]
     {[[G ⊢ k : Level< l]]}
@@ -1678,6 +1679,7 @@ if we can show that it holds for a given level
 when we know it holds for all smaller levels.
 However, it is unclear whether such an eliminator would be useful.
 
+\vspace{-0.75\baselineskip}
 \begin{mathpar}
   \inferrule[ElimLvl]
     {[[G, z : Level< k ⊢ B : Type l]] \\\\
@@ -1714,6 +1716,7 @@ function domains contravariant and codomains covariant with respect to subtyping
 Selected subtyping rules are given below,
 along with an updated \rref{Conv'} rule.
 
+\vspace{-0.75\baselineskip}
 \begin{mathpar}
   \inferrule[\ottdrulename{S-Univ}]
     {[[G ⊢ k : Level< l]]}
