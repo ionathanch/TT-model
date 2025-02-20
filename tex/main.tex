@@ -591,9 +591,10 @@ which cannot be the variable itself since it is not in the scope of its own type
 In contrast, if we had more general level constraint types,
 it would be possible to declare a looping constraint $\ottmv{x} < \ottmv{x}$.
 The level type itself can be typed at any universe by \rref{Level<}
-regardless of what the bounding level is.
+regardless of its bounding level.
 For example, we can construct a derivation for $  \cdot   \vdash   \kw{Level}\texttt{<} \gap   2    \mathrel{:}   \kw{U} \gap   0   $
-solely knowing that $  \cdot   \vdash   2   \mathrel{:}   \kw{Level}\texttt{<} \gap   3   $, $  \cdot   \vdash   \kw{U} \gap   0    \mathrel{:}   \kw{U} \gap   1   $, and $ 0  <  1 $.
+solely knowing that $  \cdot   \vdash   2   \mathrel{:}   \kw{Level}\texttt{<} \gap   3   $, $  \cdot   \vdash   \kw{U} \gap   0    \mathrel{:}   \kw{U} \gap   1   $,
+which follow from $ 0  <  1 $ and $ 2  <  3 $.
 
 \Rref{Trans} internalizes transitivity of the order on levels,
 which is now required since levels are terms in general and not only concrete levels.
@@ -626,7 +627,7 @@ In essence, closed, well-typed terms evaluate (if they terminate) to values,
 which are type formers and constructors,
 defined below.
 The proof is standard, so we omit most details,
-only listing some of the key lemmas required.
+listing only some of the key lemmas required.
 \begin{equation*}
   \ottnt{v} \Coloneqq \ottmv{i} \mid  \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}  \mid  \lambda  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{b}  \mid  \bot  \mid  \kw{U} \gap  \ottnt{k}  \mid  \kw{Level}\texttt{<} \gap  \ell  \quad \text{\thmref{safety.lean}{Value}}
 \end{equation*}
@@ -1028,8 +1029,8 @@ then $\ottnt{a}$ is in the interpretation of $\ottnt{A}$.
 For instance, there is no closed term of the empty type,
 since it must belong to its interpretation as an empty set, which is a contradiction.
 The structure of the logical relation and the soundness proof
-is adapted from the mechanization by Liu~\citep{lr-pearl},
-and we cover important details here,
+is adapted from the mechanization by Liu~\citep{lr-pearl}.
+We cover some details here,
 especially as they pertain to universes and levels.
 
 \subsection{Logical relation for closed types}
@@ -1087,12 +1088,12 @@ without worrying about well-foundedness.
 \end{figure}
 
 Let us get the easier cases out of the way.
+The interpretation of the empty type as the empty set is given by \rref{I-Mty}.
 \Rref{I-Step} backward closes the interpretation under reduction of the type,
 so a type has an interpretation if it reduces to a type with an interpretation.
 We show shortly that forward closure under reduction of the type also holds,
 as well as backward closure under reduction of the \emph{terms} in the interpretations.%
 \footnote{We do not require forward closure.}
-The interpretation of the empty type as the empty set is given by \rref{I-Mty}.
 
 Because we consider the interpretation of closed types only,
 and we have a constructor for backward closure,
@@ -1159,8 +1160,8 @@ To prove conversion, we begin with closures over reductions.
       \nameref{lem:pars:subst} is needed in the \rref*{I-Pi} case
       to manipulate the substitution in the function codomain.
       For $ \ottnt{A}  \Rightarrow^\ast  \ottnt{B} $, by induction on this reduction.
-    \item For $ \ottnt{A}  \Rightarrow^\ast  \ottnt{B} $, by induction on this reduction,
-      using \rref{I-Step}. \qedhere
+    \item For $ \ottnt{A}  \Rightarrow  \ottnt{B} $, directly by \rref{I-Step}.
+      For $ \ottnt{A}  \Rightarrow^\ast  \ottnt{B} $, by induction on this reduction. \qedhere
   \end{enumerate}
 \end{proof}
 
@@ -1191,7 +1192,7 @@ hold by induction, using properties of parallel reduction as needed.
 However, it is the inversion principle for \rref{I-Pi'} that we want.
 The issue lies in the set of terms of the interpretation:
 if we do not yet know that the sets are unique,
-then inversion on \rref{I-Pi} gives \emph{some} interpretation $\ottnt{P_{{\mathrm{1}}}}$ of the codomain,
+then inversion on \rref{I-Pi} gives \emph{some} interpretation $\ottnt{P_{{\mathrm{2}}}}$ of the codomain,
 but we do not know whether it is \emph{the} interpretation that is required.
 We solve this by proving functionality.
 
@@ -1315,7 +1316,7 @@ but the admissible rules defined in \cref{fig:sem:subst} are more convenient.
 
 \begin{definition} \thmref{semantics.lean}{semSubst}
   A substitution $\sigma$ is semantically well typed
-  for context $\Gamma$ iff for every $ \ottmv{x}  \mathrel{:}  \ottnt{A}  \in  \Gamma $,
+  wrt context $\Gamma$ iff for every $ \ottmv{x}  \mathrel{:}  \ottnt{A}  \in  \Gamma $,
   there exist $\ottmv{i}, \ottnt{P}$ such that
   $ \mathopen{\llbracket}   \ottnt{A} [  \sigma  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $ and $   \mathit{ \ottmv{x} }  [  \sigma  ]   \in  \ottnt{P} $.
 \end{definition}
@@ -1343,7 +1344,7 @@ but the admissible rules defined in \cref{fig:sem:subst} are more convenient.
   $ \mathopen{\llbracket}   \ottnt{A} [  \sigma  ]   \mathclose{\rrbracket}_{ \ottmv{i} } \searrow  \ottnt{P} $ and $  \ottnt{a} [  \sigma  ]   \in  \ottnt{P} $.
 \end{definition}
 
-The fundamental soundness theorem of syntactic typing with respect to semantic typing
+The fundamental soundness theorem
 states that syntactic typing implies semantic typing.
 The cases corresponding to the rules in \cref{fig:typing:basic} are routine
 by construction and inversion of \rref{I-Pi,I-Mty}~\citep{lr-pearl},
@@ -1676,7 +1677,7 @@ which states that a predicate $\ottnt{B}$ holds on arbitrary levels
 if we can show that it holds for a given level
 when we know it holds for all smaller levels.
 However, it is unclear whether such an eliminator would be useful.
-%
+
 \begin{mathpar}
   \inferrule[ElimLvl]
     {  \Gamma ,  \ottmv{z}  \mathbin{:}   \kw{Level}\texttt{<} \gap  \ottnt{k}    \vdash  \ottnt{B}  \mathrel{:}   \kw{U} \gap  \ell   \\\\
@@ -1712,7 +1713,7 @@ The additional benefit of subtyping making
 function domains contravariant and codomains covariant with respect to subtyping.
 Selected subtyping rules are given below,
 along with an updated \rref{Conv'} rule.
-%
+
 \begin{mathpar}
   \inferrule[\ottdrulename{S-Univ}]
     { \Gamma  \vdash  \ottnt{k}  \mathrel{:}   \kw{Level}\texttt{<} \gap  \ell  }
