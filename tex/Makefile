@@ -35,6 +35,11 @@ $(DIFF).pdf: $(RULES).tex $(MAIN).mng
 	$(LATEXRUN) -o $(DIFF).pdf $(DIFF).tex
 	rm $(DIFF).mng $(DIFF).tex
 
+.PHONY: count
+count:
+	cd ../src && \
+	tokei -f tactics.lean level.lean syntactics.lean reduction.lean typing.lean safety.lean semantics.lean soundness.lean
+
 .PHONY: clean
 clean:
 	$(LATEXRUN) --clean-all
