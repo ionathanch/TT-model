@@ -52,7 +52,8 @@ theorem closed {a A : Term} (h : ⬝ ⊢ a ∶ A) : ¬ wne a
 
 theorem consistency {b} : ¬ ⬝ ⊢ b ∶ mty := by
   intro h
-  let ⟨_, _, hmty, hb⟩ := soundness h var (semSubstNil _)
+  let ⟨_, ih⟩ := soundness
+  let ⟨_, _, hmty, hb⟩ := ih h var (semSubstNil _)
   simp [interpsMtyInv hmty, substId] at hb
   exact closed h hb
 
@@ -61,7 +62,8 @@ theorem canon𝒰 {T j} (h : ⬝ ⊢ T ∶ 𝒰 j) :
   (∃ i, T ⇒⋆ 𝒰 i) ∨
   (T ⇒⋆ mty) ∨
   (∃ b, T ⇒⋆ lvl b) := by
-  let ⟨_, _, h𝒰, hT⟩ := soundness h var (semSubstNil _)
+  let ⟨_, ih⟩ := soundness
+  let ⟨_, _, h𝒰, hT⟩ := ih h var (semSubstNil _)
   let ⟨_, _, _, e⟩ := interps𝒰Inv h𝒰; subst e
   let ⟨_, hT⟩ := hT; rw [substId] at hT
   cases interpsStepInv hT
@@ -69,7 +71,8 @@ theorem canon𝒰 {T j} (h : ⬝ ⊢ T ∶ 𝒰 j) :
   case inr h => exact h
 
 theorem canonLvl {a k} (h : ⬝ ⊢ a ∶ lvl k) : ∃ j, a ⇒⋆ lof j := by
-  let ⟨_, _, hlvl, ha⟩ := soundness h var (semSubstNil _)
+  let ⟨_, ih⟩ := soundness
+  let ⟨_, _, hlvl, ha⟩ := ih h var (semSubstNil _)
   let ⟨_, e⟩ := interpsLvlInv hlvl; subst e
   rw [substId] at ha
   cases ha

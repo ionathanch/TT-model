@@ -122,16 +122,19 @@ def idx : I → Type
 
 section
 set_option hygiene false
-local notation:40 "⊢" Γ:40 => Wtf (Sigma.mk wf Γ)
-local notation:40 Γ:41 "⊢" a:41 "∶" A:41 => Wtf (Sigma.mk wt (T.mk Γ a A))
+local notation:40 "⊢" Γ:40 => Wf Γ
+local notation:40 Γ:41 "⊢" a:41 "∶" A:41 => Wt Γ a A
 
-inductive Wtf : (Σ w, idx w) → Prop where
+mutual
+inductive Wf : Ctxt → Prop where
   | nil : ⊢ ⬝
   | cons {Γ A k} :
     ⊢ Γ →
     Γ ⊢ A ∶ 𝒰 k →
     --------------
     ⊢ Γ ∷ A
+
+inductive Wt : Ctxt → Term → Term → Prop where
   | var {Γ x A} :
     ⊢ Γ →
     Γ ∋ x ∶ A →
@@ -193,167 +196,75 @@ inductive Wtf : (Σ w, idx w) → Prop where
     ---------------
     Γ ⊢ A ∶ 𝒰 k
 end
+end
 
-notation:40 "⊢" Γ:40 => Wtf (Sigma.mk wf Γ)
-notation:40 Γ:41 "⊢" a:41 "∶" A:41 => Wtf (Sigma.mk wt (T.mk Γ a A))
+notation:40 "⊢" Γ:40 => Wf Γ
+notation:40 Γ:41 "⊢" a:41 "∶" A:41 => Wt Γ a A
 
 /-*------------------------------
   Explicit induction principles
 ------------------------------*-/
 
-theorem wtfInd {w} (wtf : Wtf w) (P : ∀ {w}, Wtf w → Prop)
-  (nil : P Wtf.nil)
+def wtInd {motive} :=
+  @Wt.rec _ (λ _ _ ↦ True) motive (by simp) (by simp)
+
+theorem wtfInd (Q : ∀ {Γ}, ⊢ Γ → Prop) (P : ∀ {Γ} {a A : Term}, Γ ⊢ a ∶ A → Prop)
+  (nil : Q Wf.nil)
   (cons : ∀ {Γ A k}
     (wf : ⊢ Γ)
     (h : Γ ⊢ A ∶ 𝒰 k),
-    P wf → P h → P (Wtf.cons wf h))
+    Q wf → P h → Q (Wf.cons wf h))
   (var : ∀ {Γ x A}
     (wf : ⊢ Γ)
     (mem : Γ ∋ x ∶ A),
-    P wf → P (Wtf.var wf mem))
+    Q wf → P (Wt.var wf mem))
   (𝒰 : ∀ {Γ j k}
     (h : Γ ⊢ j ∶ lvl k),
-    P h → P (Wtf.𝒰 h))
+    P h → P (Wt.𝒰 h))
   (pi : ∀ {Γ A B k}
     (hA : Γ ⊢ A ∶ Term.𝒰 k)
     (hB : Γ ∷ A ⊢ B ∶ Term.𝒰 (rename succ k)),
-    P hA → P hB → P (Wtf.pi hA hB))
+    P hA → P hB → P (Wt.pi hA hB))
   (abs : ∀ {Γ A B b k}
     (hpi : Γ ⊢ Term.pi A B ∶ Term.𝒰 k)
     (hA : Γ ⊢ A ∶ Term.𝒰 k)
     (hb : Γ ∷ A ⊢ b ∶ B),
-    P hpi → P hA → P hb → P (Wtf.abs hpi hA hb))
+    P hpi → P hA → P hb → P (Wt.abs hpi hA hb))
   (app : ∀ {Γ A B b a}
     (hb : Γ ⊢ b ∶ Term.pi A B)
     (ha : Γ ⊢ a ∶ A),
-    P hb → P ha → P (Wtf.app hb ha))
+    P hb → P ha → P (Wt.app hb ha))
   (mty : ∀ {Γ j k}
     (h : Γ ⊢ Term.𝒰 j ∶ Term.𝒰 k),
-    P h → P (Wtf.mty h))
+    P h → P (Wt.mty h))
   (exf : ∀ {Γ A b k}
     (hA : Γ ⊢ A ∶ Term.𝒰 k)
     (hb : Γ ⊢ b ∶ Term.mty),
-    P hA → P hb → P (Wtf.exf hA hb))
+    P hA → P hb → P (Wt.exf hA hb))
   (lvl : ∀ {Γ a b j k}
     (ha : Γ ⊢ a ∶ lvl b)
     (hj : Γ ⊢ Term.𝒰 j ∶ Term.𝒰 k),
-    P ha → P hj → P (Wtf.lvl ha hj))
+    P ha → P hj → P (Wt.lvl ha hj))
   (lof : ∀ {Γ j k}
     (wf : ⊢ Γ)
     (lt : j < k),
-    P wf → P (Wtf.lof wf lt))
+    Q wf → P (Wt.lof wf lt))
   (trans : ∀ {Γ i j k}
     (hi : Γ ⊢ i ∶ Term.lvl j)
     (hj : Γ ⊢ j ∶ Term.lvl k),
-    P hi → P hj → P (Wtf.trans hi hj))
+    P hi → P hj → P (Wt.trans hi hj))
   (conv : ∀ {Γ A B a k}
     (e : A ≈ B)
     (ha : Γ ⊢ a ∶ A)
     (hB : Γ ⊢ B ∶ Term.𝒰 k),
-    P ha → P hB → P (Wtf.conv e ha hB))
+    P ha → P hB → P (Wt.conv e ha hB))
   (sub : ∀ {Γ j k A}
     (hj : Γ ⊢ j ∶ Term.lvl k)
     (hA : Γ ⊢ A ∶ Term.𝒰 j),
-    P hj → P hA → P (Wtf.sub hj hA))
-  : P wtf := by
-  induction wtf
-  case nil => exact nil
-  case cons wf h iwf ih => exact cons wf h iwf ih
-  case var wf mem ih => exact var wf mem ih
-  case 𝒰 h ih => exact 𝒰 h ih
-  case pi hA hB ihA ihB => exact pi hA hB ihA ihB
-  case abs hA hB hb ihA ihB ihb => exact abs hA hB hb ihA ihB ihb
-  case app hb ha ihb iha => exact app hb ha ihb iha
-  case mty h ih => exact mty h ih
-  case exf hA hb ihA ihb => exact exf hA hb ihA ihb
-  case lvl ha hj iha ihj => exact lvl ha hj iha ihj
-  case lof wf lt ih => exact lof wf lt ih
-  case trans hi hj ihi ihj => exact trans hi hj ihi ihj
-  case conv e ha hB iha ihB => exact conv e ha hB iha ihB
-  case sub hj hA ihj ihA => exact sub hj hA ihj ihA
-
-theorem wtInd {Γ} {a A : Term} (wt : Γ ⊢ a ∶ A) (P : ∀ {Γ} {a A : Term}, Γ ⊢ a ∶ A → Prop)
-  (var : ∀ {Γ x A}
-    (wf : ⊢ Γ)
-    (mem : Γ ∋ x ∶ A),
-    P (Wtf.var wf mem))
-  (𝒰 : ∀ {Γ j k}
-    (h : Γ ⊢ j ∶ lvl k),
-    P h → P (Wtf.𝒰 h))
-  (pi : ∀ {Γ A B k}
-    (hA : Γ ⊢ A ∶ Term.𝒰 k)
-    (hB : Γ ∷ A ⊢ B ∶ Term.𝒰 (rename succ k)),
-    P hA → P hB → P (Wtf.pi hA hB))
-  (abs : ∀ {Γ A B b k}
-    (hpi : Γ ⊢ Term.pi A B ∶ Term.𝒰 k)
-    (hA : Γ ⊢ A ∶ Term.𝒰 k)
-    (hb : Γ ∷ A ⊢ b ∶ B),
-    P hpi → P hA → P hb → P (Wtf.abs hpi hA hb))
-  (app : ∀ {Γ A B b a}
-    (hb : Γ ⊢ b ∶ Term.pi A B)
-    (ha : Γ ⊢ a ∶ A),
-    P hb → P ha → P (Wtf.app hb ha))
-  (mty : ∀ {Γ j k}
-    (h : Γ ⊢ Term.𝒰 j ∶ Term.𝒰 k),
-    P h → P (Wtf.mty h))
-  (exf : ∀ {Γ A b k}
-    (hA : Γ ⊢ A ∶ Term.𝒰 k)
-    (hb : Γ ⊢ b ∶ Term.mty),
-    P hA → P hb → P (Wtf.exf hA hb))
-  (lvl : ∀ {Γ a b j k}
-    (ha : Γ ⊢ a ∶ lvl b)
-    (hj : Γ ⊢ Term.𝒰 j ∶ Term.𝒰 k),
-    P ha → P hj → P (Wtf.lvl ha hj))
-  (lof : ∀ {Γ j k}
-    (wf : ⊢ Γ)
-    (lt : j < k),
-    P (Wtf.lof wf lt))
-  (trans : ∀ {Γ i j k}
-    (hi : Γ ⊢ i ∶ Term.lvl j)
-    (hj : Γ ⊢ j ∶ Term.lvl k),
-    P hi → P hj → P (Wtf.trans hi hj))
-  (conv : ∀ {Γ A B a k}
-    (e : A ≈ B)
-    (ha : Γ ⊢ a ∶ A)
-    (hB : Γ ⊢ B ∶ Term.𝒰 k),
-    P ha → P hB → P (Wtf.conv e ha hB))
-  (sub : ∀ {Γ j k A}
-    (hj : Γ ⊢ j ∶ Term.lvl k)
-    (hA : Γ ⊢ A ∶ Term.𝒰 j),
-    P hj → P hA → P (Wtf.sub hj hA))
-  : P wt := by
-  apply wtfInd wt (λ {w} _ ↦
-    match w with
-    | Sigma.mk I.wf _ => True
-    | Sigma.mk I.wt (T.mk Γ a A) => ∀ {wt : Γ ⊢ a ∶ A}, P wt)
-  all_goals intros; simp at *
-  case var wf mem _ => exact var wf mem
-  case 𝒰 h ih => exact 𝒰 h ih
-  case pi hA hB ihA ihB => exact pi hA hB ihA ihB
-  case abs hpi hA hb ihpi ihA ihb => exact abs hpi hA hb ihpi ihA ihb
-  case app hb ha ihb iha => exact app hb ha ihb iha
-  case mty h ih => exact mty h ih
-  case exf hA hb ihA ihb => exact exf hA hb ihA ihb
-  case lvl ha hj iha ihj => exact lvl ha hj iha ihj
-  case lof wf lt _ => exact lof wf lt
-  case trans hi hj ihi ihj => exact trans hi hj ihi ihj
-  case conv e ha hB iha ihB => exact conv e ha hB iha ihB
-  case sub hj hA ihj ihA => exact sub hj hA ihj ihA
-
-theorem wfInd {Γ} (wf : ⊢ Γ) (P : ∀ {Γ}, ⊢ Γ → Prop)
-  (nil : P Wtf.nil)
-  (cons : ∀ {Γ A k}
-    (wf : ⊢ Γ)
-    (h : Γ ⊢ A ∶ 𝒰 k),
-    P wf → P (Wtf.cons wf h))
-  : P wf := by
-  apply wtfInd wf (λ {w} _ ↦
-    match w with
-    | Sigma.mk I.wf Γ => ∀ {wf : ⊢ Γ}, P wf
-    | Sigma.mk I.wt _ => True)
-  all_goals intros; simp at *
-  case nil => exact nil
-  case cons wf h iwf _ => exact cons wf h iwf
+    P hj → P hA → P (Wt.sub hj hA))
+  : (∀ {Γ} (wf : ⊢ Γ), Q wf) ∧ (∀ {Γ} {a A : Term} (wt : Γ ⊢ a ∶ A), P wt) :=
+  ⟨@Wf.rec _ @Q @P nil cons var 𝒰 pi abs app mty exf lvl lof trans conv sub,
+   @Wt.rec _ @Q @P nil cons var 𝒰 pi abs app mty exf lvl lof trans conv sub⟩
 
 /-*---------------------------------------
   Better constructors + inversion lemmas
@@ -395,7 +306,7 @@ theorem wtfPiInvA𝒰 {Γ A B 𝒰'}
     exact ⟨_, hA, Eqv.trans e₂ e₁⟩
   case sub hj _ _ ih =>
     let ⟨_, hA, e⟩ := ih
-    exact ⟨_, Wtf.sub hj (Wtf.conv e hA (Wtf.𝒰 hj)), Eqv.refl⟩
+    exact ⟨_, Wt.sub hj (Wt.conv e hA (Wt.𝒰 hj)), Eqv.refl⟩
 
 theorem wtfPiInvA {Γ A B 𝒰'}
   (h : Γ ⊢ pi A B ∶ 𝒰') :

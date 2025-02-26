@@ -10,7 +10,7 @@ variable [lc : LevelClass]
 
 theorem soundness {Γ} {a A : Term} (h : Γ ⊢ a ∶ A) : Γ ⊨ a ∶ A := by
   induction h using wtInd <;> intro σ hσ
-  case var mem => exact hσ _ _ mem
+  case var mem _ => exact hσ _ _ mem
   case pi ihA ihB =>
     let ⟨_, _, h𝒰, hA⟩ := ihA σ hσ
     let ⟨_, _, ra, e⟩ := interps𝒰Inv h𝒰
@@ -72,7 +72,7 @@ theorem soundness {Γ} {a A : Term} (h : Γ ⊢ a ∶ A) : Γ ⊨ a ∶ A := by
     let ⟨_, _, e⟩ := interpsLvlInv hlvl; subst e
     let ⟨k, r, _⟩ := ha
     refine ⟨_, _, hi, ⟨_, interpsBwds (parsLvl r) interpsLvl⟩⟩
-  case lof j k _ lt =>
+  case lof j k _ lt _ =>
     exact ⟨j, _, interpsLvl, ⟨_, Pars.refl _, lt⟩⟩
   case trans j k _ _ ihj ihk =>
     let ⟨k, Pj, hk, hj⟩ := ihk σ hσ
