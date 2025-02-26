@@ -92,33 +92,7 @@ theorem eqvConv {a b} (r : a ≈ b) : a ⇔ b := by
 
 /-*-------------------------------------------------
   Context well-formedness and term well-typedness
-
-  This is an encoding of a mutual inductive
-  predicate as a single inductive,
-  where I selects the original inductive
-  (wf for the well-formedness judgement,
-   wt for the well-typedness judgement),
-  and idx provides the types of the indices
-  for each judgement.
-  The (w : I) and the idx i need to be paired up
-  so that they can be generalized together
-  during induction; generalizing over the w alone
-  will result in an ill-typed idx w.
 -------------------------------------------------*-/
-
-inductive I : Type where
-  | wf : I
-  | wt : I
-open I
-
-structure T where
-  ctxt : Ctxt
-  term : Term
-  type : Term
-
-def idx : I → Type
-  | wf => Ctxt
-  | wt => T
 
 section
 set_option hygiene false
