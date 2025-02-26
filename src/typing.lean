@@ -237,8 +237,8 @@ theorem wtfInd (Q : ∀ {Γ}, ⊢ Γ → Prop) (P : ∀ {Γ} {a A : Term}, Γ �
     (hA : Γ ⊢ A ∶ Term.𝒰 j),
     P hj → P hA → P (Wt.sub hj hA))
   : (∀ {Γ} (wf : ⊢ Γ), Q wf) ∧ (∀ {Γ} {a A : Term} (wt : Γ ⊢ a ∶ A), P wt) :=
-  ⟨@Wf.rec _ @Q @P nil cons var 𝒰 pi abs app mty exf lvl lof trans conv sub,
-   @Wt.rec _ @Q @P nil cons var 𝒰 pi abs app mty exf lvl lof trans conv sub⟩
+  ⟨by apply @Wf.rec _ @Q @P <;> assumption,
+   by apply @Wt.rec _ @Q @P <;> assumption⟩
 
 /-*---------------------------------------
   Better constructors + inversion lemmas
