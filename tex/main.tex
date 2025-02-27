@@ -1,7 +1,14 @@
+\newif\ifarxiv
+\arxivtrue
+
 \documentclass[a4paper,UKenglish,cleveref,autoref,thm-restate]{lipics-v2021}
 
-% \pdfoutput=1
-% \hideLIPIcs
+\ifarxiv
+\pdfoutput=1
+\usepackage[T1]{fontenc}
+\else
+\usepackage{fontspec}
+\fi
 
 \usepackage[supertabular]{ottalt}
 \let\newlist\relax
@@ -9,9 +16,8 @@
 \usepackage{enumitem,booktabs,xspace,doi}
 \usepackage{mathpartir,mathtools,stmaryrd}
 \usepackage[bottom,flushmargin,multiple,para]{footmisc} % para spacing is weird and ugly
-\usepackage[outputdir=latex.out]{minted}
-\usepackage{fontspec}
-\setmonofont[Scale=MatchUppercase]{sgr-iosevka-fixed-regular.ttc}
+\usepackage[scale=0.92]{inconsolata}
+% \setmonofont[Scale=MatchUppercase]{sgr-iosevka-fixed-regular.ttc}
 
 \newcommand{\citep}[1]{\cite{#1}}
 \newcommand{\citet}[1]{\cite{#1}}
@@ -32,35 +38,8 @@
 \newcommand{\welldefinedness}{well-\hspace{0pt}definedness\@\xspace}
 \newcommand{\crude}{crude-\hspace{0pt}but-\hspace{0pt}effective\@\xspace}
 
-\newcommand{\footfile}[1]{%
-  \raggedright
-  \href{\repo{}/tree/main/TTBFL/#1}{\texttt{#1}}
-}
-\newcommand{\footfilethm}[2]{%
-  \raggedright
-  \href{\repo{}/tree/main/TTBFL/#1}{\texttt{#1}}\texttt{:#2}
-}
 \newcommand{\thmref}[2]{%
-  $\langle$\href{\repo/tree/main/src/#1}{\texttt{#1}}\texttt{:#2}$\rangle$%
-}
-
-\newlength{\punctwidth}
-% \nspace{<punct>} is a negative space the size of <punct>
-\newcommand{\nspace}[1]{%
-  \settowidth{\punctwidth}{#1}%
-  \hspace*{-\the\punctwidth}%
-}
-% \npunct{<punct>} treats <punct> as having no width,
-% so that footnotes after it can stack on top
-\newcommand{\npunct}[1]{#1%
-  \nspace{#1}%
-}
-% \nsup{<sup>}{<punct>} shifts <punct> left by
-% the width of <sup> as a superscript
-% so that footnotes *before* it will stack on top
-\newcommand{\nsup}[2]{%
-  \nspace{$^{#1}$}%
-  #2%
+  $\langle$\textnormal{\texttt{\href{\repo/tree/main/src/#1}{#1}:#2}}$\rangle$%
 }
 
 \setlength{\fboxsep}{2pt}
@@ -242,7 +221,7 @@ Our contributions are as follows:
 \end{itemize}
 %
 All results are mechanized in Lean.
-The development consists of under 1700 lines of code,
+The development consists of under 1600 lines of code,
 which can be found in the supplementary materials at \url{\repo}.
 The definitions and theorems in this paper
 are hyperlinked to the corresponding Lean files.
@@ -1436,7 +1415,7 @@ Consistency and canonicity results then follow from the fundamental theorem as c
 
 \begin{corollary}[Canonicity of types] \thmref{soundness.lean}{canon$\mathcal{U}$} \label{lem:canon:univ}
   If $  \cdot   \vdash  \ottnt{C}  \mathrel{:}   \kw{U} \gap  \ottnt{k}  $,
-  then either $ \ottnt{C}  \Rightarrow^\ast   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}  $, $ \ottnt{C}  \Rightarrow^\ast   \kw{U} \gap   \ottmv{i}   $, $ \ottnt{C}  \Rightarrow^\ast   \kw{Level}\texttt{<} \gap   \ottmv{i}   $, or $ \ottnt{C}  \Rightarrow^\ast   \bot  $.
+  then $ \ottnt{C}  \Rightarrow^\ast   \Pi  \ottmv{x}  \mathbin{:}  \ottnt{A}  \mathpunct{.}  \ottnt{B}  $, $ \ottnt{C}  \Rightarrow^\ast   \kw{U} \gap   \ottmv{i}   $, $ \ottnt{C}  \Rightarrow^\ast   \kw{Level}\texttt{<} \gap   \ottmv{i}   $, or $ \ottnt{C}  \Rightarrow^\ast   \bot  $.
   By \nameref{thm:soundness},
   instantiating with the identity substitution,
   we have $\ottmv{j}, \ottnt{Q}$ such that $ \mathopen{\llbracket}   \kw{U} \gap  \ottnt{k}   \mathclose{\rrbracket}_{ \ottmv{j} } \searrow  \ottnt{Q} $ and $ \ottnt{C}  \in  \ottnt{Q} $.
