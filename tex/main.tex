@@ -1,13 +1,16 @@
 \newif\ifarxiv
-\arxivtrue
+\arxivfalse
 
 \documentclass[a4paper,UKenglish,cleveref,autoref,thm-restate]{lipics-v2021}
 
 \ifarxiv
 \pdfoutput=1
+\nolinenumbers
 \usepackage[T1]{fontenc}
+\usepackage[scale=0.92]{inconsolata}
 \else
 \usepackage{fontspec}
+\setmonofont[Scale=MatchLowercase]{inconsolata}
 \fi
 
 \usepackage[supertabular]{ottalt}
@@ -16,8 +19,6 @@
 \usepackage{enumitem,booktabs,xspace,doi}
 \usepackage{mathpartir,mathtools,stmaryrd}
 \usepackage[bottom,flushmargin,multiple,para]{footmisc} % para spacing is weird and ugly
-\usepackage[scale=0.92]{inconsolata}
-% \setmonofont[Scale=MatchUppercase]{sgr-iosevka-fixed-regular.ttc}
 
 \newcommand{\citep}[1]{\cite{#1}}
 \newcommand{\citet}[1]{\cite{#1}}
